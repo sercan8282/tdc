@@ -230,7 +230,9 @@ export default function ForumCategory() {
                         {/* Author info */}
                         <div className="flex items-center gap-2 mt-1 text-sm">
                           <span className="text-slate-400">by</span>
-                          <span className="text-blue-400">{topic.author.nickname}</span>
+                          <Link to={`/profile/${topic.author.nickname}`} className="text-blue-400 hover:text-blue-300">
+                            {topic.author.nickname}
+                          </Link>
                           {topic.author.rank && (
                             <span className={`text-xs ${rankColorMap[topic.author.rank.color] || 'text-gray-400'}`}>
                               {topic.author.rank.icon} {topic.author.rank.name}

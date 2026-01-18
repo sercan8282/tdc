@@ -405,7 +405,9 @@ export default function ForumTopic() {
                 )}
               </div>
               <div>
-                <span className="text-blue-400 text-sm font-medium">{reply.author.nickname}</span>
+                <Link to={`/profile/${reply.author.nickname}`} className="text-blue-400 hover:text-blue-300 text-sm font-medium">
+                  {reply.author.nickname}
+                </Link>
                 {reply.author.rank && (
                   <div className={`text-xs ${rankColorMap[rankColor].split(' ')[0]} mt-0.5`}>
                     {reply.author.rank.image_url ? (
@@ -653,7 +655,9 @@ export default function ForumTopic() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-blue-400 font-medium">{topic.author.nickname}</span>
+                <Link to={`/profile/${topic.author.nickname}`} className="text-blue-400 hover:text-blue-300 font-medium">
+                  {topic.author.nickname}
+                </Link>
                 {topic.author.rank && (
                   <span className={`text-xs px-2 py-0.5 rounded border flex items-center gap-1 ${rankColorMap[authorRankColor]}`}>
                     {topic.author.rank.image_url ? (
