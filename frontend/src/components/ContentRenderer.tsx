@@ -47,6 +47,9 @@ export default function ContentRenderer({ content }: ContentRendererProps) {
         
         // Links: [text](url)
         processedLine = processedLine.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:underline">$1</a>');
+        
+        // @Mentions: @username -> clickable link
+        processedLine = processedLine.replace(/@(\w+)/g, '<a href="/profile/$1" class="text-blue-400 hover:underline font-medium">@$1</a>');
 
         elements.push(
           <p key={i} className="mb-2" dangerouslySetInnerHTML={{ __html: processedLine || '&nbsp;' }} />

@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status, permissions
+from rest_framework import viewsets, status, permissions, serializers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
@@ -176,23 +176,25 @@ class ReplyViewSet(viewsets.ModelViewSet):
     
     def get_serializer_context(self):
         context = super().get_serializer_context()
+        context['request'] = self.request
         topic_id = self.kwargs.get('topic_pk')
         if topic_id:
             context['topic'] = get_object_or_404(Topic, pk=topic_id)
         return context
     
-    def create(self, request, *args, **kwargs):
+    def perform_create(self, serializer):
+        """Save the reply and create notifications."""
         topic = get_object_or_404(Topic, pk=self.kwargs.get('topic_pk'))
-        if topic.is_locked:
-            return Response({'error': 'This topic is locked'}, status=403)
         
-        # Create the reply
-        response = super().create(request, *args, **kwargs)
+        # Check if topic is locked
+        if topic.is_locked:
+            raise serializers.ValidationError({'error': 'This topic is locked'})
+        
+        # Save the reply
+        reply = serializer.save()
         
         # Create notifications (wrapped in try-except to prevent reply creation from failing)
         try:
-            # Get the created reply
-            reply = Reply.objects.get(pk=response.data['id'])
             content_type = ContentType.objects.get_for_model(Reply)
             
             # Detect @mentions in content
@@ -201,45 +203,43 @@ class ReplyViewSet(viewsets.ModelViewSet):
                 try:
                     mentioned_user = User.objects.get(nickname=mention)
                     # Don't notify yourself
-                    if mentioned_user != request.user:
+                    if mentioned_user != self.request.user:
                         Notification.objects.create(
                             user=mentioned_user,
-                            notifier=request.user,
+                            notifier=self.request.user,
                             notification_type='mention',
                             content_type=content_type,
                             object_id=reply.id,
-                            message=f"@{request.user.nickname} mentioned you in {topic.title}"
+                            message=f"@{self.request.user.nickname} mentioned you in {topic.title}"
                         )
                 except User.DoesNotExist:
                     pass
             
             # Notify topic author if someone replied to their topic
-            if reply.parent is None and topic.author != request.user:
+            if reply.parent is None and topic.author != self.request.user:
                 Notification.objects.create(
                     user=topic.author,
-                    notifier=request.user,
+                    notifier=self.request.user,
                     notification_type='reply',
                     content_type=content_type,
                     object_id=reply.id,
-                    message=f"{request.user.nickname} replied to your topic: {topic.title}"
+                    message=f"{self.request.user.nickname} replied to your topic: {topic.title}"
                 )
             
             # Notify parent reply author if someone replied to their reply
-            if reply.parent and reply.parent.author != request.user:
+            if reply.parent and reply.parent.author != self.request.user:
                 Notification.objects.create(
                     user=reply.parent.author,
-                    notifier=request.user,
+                    notifier=self.request.user,
                     notification_type='reply',
                     content_type=content_type,
                     object_id=reply.id,
-                    message=f"{request.user.nickname} replied to your comment in {topic.title}"
+                    message=f"{self.request.user.nickname} replied to your comment in {topic.title}"
                 )
         except Exception as e:
             # Log the error but don't fail the reply creation
             logger.error(f"Error creating notifications: {e}", exc_info=True)
             print(f"Error creating notifications: {e}")
-        
-        return response
     
     def update(self, request, *args, **kwargs):
         """Update a reply - only author or admin can edit."""

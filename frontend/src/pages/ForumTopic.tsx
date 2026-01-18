@@ -303,6 +303,12 @@ export default function ForumTopic() {
 
   const canEdit = (reply: ReplyData) => {
     if (!user) return false;
+    console.log('canEdit check:', { 
+      reply_id: reply.id, 
+      is_own: reply.is_own, 
+      is_staff: user.is_staff,
+      result: reply.is_own || user.is_staff 
+    });
     return reply.is_own || user.is_staff;
   };
 
