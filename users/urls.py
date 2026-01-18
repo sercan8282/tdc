@@ -14,10 +14,12 @@ urlpatterns = [
     path('mfa/setup/', views.mfa_setup, name='mfa_setup'),
     path('mfa/verify/', views.mfa_verify, name='mfa_verify'),
     path('mfa/disable/', views.mfa_disable, name='mfa_disable'),
+    path('mfa/reset/', views.mfa_reset, name='mfa_reset'),
     
     # Profile
     path('profile/', views.profile, name='profile'),
     path('profile/avatar/', views.upload_avatar, name='upload_avatar'),
     path('profile/avatar/delete/', views.delete_avatar, name='delete_avatar'),
     path('profile/password/', views.change_password, name='change_password'),
+    path('profile/recent-replies/', views.recent_replies, name='recent_replies'),
 ]

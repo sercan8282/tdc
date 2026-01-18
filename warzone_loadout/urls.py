@@ -25,6 +25,7 @@ urlpatterns = [
     path('api/auth/', include('users.urls')),  # Custom auth endpoints (captcha, register, MFA)
     path('api/auth/', include('djoser.urls')),
     path('api/auth/', include('djoser.urls.authtoken')),
+    path('api/forum/', include('forum.urls')),  # Forum endpoints
 ]
 
 if settings.DEBUG:

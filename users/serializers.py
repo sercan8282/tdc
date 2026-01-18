@@ -103,7 +103,8 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'email', 'nickname', 'first_name', 'last_name', 'full_name',
-            'avatar', 'favorite_games', 'mfa_enabled', 'created_at', 'updated_at'
+            'avatar', 'favorite_games', 'is_streamer', 'stream_url',
+            'mfa_enabled', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'email', 'mfa_enabled', 'created_at', 'updated_at']
 
@@ -118,7 +119,7 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ['nickname', 'first_name', 'last_name', 'favorite_games']
+        fields = ['nickname', 'first_name', 'last_name', 'favorite_games', 'is_streamer', 'stream_url']
     
     def validate_nickname(self, value):
         user = self.instance
@@ -140,6 +141,15 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
                 seen.add(game.lower())
                 cleaned.append(game)
         return cleaned
+    
+    def validate(self, data):
+        # If is_streamer is True, stream_url is required
+        if data.get('is_streamer') and not data.get('stream_url'):
+            raise serializers.ValidationError({'stream_url': 'Stream URL is required for streamers'})
+        # If is_streamer is False, clear stream_url
+        if not data.get('is_streamer', self.instance.is_streamer):
+            data['stream_url'] = None
+        return data
     
     def update(self, instance, validated_data):
         for attr, value in validated_data.items():

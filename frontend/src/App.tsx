@@ -1,11 +1,17 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
+import NotificationBell from './components/NotificationBell';
 import Dashboard from './pages/Dashboard';
 import Games from './pages/Games';
 import Weapons from './pages/Weapons';
 import GameSettings from './pages/GameSettings';
 import Forum from './pages/Forum';
+import ForumCategory from './pages/ForumCategory';
+import ForumTopic from './pages/ForumTopic';
+import ForumNewTopic from './pages/ForumNewTopic';
+import Leaderboard from './pages/Leaderboard';
+import ForumAdmin from './pages/ForumAdmin';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -63,6 +69,7 @@ function PublicNav() {
           <div className="flex items-center gap-2">
             {isAuthenticated ? (
               <>
+                <NotificationBell />
                 {isAdmin && (
                   <Link
                     to="/admin"
@@ -164,6 +171,11 @@ function AppContent() {
       <Route path="/weapons" element={<PublicLayout><Weapons /></PublicLayout>} />
       <Route path="/settings" element={<PublicLayout><GameSettings /></PublicLayout>} />
       <Route path="/forum" element={<PublicLayout><Forum /></PublicLayout>} />
+      <Route path="/forum/category/:slug" element={<PublicLayout><ForumCategory /></PublicLayout>} />
+      <Route path="/forum/topic/:id/:slug?" element={<PublicLayout><ForumTopic /></PublicLayout>} />
+      <Route path="/forum/new" element={<PublicLayout><ForumNewTopic /></PublicLayout>} />
+      <Route path="/leaderboard" element={<PublicLayout><Leaderboard /></PublicLayout>} />
+      <Route path="/forum/admin" element={<PublicLayout><ForumAdmin /></PublicLayout>} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       

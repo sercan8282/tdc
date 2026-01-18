@@ -198,6 +198,36 @@ def mfa_disable(request):
     )
 
 
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def mfa_reset(request):
+    """Reset MFA for the user (requires password verification)."""
+    user = request.user
+    password = request.data.get('password')
+    
+    if not password:
+        return Response(
+            {'error': 'Password is required to reset MFA'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    if not user.check_password(password):
+        return Response(
+            {'error': 'Invalid password'},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
+    
+    # Reset MFA
+    user.mfa_enabled = False
+    user.mfa_secret = None
+    user.save()
+    
+    return Response({
+        'message': 'MFA has been reset successfully. You can set it up again from your profile.',
+        'user': CustomUserSerializer(user).data
+    })
+
+
 # ============== Profile Views ==============
 
 @api_view(['GET', 'PUT'])
@@ -323,4 +353,50 @@ def change_password(request):
     return Response({
         'message': 'Password changed successfully',
         'token': token.key  # Return new token since old one is invalidated
+    })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def recent_replies(request):
+    """Get user's recent forum replies with pagination."""
+    from forum.models import Reply
+    from forum.serializers import ReplySerializer
+    from django.core.paginator import Paginator
+    
+    user = request.user
+    page_number = request.query_params.get('page', 1)
+    page_size = 20
+    
+    # Get all replies by user, ordered by most recent
+    replies = Reply.objects.filter(author=user).select_related(
+        'topic', 'topic__category', 'author', 'author__forum_stats'
+    ).order_by('-created_at')
+    
+    # Paginate
+    paginator = Paginator(replies, page_size)
+    page_obj = paginator.get_page(page_number)
+    
+    # Serialize with topic info
+    replies_data = []
+    for reply in page_obj:
+        reply_data = ReplySerializer(reply, context={'request': request}).data
+        reply_data['topic'] = {
+            'id': reply.topic.id,
+            'title': reply.topic.title,
+            'slug': reply.topic.slug,
+            'category': {
+                'name': reply.topic.category.name,
+                'slug': reply.topic.category.slug,
+            }
+        }
+        replies_data.append(reply_data)
+    
+    return Response({
+        'count': paginator.count,
+        'total_pages': paginator.num_pages,
+        'current_page': page_obj.number,
+        'has_next': page_obj.has_next(),
+        'has_previous': page_obj.has_previous(),
+        'results': replies_data
     })

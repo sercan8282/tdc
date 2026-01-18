@@ -30,6 +30,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         blank=True,
         help_text='List of favorite game names as tags'
     )
+    is_streamer = models.BooleanField(default=False)
+    stream_url = models.URLField(max_length=500, blank=True, null=True)
     is_blocked = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)  # Admin approval required
     mfa_secret = models.CharField(

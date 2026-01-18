@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { 
   User, Camera, Save, Loader, AlertCircle, CheckCircle, 
-  Lock, Eye, EyeOff, Gamepad2, X, Trash2, Plus
+  Lock, Eye, EyeOff, Gamepad2, X, Trash2, Plus, MessageSquare,
+  ChevronLeft, ChevronRight
 } from 'lucide-react';
 
 interface ProfileData {
@@ -15,9 +16,28 @@ interface ProfileData {
   full_name: string;
   avatar: string | null;
   favorite_games: string[];
+  is_streamer: boolean;
+  stream_url: string | null;
   mfa_enabled: boolean;
   created_at: string;
   updated_at: string;
+}
+
+interface RecentReply {
+  id: number;
+  content: string;
+  created_at: string;
+  is_edited: boolean;
+  likes_count: number;
+  topic: {
+    id: number;
+    title: string;
+    slug: string;
+    category: {
+      name: string;
+      slug: string;
+    };
+  };
 }
 
 export default function Profile() {
@@ -36,6 +56,8 @@ export default function Profile() {
     nickname: '',
     first_name: '',
     last_name: '',
+    is_streamer: false,
+    stream_url: '',
   });
   
   // Password change state
@@ -51,12 +73,26 @@ export default function Profile() {
   const [passwordSuccess, setPasswordSuccess] = useState<string | null>(null);
   const [changingPassword, setChangingPassword] = useState(false);
   
+  // MFA reset state
+  const [showMfaReset, setShowMfaReset] = useState(false);
+  const [mfaResetPassword, setMfaResetPassword] = useState('');
+  const [mfaResetError, setMfaResetError] = useState<string | null>(null);
+  const [mfaResetSuccess, setMfaResetSuccess] = useState<string | null>(null);
+  const [resettingMfa, setResettingMfa] = useState(false);
+  
   // Favorite games state (tags)
   const [favoriteGames, setFavoriteGames] = useState<string[]>([]);
   const [newGameTag, setNewGameTag] = useState('');
   
   // Avatar upload state
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  
+  // Recent replies state
+  const [recentReplies, setRecentReplies] = useState<RecentReply[]>([]);
+  const [repliesLoading, setRepliesLoading] = useState(false);
+  const [repliesPage, setRepliesPage] = useState(1);
+  const [repliesTotalPages, setRepliesTotalPages] = useState(0);
+  const [repliesCount, setRepliesCount] = useState(0);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -64,6 +100,7 @@ export default function Profile() {
       return;
     }
     fetchProfile();
+    fetchRecentReplies(1);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAuthenticated, navigate]);
 
@@ -80,6 +117,8 @@ export default function Profile() {
           nickname: data.nickname || '',
           first_name: data.first_name || '',
           last_name: data.last_name || '',
+          is_streamer: data.is_streamer || false,
+          stream_url: data.stream_url || '',
         });
         setFavoriteGames(data.favorite_games || []);
       } else {
@@ -89,6 +128,27 @@ export default function Profile() {
       setError('Connection error');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRecentReplies = async (page: number) => {
+    setRepliesLoading(true);
+    try {
+      const response = await fetch(`http://localhost:8000/api/auth/profile/recent-replies/?page=${page}`, {
+        headers: { 'Authorization': `Token ${token}` },
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setRecentReplies(data.results);
+        setRepliesPage(data.current_page);
+        setRepliesTotalPages(data.total_pages);
+        setRepliesCount(data.count);
+      }
+    } catch (error) {
+      console.error('Failed to load recent replies:', error);
+    } finally {
+      setRepliesLoading(false);
     }
   };
 
@@ -224,6 +284,40 @@ export default function Profile() {
     }
   };
 
+  const handleMfaReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResettingMfa(true);
+    setMfaResetError(null);
+    setMfaResetSuccess(null);
+
+    try {
+      const response = await fetch('http://localhost:8000/api/auth/mfa/reset/', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: mfaResetPassword }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setMfaResetSuccess('MFA has been reset successfully. You can set it up again.');
+        setMfaResetPassword('');
+        setShowMfaReset(false);
+        fetchProfile(); // Refresh profile to update MFA status
+        setTimeout(() => setMfaResetSuccess(null), 5000);
+      } else {
+        setMfaResetError(data.error || 'Failed to reset MFA');
+      }
+    } catch {
+      setMfaResetError('Connection error');
+    } finally {
+      setResettingMfa(false);
+    }
+  };
+
   const addGameTag = () => {
     const tag = newGameTag.trim();
     if (!tag) return;
@@ -246,6 +340,21 @@ export default function Profile() {
       e.preventDefault();
       addGameTag();
     }
+  };
+
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString();
   };
 
   if (loading) {
@@ -374,6 +483,37 @@ export default function Profile() {
                 className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+          </div>
+
+          {/* Streamer Section */}
+          <div className="mb-6 p-4 bg-slate-700/30 rounded-lg border border-slate-600">
+            <div className="flex items-center gap-3 mb-4">
+              <input
+                type="checkbox"
+                id="is_streamer"
+                checked={formData.is_streamer}
+                onChange={(e) => setFormData(prev => ({ ...prev, is_streamer: e.target.checked, stream_url: e.target.checked ? prev.stream_url : '' }))}
+                className="w-5 h-5 bg-slate-700 border-slate-600 rounded text-blue-600 focus:ring-2 focus:ring-blue-500"
+              />
+              <label htmlFor="is_streamer" className="text-sm font-medium text-slate-300 cursor-pointer">
+                I am a streamer
+              </label>
+            </div>
+            
+            {formData.is_streamer && (
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-2">Stream URL *</label>
+                <input
+                  type="url"
+                  value={formData.stream_url}
+                  onChange={(e) => setFormData(prev => ({ ...prev, stream_url: e.target.value }))}
+                  placeholder="https://twitch.tv/yourname or https://youtube.com/@yourname"
+                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required={formData.is_streamer}
+                />
+                <p className="text-slate-500 text-xs mt-1">Enter your Twitch, YouTube, or other streaming platform URL</p>
+              </div>
+            )}
           </div>
 
           {/* Favorite Games */}
@@ -534,6 +674,104 @@ export default function Profile() {
           )}
         </div>
 
+        {/* MFA Reset */}
+        {profile?.mfa_enabled && (
+          <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 mb-6">
+            <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+              <Lock className="w-5 h-5" />
+              Two-Factor Authentication
+            </h2>
+            
+            {mfaResetSuccess && (
+              <div className="mb-4 p-4 bg-green-900/20 border border-green-700 rounded-lg flex items-center gap-3">
+                <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />
+                <p className="text-green-200">{mfaResetSuccess}</p>
+              </div>
+            )}
+
+            <div className="bg-green-900/20 border border-green-700 rounded-lg p-4 mb-4">
+              <div className="flex items-center gap-2 text-green-400 mb-2">
+                <CheckCircle className="w-5 h-5" />
+                <span className="font-semibold">MFA is currently enabled</span>
+              </div>
+              <p className="text-slate-300 text-sm">
+                Your account is protected with two-factor authentication.
+              </p>
+            </div>
+
+            {!showMfaReset ? (
+              <button
+                onClick={() => setShowMfaReset(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-yellow-600/20 hover:bg-yellow-600/30 text-yellow-400 rounded-lg transition"
+              >
+                <AlertCircle className="w-4 h-4" />
+                Reset MFA
+              </button>
+            ) : (
+              <form onSubmit={handleMfaReset} className="space-y-4">
+                {mfaResetError && (
+                  <div className="p-3 bg-red-900/20 border border-red-700 rounded-lg flex items-center gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                    <p className="text-red-200 text-sm">{mfaResetError}</p>
+                  </div>
+                )}
+                
+                <div className="bg-yellow-900/20 border border-yellow-700 rounded-lg p-4">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-yellow-400 font-semibold text-sm mb-1">Warning</p>
+                      <p className="text-slate-300 text-sm">
+                        Resetting MFA will disable two-factor authentication. You'll need to set it up again to re-enable it.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Confirm your password
+                  </label>
+                  <input
+                    type="password"
+                    value={mfaResetPassword}
+                    onChange={(e) => setMfaResetPassword(e.target.value)}
+                    placeholder="Enter your password"
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    type="submit"
+                    disabled={resettingMfa || !mfaResetPassword}
+                    className="flex items-center gap-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-slate-600 text-white rounded-lg transition"
+                  >
+                    {resettingMfa ? (
+                      <Loader className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4" />
+                    )}
+                    {resettingMfa ? 'Resetting...' : 'Reset MFA'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowMfaReset(false);
+                      setMfaResetPassword('');
+                      setMfaResetError(null);
+                    }}
+                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
+
         {/* Account Info */}
         <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
           <h2 className="text-xl font-semibold text-white mb-4">Account Information</h2>
@@ -565,6 +803,89 @@ export default function Profile() {
               </span>
             </div>
           </div>
+        </div>
+
+        {/* Recent Forum Replies */}
+        <div className="bg-slate-800 rounded-lg border border-slate-700 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+              <MessageSquare className="w-5 h-5" />
+              Recent Forum Replies
+              {repliesCount > 0 && (
+                <span className="text-sm text-slate-400">({repliesCount} total)</span>
+              )}
+            </h2>
+          </div>
+
+          {repliesLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader className="w-6 h-6 animate-spin text-blue-500" />
+            </div>
+          ) : recentReplies.length === 0 ? (
+            <div className="text-center py-8 text-slate-400">
+              <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p>No forum replies yet</p>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-3">
+                {recentReplies.map((reply) => (
+                  <Link
+                    key={reply.id}
+                    to={`/forum/topic/${reply.topic.id}`}
+                    className="block p-4 bg-slate-700/30 hover:bg-slate-700/50 rounded-lg border border-slate-600 transition group"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-blue-400 group-hover:text-blue-300 font-medium truncate">
+                          {reply.topic.title}
+                        </h3>
+                        <p className="text-xs text-slate-500">
+                          {reply.topic.category.name} • {formatTimeAgo(reply.created_at)}
+                          {reply.is_edited && <span className="italic"> (edited)</span>}
+                        </p>
+                      </div>
+                      {reply.likes_count > 0 && (
+                        <span className="text-xs text-slate-400 flex items-center gap-1 ml-2">
+                          <span>👍</span> {reply.likes_count}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-slate-300 text-sm line-clamp-2">
+                      {reply.content}
+                    </p>
+                  </Link>
+                ))}
+              </div>
+
+              {/* Pagination */}
+              {repliesTotalPages > 1 && (
+                <div className="flex items-center justify-between mt-6 pt-4 border-t border-slate-700">
+                  <button
+                    onClick={() => fetchRecentReplies(repliesPage - 1)}
+                    disabled={!repliesPage || repliesPage === 1 || repliesLoading}
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 disabled:text-slate-600 text-white rounded-lg transition"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Previous
+                  </button>
+                  
+                  <span className="text-slate-400 text-sm">
+                    Page {repliesPage} of {repliesTotalPages}
+                  </span>
+                  
+                  <button
+                    onClick={() => fetchRecentReplies(repliesPage + 1)}
+                    disabled={repliesPage >= repliesTotalPages || repliesLoading}
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 disabled:bg-slate-800 disabled:text-slate-600 text-white rounded-lg transition"
+                  >
+                    Next
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>
