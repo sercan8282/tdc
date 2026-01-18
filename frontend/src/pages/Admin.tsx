@@ -295,6 +295,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
   }, [userSearch, userPage, token]);
 
   const fetchGames = useCallback(async () => {
+    console.log('=== FETCH GAMES CALLED ===');
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -311,6 +312,8 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         params.append('has_image', 'false');
       }
 
+      console.log('Fetching games with token:', token ? 'present' : 'missing', 'URL:', `http://localhost:8000/api/games/?${params}`);
+      
       const response = await fetch(`http://localhost:8000/api/games/?${params}`, {
         headers: {
           'Authorization': `Token ${token}`,
@@ -319,6 +322,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Games received:', data.count || data.length);
         setGames(data.results || data);
         setGameTotalPages(Math.ceil((data.count || data.length) / itemsPerPage));
         setSelectedGames(new Set());
