@@ -12,15 +12,16 @@ class CustomUserCreateSerializer(UserCreateSerializer):
 
 
 class CustomUserSerializer(serializers.ModelSerializer):
-    """Custom serializer that explicitly includes is_staff"""
+    """Custom serializer that explicitly includes is_staff but NEVER exposes mfa_secret"""
     class Meta:
         model = User
         fields = ('id', 'email', 'nickname', 'avatar', 'is_verified', 'is_blocked', 'is_staff', 'is_superuser', 'mfa_enabled', 'created_at')
-        read_only_fields = ('id', 'is_verified', 'is_blocked', 'is_staff', 'is_superuser', 'mfa_enabled', 'created_at')
+        read_only_fields = ('id', 'email', 'is_verified', 'is_blocked', 'is_staff', 'is_superuser', 'mfa_enabled', 'created_at')
+        # CRITICAL: mfa_secret is NOT in fields - never expose this!
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True, min_length=8)
+    password = serializers.CharField(write_only=True, min_length=12)
     password_confirm = serializers.CharField(write_only=True)
     captcha_token = serializers.CharField(write_only=True)
     captcha_answer = serializers.IntegerField(write_only=True)
@@ -30,9 +31,11 @@ class RegistrationSerializer(serializers.ModelSerializer):
         fields = ['email', 'nickname', 'password', 'password_confirm', 'captcha_token', 'captcha_answer']
 
     def validate_email(self, value):
-        if User.objects.filter(email=value).exists():
-            raise serializers.ValidationError('Email already exists')
-        return value
+        # Don't reveal if email exists (prevent user enumeration)
+        # Instead, silently handle in create()
+        if not value or '@' not in value:
+            raise serializers.ValidationError('Invalid email address')
+        return value.lower()
 
     def validate_nickname(self, value):
         if len(value) < 3:
@@ -45,6 +48,17 @@ class RegistrationSerializer(serializers.ModelSerializer):
         # Check passwords match
         if data['password'] != data['password_confirm']:
             raise serializers.ValidationError({'password_confirm': 'Passwords do not match'})
+        
+        # Password complexity check
+        password = data['password']
+        if not any(c.isupper() for c in password):
+            raise serializers.ValidationError({'password': 'Password must contain at least one uppercase letter'})
+        if not any(c.islower() for c in password):
+            raise serializers.ValidationError({'password': 'Password must contain at least one lowercase letter'})
+        if not any(c.isdigit() for c in password):
+            raise serializers.ValidationError({'password': 'Password must contain at least one number'})
+        if not any(c in '!@#$%^&*()_+-=[]{}|;:,.<>?' for c in password):
+            raise serializers.ValidationError({'password': 'Password must contain at least one special character'})
         
         # Verify captcha
         from users.services.captcha import captcha_service
@@ -63,8 +77,14 @@ class RegistrationSerializer(serializers.ModelSerializer):
         validated_data.pop('captcha_token', None)
         validated_data.pop('captcha_answer', None)
         
+        # Check if email already exists (prevent enumeration by not revealing)
+        email = validated_data['email'].lower()
+        if User.objects.filter(email=email).exists():
+            # Return existing user but don't reveal it exists
+            return User.objects.get(email=email)
+        
         user = User.objects.create_user(
-            email=validated_data['email'],
+            email=email,
             nickname=validated_data['nickname'],
             password=validated_data['password'],
             is_verified=False  # Requires admin approval

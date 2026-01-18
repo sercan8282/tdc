@@ -56,6 +56,12 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def verify_user(self, request, pk=None):
         user = self.get_object()
+        # Only superusers can verify other superusers
+        if user.is_superuser and not request.user.is_superuser:
+            return Response(
+                {'error': 'Only superusers can verify superuser accounts'},
+                status=status.HTTP_403_FORBIDDEN
+            )
         user.is_verified = True
         user.save()
         return Response({'status': 'user verified'})
@@ -75,6 +81,18 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def block_user(self, request, pk=None):
         user = self.get_object()
+        # Staff cannot block superusers
+        if user.is_superuser and not request.user.is_superuser:
+            return Response(
+                {'error': 'Only superusers can block other superusers'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        # Cannot block yourself
+        if user == request.user:
+            return Response(
+                {'error': 'You cannot block yourself'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         user.is_blocked = True
         user.save()
         return Response({'status': 'user blocked'})
@@ -89,6 +107,12 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def make_staff(self, request, pk=None):
         user = self.get_object()
+        # Cannot modify superusers
+        if user.is_superuser:
+            return Response(
+                {'error': 'Cannot modify superuser status'},
+                status=status.HTTP_403_FORBIDDEN
+            )
         user.is_staff = True
         user.save()
         return Response({'status': 'user is now staff'})
@@ -96,6 +120,12 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'])
     def remove_staff(self, request, pk=None):
         user = self.get_object()
+        # Cannot modify superusers
+        if user.is_superuser:
+            return Response(
+                {'error': 'Cannot modify superuser status'},
+                status=status.HTTP_403_FORBIDDEN
+            )
         user.is_staff = False
         user.save()
         return Response({'status': 'staff removed'})

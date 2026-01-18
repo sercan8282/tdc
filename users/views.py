@@ -126,8 +126,7 @@ def mfa_setup(request):
     
     return Response({
         'qr_code': qr_code,
-        'secret': user.mfa_secret,  # Allow manual entry
-        'message': 'Scan this QR code with your authenticator app'
+        'message': 'Scan this QR code with your authenticator app. If you need manual entry, it is shown in the QR code.'
     })
 
 
@@ -135,8 +134,35 @@ def mfa_setup(request):
 @permission_classes([IsAuthenticated])
 def mfa_verify(request):
     """Verify MFA code and enable MFA for the user."""
+    from core.security_models import SecurityEvent, RateLimitTracker
+    from core.middleware import get_client_ip
+    
     user = request.user
     code = request.data.get('code')
+    ip_address = get_client_ip(request)
+    
+    # Rate limiting: Max 5 MFA verification attempts per minute
+    is_allowed, count, time_until_reset = RateLimitTracker.check_rate_limit(
+        ip_address=ip_address,
+        endpoint='mfa_verify',
+        max_requests=5,
+        window_seconds=60
+    )
+    
+    if not is_allowed:
+        SecurityEvent.objects.create(
+            event_type='rate_limit',
+            severity='high',
+            ip_address=ip_address,
+            user=user,
+            endpoint='/api/auth/mfa/verify/',
+            method='POST',
+            details={'message': 'MFA verification rate limit exceeded', 'attempts': count}
+        )
+        return Response(
+            {'error': f'Too many attempts. Please try again in {int(time_until_reset)} seconds.'},
+            status=429
+        )
     
     if not code:
         return Response(
@@ -153,10 +179,29 @@ def mfa_verify(request):
     if mfa_service.verify_code(user.mfa_secret, code):
         user.mfa_enabled = True
         user.save()
+        
+        SecurityEvent.objects.create(
+            event_type='login_success',
+            severity='low',
+            ip_address=ip_address,
+            user=user,
+            details={'action': 'mfa_enabled'}
+        )
+        
         return Response({
             'message': 'MFA enabled successfully',
             'user': CustomUserSerializer(user).data
         })
+    
+    # Log failed MFA attempt
+    SecurityEvent.objects.create(
+        event_type='login_fail',
+        severity='medium',
+        ip_address=ip_address,
+        user=user,
+        endpoint='/api/auth/mfa/verify/',
+        details={'action': 'mfa_verification_failed'}
+    )
     
     return Response(
         {'error': 'Invalid MFA code'},
@@ -168,8 +213,12 @@ def mfa_verify(request):
 @permission_classes([IsAuthenticated])
 def mfa_disable(request):
     """Disable MFA for the user (requires current MFA code)."""
+    from core.security_models import SecurityEvent
+    from core.middleware import get_client_ip
+    
     user = request.user
     code = request.data.get('code')
+    ip_address = get_client_ip(request)
     
     if not user.mfa_enabled:
         return Response(
@@ -187,10 +236,29 @@ def mfa_disable(request):
         user.mfa_enabled = False
         user.mfa_secret = None
         user.save()
+        
+        # Log MFA disabled
+        SecurityEvent.objects.create(
+            event_type='suspicious',
+            severity='medium',
+            ip_address=ip_address,
+            user=user,
+            details={'action': 'mfa_disabled'}
+        )
+        
         return Response({
             'message': 'MFA disabled successfully',
             'user': CustomUserSerializer(user).data
         })
+    
+    # Log failed attempt
+    SecurityEvent.objects.create(
+        event_type='login_fail',
+        severity='medium',
+        ip_address=ip_address,
+        user=user,
+        details={'action': 'mfa_disable_failed'}
+    )
     
     return Response(
         {'error': 'Invalid MFA code'},

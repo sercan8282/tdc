@@ -16,8 +16,16 @@ class SiteSettingsViewSet(viewsets.ModelViewSet):
     serializer_class = SiteSettingsSerializer
 
     def get_permissions(self):
+        """Only superusers can modify settings, anyone can read"""
         if self.action in ['update', 'partial_update', 'destroy', 'create']:
-            return [IsAuthenticated()]
+            # Use custom permission to check superuser
+            from rest_framework.permissions import BasePermission
+            
+            class IsSuperUser(BasePermission):
+                def has_permission(self, request, view):
+                    return request.user and request.user.is_authenticated and request.user.is_superuser
+            
+            return [IsSuperUser()]
         return [AllowAny()]
 
     def get_queryset(self):
