@@ -27,30 +27,32 @@ class SecurityMiddleware:
     - Security event logging
     """
     
-    # Endpoints that require strict rate limiting
-    SENSITIVE_ENDPOINTS = {
-        '/api/auth/users/': {
-            'max_requests': settings.MAX_REGISTER_ATTEMPTS,
-            'window': settings.RATE_LIMIT_WINDOW,
-            'name': 'register'
-        },
-        '/api/auth/token/login/': {
-            'max_requests': settings.MAX_LOGIN_ATTEMPTS,
-            'window': settings.RATE_LIMIT_WINDOW,
-            'name': 'login'
-        },
-        '/api/auth/token/logout/': {
-            'max_requests': 10,
-            'window': 60,
-            'name': 'logout'
-        },
-    }
+    def __init__(self, get_response):
+        self.get_response = get_response
+    
+    @property
+    def SENSITIVE_ENDPOINTS(self):
+        """Load sensitive endpoints dynamically to access settings."""
+        return {
+            '/api/auth/users/': {
+                'max_requests': getattr(settings, 'MAX_REGISTER_ATTEMPTS', 3),
+                'window': getattr(settings, 'RATE_LIMIT_WINDOW', 300),
+                'name': 'register'
+            },
+            '/api/auth/token/login/': {
+                'max_requests': getattr(settings, 'MAX_LOGIN_ATTEMPTS', 5),
+                'window': getattr(settings, 'RATE_LIMIT_WINDOW', 300),
+                'name': 'login'
+            },
+            '/api/auth/token/logout/': {
+                'max_requests': 10,
+                'window': 60,
+                'name': 'logout'
+            },
+        }
     
     # Patterns for API endpoints (general rate limiting)
     API_PATTERN = re.compile(r'^/api/')
-    
-    def __init__(self, get_response):
-        self.get_response = get_response
     
     def __call__(self, request):
         ip_address = get_client_ip(request)
@@ -112,7 +114,7 @@ class SecurityMiddleware:
             is_allowed, count, time_until_reset = RateLimitTracker.check_rate_limit(
                 ip_address=ip_address,
                 endpoint='api_general',
-                max_requests=settings.MAX_API_CALLS_PER_MINUTE,
+                max_requests=getattr(settings, 'MAX_API_CALLS_PER_MINUTE', 60),
                 window_seconds=60
             )
             
@@ -127,7 +129,7 @@ class SecurityMiddleware:
                 )
                 
                 # Check for potential DDoS
-                if count > settings.MAX_API_CALLS_PER_MINUTE * 3:
+                if count > getattr(settings, 'MAX_API_CALLS_PER_MINUTE', 60) * 3:
                     self._auto_block_ip(ip_address, "Potential DDoS attack", count)
                     SecurityEvent.objects.create(
                         event_type='ddos',
@@ -184,7 +186,7 @@ class SecurityMiddleware:
         ).count()
         
         # Auto-block if threshold exceeded
-        if recent_fails >= settings.AUTO_BLOCK_THRESHOLD:
+        if recent_fails >= getattr(settings, 'AUTO_BLOCK_THRESHOLD', 10):
             self._auto_block_ip(ip_address, "Brute force login attempts", recent_fails)
             SecurityEvent.objects.create(
                 event_type='brute_force',
@@ -199,5 +201,5 @@ class SecurityMiddleware:
             ip_address=ip_address,
             reason='auto',
             details=f"{reason} ({attempt_count} attempts)",
-            duration_hours=settings.BLOCK_DURATION_HOURS
+            duration_hours=getattr(settings, 'BLOCK_DURATION_HOURS', 24)
         )
