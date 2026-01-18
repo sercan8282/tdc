@@ -111,7 +111,7 @@ class GameViewSet(viewsets.ModelViewSet):
         queryset = Game.objects.all()
         
         # Check if user is admin
-        is_admin = self.request.user and self.request.user.is_staff
+        is_admin = self.request.user and self.request.user.is_authenticated and self.request.user.is_staff
         
         # If 'all' parameter is passed and user is admin, show all games
         show_all = self.request.query_params.get('all', 'false').lower() == 'true'
@@ -127,10 +127,9 @@ class GameViewSet(viewsets.ModelViewSet):
         if is_admin and show_all:
             return queryset
         
-        # For non-admin or when not requesting all, only show active games
-        is_active_filter = self.request.query_params.get('is_active', None)
-        if is_active_filter is None and not is_admin:
-            queryset = queryset.filter(is_active=True)
+        # Default behavior: only show active games
+        # Admin needs to explicitly pass ?all=true to see inactive games
+        queryset = queryset.filter(is_active=True)
         
         return queryset
 
@@ -230,10 +229,10 @@ class GameViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
     def fetch_settings(self, request, pk=None):
         """Fetch and create game settings definitions"""
-        from core.services.game_settings_fetch import game_settings_service
+        from core.services.game_settings_fetch import game_settings_fetch_service
         
         game = self.get_object()
-        result = game_settings_service.fetch_settings_for_game(game)
+        result = game_settings_fetch_service.fetch_settings_for_game(game)
         return Response(result)
 
     @action(detail=False, methods=['get'], permission_classes=[IsAdminUser])
