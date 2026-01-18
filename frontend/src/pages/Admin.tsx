@@ -23,7 +23,16 @@ interface Game {
   description?: string;
   image?: string;
   is_active: boolean;
+  game_type: 'shooter' | 'racing' | 'sports' | 'rpg' | 'strategy' | 'simulation' | 'adventure' | 'other';
+  is_shooter?: boolean;
+  can_fetch_weapons?: boolean;
   created_at: string;
+}
+
+interface ImageSearchResult {
+  url: string;
+  source: string;
+  thumbnail?: string;
 }
 
 interface Category {
@@ -42,6 +51,7 @@ interface Weapon {
   image: string;
   text_color: string;
   image_size: 'small' | 'medium' | 'large';
+  is_active: boolean;
   created_at: string;
 }
 
@@ -50,8 +60,19 @@ interface Attachment {
   name: string;
   weapon: number;
   weapon_name?: string;
-  type: 'Muzzle' | 'Optic' | 'Stock' | 'Grip' | 'Magazine' | 'Underbarrel' | 'Ammunition' | 'Perk';
+  attachment_type: number | null;
+  attachment_type_name?: string;
+  type?: string;
+  type_name?: string;
   image?: string;
+  created_at: string;
+}
+
+interface AttachmentType {
+  id: number;
+  name: string;
+  display_name: string;
+  order: number;
   created_at: string;
 }
 
@@ -85,7 +106,7 @@ interface GameSettingProfile {
   updated_at: string;
 }
 
-type AdminTab = 'users' | 'games' | 'categories' | 'weapons' | 'attachments' | 'settings' | 'game-settings';
+type AdminTab = 'users' | 'games' | 'categories' | 'weapons' | 'attachments' | 'attachment-types' | 'settings' | 'game-settings';
 
 export default function Admin({ initialTab = 'users' }: { initialTab?: string | AdminTab }) {
   const { token } = useAuth();
@@ -104,12 +125,20 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
   
   // Games state
   const [games, setGames] = useState<Game[]>([]);
+  const [selectedGames, setSelectedGames] = useState<Set<number>>(new Set());
   const [gameSearch, setGameSearch] = useState('');
   const [gamePage, setGamePage] = useState(1);
   const [gameTotalPages, setGameTotalPages] = useState(1);
-  const [gameForm, setGameForm] = useState<{ id: number | null; name: string; slug: string; description: string; is_active: boolean; image: File | null }>({ id: null, name: '', slug: '', description: '', is_active: true, image: null });
+  const [gameForm, setGameForm] = useState<{ id: number | null; name: string; slug: string; description: string; is_active: boolean; game_type: string; image: File | null }>({ id: null, name: '', slug: '', description: '', is_active: false, game_type: 'other', image: null });
   const [showGameForm, setShowGameForm] = useState(false);
   const [gameImagePreview, setGameImagePreview] = useState<string | null>(null);
+  const [imageSearchResults, setImageSearchResults] = useState<ImageSearchResult[]>([]);
+  const [showImageSearchModal, setShowImageSearchModal] = useState(false);
+  const [imageSearchLoading, setImageSearchLoading] = useState(false);
+  const [imageSearchGame, setImageSearchGame] = useState<Game | null>(null);
+  const [gameImageFilter, setGameImageFilter] = useState<'all' | 'with' | 'without'>('all');
+  const [fetchingWeapons, setFetchingWeapons] = useState<number | null>(null);
+  const [fetchingSettings, setFetchingSettings] = useState<number | null>(null);
   
   // Categories state
   const [categories, setCategories] = useState<Category[]>([]);
@@ -121,9 +150,11 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
   
   // Weapons state
   const [weapons, setWeapons] = useState<Weapon[]>([]);
+  const [selectedWeapons, setSelectedWeapons] = useState<Set<number>>(new Set());
   const [weaponSearch, setWeaponSearch] = useState('');
   const [weaponPage, setWeaponPage] = useState(1);
   const [weaponTotalPages, setWeaponTotalPages] = useState(1);
+  const [weaponImageFilter, setWeaponImageFilter] = useState<'all' | 'with' | 'without'>('all');
   const [weaponForm, setWeaponForm] = useState<{ 
     id: number | null; 
     name: string; 
@@ -131,7 +162,8 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
     image: File | null; 
     text_color: string; 
     image_size: 'small' | 'medium' | 'large';
-  }>({ id: null, name: '', category: null, image: null, text_color: '#FFFFFF', image_size: 'medium' });
+    is_active: boolean;
+  }>({ id: null, name: '', category: null, image: null, text_color: '#FFFFFF', image_size: 'medium', is_active: false });
   const [showWeaponForm, setShowWeaponForm] = useState(false);
   const [showCopyWeaponModal, setShowCopyWeaponModal] = useState(false);
   const [copyWeaponData, setCopyWeaponData] = useState<{ weapon: Weapon | null; newName: string }>({ weapon: null, newName: '' });
@@ -145,15 +177,25 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
     id: number | null; 
     name: string; 
     weapon: number | null; 
-    type: Attachment['type'] | '';
+    attachment_type: number | null;
     image: File | null;
-  }>({ id: null, name: '', weapon: null, type: '', image: null });
+  }>({ id: null, name: '', weapon: null, attachment_type: null, image: null });
   const [showAttachmentForm, setShowAttachmentForm] = useState(false);
   const [attachmentImagePreview, setAttachmentImagePreview] = useState<string | null>(null);
   const [expandedWeaponsInAttachments, setExpandedWeaponsInAttachments] = useState<Set<number>>(new Set());
   const [weaponSearchQuery, setWeaponSearchQuery] = useState('');
   const [showWeaponDropdown, setShowWeaponDropdown] = useState(false);
   const weaponDropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Attachment Types state
+  const [attachmentTypes, setAttachmentTypes] = useState<AttachmentType[]>([]);
+  const [attachmentTypeForm, setAttachmentTypeForm] = useState<{
+    id: number | null;
+    name: string;
+    display_name: string;
+    order: number;
+  }>({ id: null, name: '', display_name: '', order: 0 });
+  const [showAttachmentTypeForm, setShowAttachmentTypeForm] = useState(false);
   
   // Click outside handler for weapon dropdown
   useEffect(() => {
@@ -259,7 +301,15 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         search: gameSearch,
         page: gamePage.toString(),
         page_size: itemsPerPage.toString(),
+        all: 'true',
       });
+      
+      // Add has_image filter
+      if (gameImageFilter === 'with') {
+        params.append('has_image', 'true');
+      } else if (gameImageFilter === 'without') {
+        params.append('has_image', 'false');
+      }
 
       const response = await fetch(`http://localhost:8000/api/games/?${params}`, {
         headers: {
@@ -271,13 +321,14 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         const data = await response.json();
         setGames(data.results || data);
         setGameTotalPages(Math.ceil((data.count || data.length) / itemsPerPage));
+        setSelectedGames(new Set());
       }
     } catch (error) {
       console.error('Failed to fetch games:', error);
     } finally {
       setLoading(false);
     }
-  }, [gameSearch, gamePage, token]);
+  }, [gameSearch, gamePage, gameImageFilter, token]);
 
   const fetchCategories = useCallback(async () => {
     setLoading(true);
@@ -313,7 +364,15 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         search: weaponSearch,
         page: weaponPage.toString(),
         page_size: itemsPerPage.toString(),
+        all: 'true', // Admin sees all weapons including inactive
       });
+      
+      // Add has_image filter
+      if (weaponImageFilter === 'with') {
+        params.append('has_image', 'true');
+      } else if (weaponImageFilter === 'without') {
+        params.append('has_image', 'false');
+      }
 
       const response = await fetch(`http://localhost:8000/api/weapons/?${params}`, {
         headers: {
@@ -331,7 +390,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
     } finally {
       setLoading(false);
     }
-  }, [weaponSearch, weaponPage, token]);
+  }, [weaponSearch, weaponPage, weaponImageFilter, token]);
 
   const fetchAttachments = useCallback(async () => {
     setLoading(true);
@@ -359,6 +418,22 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
       setLoading(false);
     }
   }, [attachmentSearch, attachmentPage, token]);
+
+  // Fetch attachment types
+  const fetchAttachmentTypes = useCallback(async () => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/attachment-types/?page_size=100`, {
+        headers: { 'Authorization': `Token ${token}` },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAttachmentTypes(data.results || data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch attachment types:', error);
+    }
+  }, [token]);
 
   // Fetch game setting definitions
   const fetchSettingDefinitions = useCallback(async (gameId?: number) => {
@@ -478,8 +553,17 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
   useEffect(() => {
     if (activeTab === 'attachments') {
       fetchAttachments();
+      fetchAttachmentTypes();
+      fetchWeapons(); // Needed for weapon name lookups
     }
-  }, [attachmentSearch, attachmentPage, activeTab, fetchAttachments]);
+  }, [attachmentSearch, attachmentPage, activeTab, fetchAttachments, fetchAttachmentTypes, fetchWeapons]);
+
+  // Attachment Types Effects
+  useEffect(() => {
+    if (activeTab === 'attachment-types') {
+      fetchAttachmentTypes();
+    }
+  }, [activeTab, fetchAttachmentTypes]);
 
   // Game Settings Effects
   useEffect(() => {
@@ -627,9 +711,17 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
       
       const formData = new FormData();
       formData.append('name', gameForm.name);
-      formData.append('slug', gameForm.slug || gameForm.name.toLowerCase().replace(/\s+/g, '-'));
+      // Generate slug: lowercase, replace spaces with dashes, remove special characters
+      const generatedSlug = gameForm.slug || gameForm.name
+        .toLowerCase()
+        .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and dashes
+        .replace(/\s+/g, '-')          // Replace spaces with dashes
+        .replace(/-+/g, '-')           // Replace multiple dashes with single dash
+        .replace(/^-|-$/g, '');        // Remove leading/trailing dashes
+      formData.append('slug', generatedSlug);
       formData.append('description', gameForm.description);
       formData.append('is_active', gameForm.is_active.toString());
+      formData.append('game_type', gameForm.game_type);
       if (gameForm.image) {
         formData.append('image', gameForm.image);
       }
@@ -644,7 +736,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
 
       if (response.ok) {
         setShowGameForm(false);
-        setGameForm({ id: null, name: '', slug: '', description: '', is_active: true, image: null });
+        setGameForm({ id: null, name: '', slug: '', description: '', is_active: false, game_type: 'other', image: null });
         setGameImagePreview(null);
         fetchGames();
       }
@@ -660,6 +752,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
       slug: game.slug,
       description: game.description || '',
       is_active: game.is_active,
+      game_type: game.game_type || 'other',
       image: null,
     });
     setGameImagePreview(game.image || null);
@@ -668,8 +761,216 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
 
   const handleCancelGameForm = () => {
     setShowGameForm(false);
-    setGameForm({ id: null, name: '', slug: '', description: '', is_active: true, image: null });
+    setGameForm({ id: null, name: '', slug: '', description: '', is_active: false, game_type: 'other', image: null });
     setGameImagePreview(null);
+  };
+
+  const handleToggleGameActive = async (game: Game) => {
+    try {
+      const endpoint = game.is_active ? 'deactivate' : 'activate';
+      const response = await fetch(`http://localhost:8000/api/games/${game.id}/${endpoint}/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        setGames(prev => prev.map(g => 
+          g.id === game.id ? { ...g, is_active: !g.is_active } : g
+        ));
+      }
+    } catch (err) {
+      console.error('Failed to toggle game active status:', err);
+    }
+  };
+
+  const handleBulkActivateGames = async () => {
+    const gameIds = selectedGames.size > 0 
+      ? Array.from(selectedGames) 
+      : games.map(g => g.id);
+    
+    if (gameIds.length === 0) return;
+    
+    try {
+      const response = await fetch(`http://localhost:8000/api/games/bulk_activate/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ids: gameIds }),
+      });
+
+      if (response.ok) {
+        setGames(prev => prev.map(g => 
+          gameIds.includes(g.id) ? { ...g, is_active: true } : g
+        ));
+        setSelectedGames(new Set());
+      } else {
+        console.error('Failed to bulk activate games');
+      }
+    } catch (err) {
+      console.error('Failed to bulk activate games:', err);
+    }
+  };
+
+  const handleBulkDeactivateGames = async () => {
+    const gameIds = selectedGames.size > 0 
+      ? Array.from(selectedGames) 
+      : games.map(g => g.id);
+    
+    if (gameIds.length === 0) return;
+    
+    try {
+      const response = await fetch(`http://localhost:8000/api/games/bulk_deactivate/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ids: gameIds }),
+      });
+
+      if (response.ok) {
+        setGames(prev => prev.map(g => 
+          gameIds.includes(g.id) ? { ...g, is_active: false } : g
+        ));
+        setSelectedGames(new Set());
+      } else {
+        console.error('Failed to bulk deactivate games');
+      }
+    } catch (err) {
+      console.error('Failed to bulk deactivate games:', err);
+    }
+  };
+
+  // Image search functions
+  const handleSearchImages = async (game: Game) => {
+    setImageSearchGame(game);
+    setImageSearchLoading(true);
+    setShowImageSearchModal(true);
+    setImageSearchResults([]);
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/games/search_images/?name=${encodeURIComponent(game.name)}`,
+        {
+          headers: {
+            'Authorization': `Token ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setImageSearchResults(data.results || []);
+      } else {
+        console.error('Failed to search images');
+      }
+    } catch (error) {
+      console.error('Failed to search images:', error);
+    } finally {
+      setImageSearchLoading(false);
+    }
+  };
+
+  const handleSelectImage = async (imageUrl: string) => {
+    if (!imageSearchGame) return;
+
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/games/${imageSearchGame.id}/set_image_from_url/`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Token ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ url: imageUrl }),
+        }
+      );
+
+      if (response.ok) {
+        setShowImageSearchModal(false);
+        setImageSearchGame(null);
+        setImageSearchResults([]);
+        fetchGames();
+      } else {
+        const error = await response.json();
+        console.error('Failed to set image:', error);
+        alert('Failed to set image: ' + (error.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Failed to set image:', error);
+    }
+  };
+
+  // Fetch weapons for shooter games
+  const handleFetchWeapons = async (game: Game) => {
+    if (!game.is_shooter) {
+      alert('Weapons can only be fetched for shooter games');
+      return;
+    }
+
+    setFetchingWeapons(game.id);
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/games/${game.id}/fetch_weapons/`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Token ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok) {
+        alert(`Weapons fetched successfully!\n\nCategories created: ${data.categories_created}\nWeapons created: ${data.weapons_created}\nSkipped (duplicates): ${data.skipped}`);
+        fetchCategories();
+        fetchWeapons();
+      } else {
+        alert('Failed to fetch weapons: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Failed to fetch weapons:', error);
+      alert('Failed to fetch weapons');
+    } finally {
+      setFetchingWeapons(null);
+    }
+  };
+
+  // Fetch settings for game
+  const handleFetchSettings = async (game: Game) => {
+    setFetchingSettings(game.id);
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/games/${game.id}/fetch_settings/`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Token ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok) {
+        alert(`Settings fetched successfully!\n\nSettings created: ${data.settings_created}\nSkipped (existing): ${data.skipped}`);
+        // Refresh settings if we're viewing them for this game
+        if (selectedGameForSettings === game.id) {
+          fetchSettingDefinitions(game.id);
+        }
+      } else {
+        alert('Failed to fetch settings: ' + (data.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Failed to fetch settings:', error);
+      alert('Failed to fetch settings');
+    } finally {
+      setFetchingSettings(null);
+    }
   };
 
   const handleSaveCategory = async () => {
@@ -728,6 +1029,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
       formData.append('category', weaponForm.category.toString());
       formData.append('text_color', weaponForm.text_color);
       formData.append('image_size', weaponForm.image_size);
+      formData.append('is_active', weaponForm.is_active.toString());
       
       if (weaponForm.image instanceof File) {
         formData.append('image', weaponForm.image);
@@ -749,7 +1051,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
 
       if (response.ok) {
         setShowWeaponForm(false);
-        setWeaponForm({ id: null, name: '', category: null, image: null, text_color: '#FFFFFF', image_size: 'medium' });
+        setWeaponForm({ id: null, name: '', category: null, image: null, text_color: '#FFFFFF', image_size: 'medium', is_active: false });
         fetchWeapons();
       } else {
         const errorData = await response.json();
@@ -775,13 +1077,99 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
       image: null,
       text_color: weapon.text_color,
       image_size: weapon.image_size,
+      is_active: weapon.is_active,
     });
     setShowWeaponForm(true);
   };
 
+  const handleToggleWeaponActive = async (weapon: Weapon) => {
+    try {
+      const action = weapon.is_active ? 'deactivate' : 'activate';
+      const response = await fetch(`http://localhost:8000/api/weapons/${weapon.id}/${action}/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        // Update the weapon in the local state
+        setWeapons(prev => prev.map(w => 
+          w.id === weapon.id ? { ...w, is_active: !weapon.is_active } : w
+        ));
+      } else {
+        console.error('Failed to toggle weapon active status');
+      }
+    } catch (err) {
+      console.error('Failed to toggle weapon active status:', err);
+    }
+  };
+
+  const handleBulkActivateWeapons = async () => {
+    const weaponIds = selectedWeapons.size > 0 
+      ? Array.from(selectedWeapons) 
+      : weapons.map(w => w.id);
+    
+    if (weaponIds.length === 0) return;
+    
+    try {
+      const response = await fetch(`http://localhost:8000/api/weapons/bulk_activate/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ids: weaponIds }),
+      });
+
+      if (response.ok) {
+        // Update weapons in the local state
+        setWeapons(prev => prev.map(w => 
+          weaponIds.includes(w.id) ? { ...w, is_active: true } : w
+        ));
+        setSelectedWeapons(new Set());
+      } else {
+        console.error('Failed to bulk activate weapons');
+      }
+    } catch (err) {
+      console.error('Failed to bulk activate weapons:', err);
+    }
+  };
+
+  const handleBulkDeactivateWeapons = async () => {
+    const weaponIds = selectedWeapons.size > 0 
+      ? Array.from(selectedWeapons) 
+      : weapons.map(w => w.id);
+    
+    if (weaponIds.length === 0) return;
+    
+    try {
+      const response = await fetch(`http://localhost:8000/api/weapons/bulk_deactivate/`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ids: weaponIds }),
+      });
+
+      if (response.ok) {
+        // Update weapons in the local state
+        setWeapons(prev => prev.map(w => 
+          weaponIds.includes(w.id) ? { ...w, is_active: false } : w
+        ));
+        setSelectedWeapons(new Set());
+      } else {
+        console.error('Failed to bulk deactivate weapons');
+      }
+    } catch (err) {
+      console.error('Failed to bulk deactivate weapons:', err);
+    }
+  };
+
   const handleCancelWeaponForm = () => {
     setShowWeaponForm(false);
-    setWeaponForm({ id: null, name: '', category: null, image: null, text_color: '#FFFFFF', image_size: 'medium' });
+    setWeaponForm({ id: null, name: '', category: null, image: null, text_color: '#FFFFFF', image_size: 'medium', is_active: false });
     setError(null);
   };
 
@@ -883,7 +1271,9 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
           const attachmentFormData = new FormData();
           attachmentFormData.append('name', attachment.name);
           attachmentFormData.append('weapon', newWeapon.id.toString());
-          attachmentFormData.append('type', attachment.type);
+          if (attachment.attachment_type) {
+            attachmentFormData.append('attachment_type', attachment.attachment_type.toString());
+          }
           
           // Copy attachment image if exists
           if (attachment.image) {
@@ -922,7 +1312,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
   };
 
   const handleSaveAttachment = async () => {
-    if (!attachmentForm.name.trim() || !attachmentForm.weapon || !attachmentForm.type) return;
+    if (!attachmentForm.name.trim() || !attachmentForm.weapon || !attachmentForm.attachment_type) return;
     setError(null);
 
     try {
@@ -935,7 +1325,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
       const formData = new FormData();
       formData.append('name', attachmentForm.name);
       formData.append('weapon', attachmentForm.weapon.toString());
-      formData.append('type', attachmentForm.type);
+      formData.append('attachment_type', attachmentForm.attachment_type.toString());
       if (attachmentForm.image) {
         formData.append('image', attachmentForm.image);
       }
@@ -950,7 +1340,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
 
       if (response.ok) {
         setShowAttachmentForm(false);
-        setAttachmentForm({ id: null, name: '', weapon: null, type: '', image: null });
+        setAttachmentForm({ id: null, name: '', weapon: null, attachment_type: null, image: null });
         setAttachmentImagePreview(null);
         setWeaponSearchQuery('');
         setShowWeaponDropdown(false);
@@ -976,7 +1366,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
       id: attachment.id,
       name: attachment.name,
       weapon: attachment.weapon,
-      type: attachment.type,
+      attachment_type: attachment.attachment_type,
       image: null,
     });
     setAttachmentImagePreview(attachment.image || null);
@@ -987,10 +1377,106 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
 
   const handleCancelAttachmentForm = () => {
     setShowAttachmentForm(false);
-    setAttachmentForm({ id: null, name: '', weapon: null, type: '', image: null });
+    setAttachmentForm({ id: null, name: '', weapon: null, attachment_type: null, image: null });
     setAttachmentImagePreview(null);
     setWeaponSearchQuery('');
     setShowWeaponDropdown(false);
+    setError(null);
+  };
+
+  const handleDeleteAllAttachmentsForWeapon = async (weaponId: number, weaponName: string) => {
+    const weaponAttachments = attachments.filter(a => a.weapon === weaponId);
+    if (!confirm(`Are you sure you want to delete all ${weaponAttachments.length} attachments for "${weaponName}"? This action cannot be undone.`)) return;
+    
+    try {
+      setError(null);
+      const token = localStorage.getItem('token');
+      
+      // Delete all attachments for this weapon
+      for (const attachment of weaponAttachments) {
+        await fetch(`http://localhost:8000/api/attachments/${attachment.id}/`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Token ${token}`,
+          },
+        });
+      }
+      
+      // Refresh attachments list
+      fetchAttachments();
+    } catch (err) {
+      console.error('Failed to delete attachments:', err);
+      setError('Failed to delete attachments');
+    }
+  };
+
+  // Attachment Type Handlers
+  const handleSaveAttachmentType = async () => {
+    try {
+      setError(null);
+      const token = localStorage.getItem('token');
+      const data = {
+        name: attachmentTypeForm.name,
+        display_name: attachmentTypeForm.display_name,
+        order: attachmentTypeForm.order
+      };
+
+      if (attachmentTypeForm.id) {
+        await axios.put(
+          `${API_BASE_URL}/api/attachment-types/${attachmentTypeForm.id}/`,
+          data,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      } else {
+        await axios.post(
+          `${API_BASE_URL}/api/attachment-types/`,
+          data,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
+      setShowAttachmentTypeForm(false);
+      setAttachmentTypeForm({ id: null, name: '', display_name: '', order: 0 });
+      fetchAttachmentTypes();
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.detail || err.response?.data?.message || 'Failed to save attachment type');
+      } else {
+        setError('Failed to save attachment type');
+      }
+    }
+  };
+
+  const handleEditAttachmentType = (attachmentType: AttachmentType) => {
+    setAttachmentTypeForm({
+      id: attachmentType.id,
+      name: attachmentType.name,
+      display_name: attachmentType.display_name,
+      order: attachmentType.order
+    });
+    setShowAttachmentTypeForm(true);
+  };
+
+  const handleDeleteAttachmentType = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this attachment type? This may affect existing attachments.')) return;
+    try {
+      setError(null);
+      const token = localStorage.getItem('token');
+      await axios.delete(`${API_BASE_URL}/api/attachment-types/${id}/`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      fetchAttachmentTypes();
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.detail || 'Failed to delete attachment type');
+      } else {
+        setError('Failed to delete attachment type');
+      }
+    }
+  };
+
+  const handleCancelAttachmentTypeForm = () => {
+    setShowAttachmentTypeForm(false);
+    setAttachmentTypeForm({ id: null, name: '', display_name: '', order: 0 });
     setError(null);
   };
 
@@ -1458,22 +1944,52 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
             <div className="mb-8 flex justify-between items-start">
               <div>
                 <h1 className="text-3xl font-bold text-white mb-2">Games Management</h1>
-                <p className="text-slate-400">Manage all games in the system</p>
+                <p className="text-slate-400">Manage all games in the system - Games are inactive by default</p>
               </div>
-              <button
-                onClick={() => setShowGameForm(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-              >
-                <Plus className="w-4 h-4" /> Add Game
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleBulkActivateGames}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                  title={selectedGames.size > 0 ? `Activate ${selectedGames.size} selected games` : "Activate all games on current page"}
+                >
+                  <Check className="w-4 h-4" /> {selectedGames.size > 0 ? `Activate (${selectedGames.size})` : 'Activate All'}
+                </button>
+                <button
+                  onClick={handleBulkDeactivateGames}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                  title={selectedGames.size > 0 ? `Deactivate ${selectedGames.size} selected games` : "Deactivate all games on current page"}
+                >
+                  <Ban className="w-4 h-4" /> {selectedGames.size > 0 ? `Deactivate (${selectedGames.size})` : 'Deactivate All'}
+                </button>
+                <button
+                  onClick={() => setShowGameForm(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                >
+                  <Plus className="w-4 h-4" /> Add Game
+                </button>
+              </div>
             </div>
 
-            <div className="mb-6">
-              <SearchBar 
-                value={gameSearch}
-                onChange={handleGameSearchChange}
-                placeholder="Search games..."
-              />
+            <div className="mb-6 flex gap-4 items-center">
+              <div className="flex-1">
+                <SearchBar 
+                  value={gameSearch}
+                  onChange={handleGameSearchChange}
+                  placeholder="Search games..."
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-slate-400">Image:</label>
+                <select
+                  value={gameImageFilter}
+                  onChange={(e) => setGameImageFilter(e.target.value as 'all' | 'with' | 'without')}
+                  className="px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
+                >
+                  <option value="all">All</option>
+                  <option value="with">With Image</option>
+                  <option value="without">No Image</option>
+                </select>
+              </div>
             </div>
 
             {loading ? (
@@ -1486,26 +2002,81 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-slate-700 bg-slate-900">
+                        <th className="px-4 py-4 text-left">
+                          <input
+                            type="checkbox"
+                            checked={games.length > 0 && selectedGames.size === games.length}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedGames(new Set(games.map(g => g.id)));
+                              } else {
+                                setSelectedGames(new Set());
+                              }
+                            }}
+                            className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-800"
+                          />
+                        </th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Image</th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Name</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Type</th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Slug</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Status</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Active</th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Created</th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {games.map((game) => (
-                        <tr key={game.id} className="border-b border-slate-700 hover:bg-slate-700/50">
+                        <tr key={game.id} className={`border-b border-slate-700 hover:bg-slate-700/50 ${!game.is_active ? 'opacity-50' : ''}`}>
+                          <td className="px-4 py-4">
+                            <input
+                              type="checkbox"
+                              checked={selectedGames.has(game.id)}
+                              onChange={(e) => {
+                                const newSelected = new Set(selectedGames);
+                                if (e.target.checked) {
+                                  newSelected.add(game.id);
+                                } else {
+                                  newSelected.delete(game.id);
+                                }
+                                setSelectedGames(newSelected);
+                              }}
+                              className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-800"
+                            />
+                          </td>
+                          <td className="px-6 py-4 text-sm">
+                            {game.image ? (
+                              <img src={game.image} alt={game.name} className="w-12 h-12 rounded object-cover" />
+                            ) : (
+                              <div className="w-12 h-12 rounded bg-slate-700 flex items-center justify-center">
+                                <span className="text-xs text-slate-500">No img</span>
+                              </div>
+                            )}
+                          </td>
                           <td className="px-6 py-4 text-sm text-white">{game.name}</td>
+                          <td className="px-6 py-4 text-sm">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                              game.game_type === 'shooter' ? 'bg-orange-900/30 text-orange-400' :
+                              game.game_type === 'racing' ? 'bg-blue-900/30 text-blue-400' :
+                              game.game_type === 'sports' ? 'bg-green-900/30 text-green-400' :
+                              game.game_type === 'rpg' ? 'bg-purple-900/30 text-purple-400' :
+                              'bg-slate-900/30 text-slate-400'
+                            }`}>
+                              {game.game_type || 'other'}
+                            </span>
+                          </td>
                           <td className="px-6 py-4 text-sm text-slate-300">{game.slug}</td>
                           <td className="px-6 py-4 text-sm">
-                            <span className={`inline-flex items-center px-2 py-1 rounded text-xs ${
-                              game.is_active
-                                ? 'bg-green-900/30 text-green-400'
-                                : 'bg-red-900/30 text-red-400'
-                            }`}>
+                            <button
+                              onClick={() => handleToggleGameActive(game)}
+                              className={`px-3 py-1 rounded-full text-xs font-medium transition ${
+                                game.is_active
+                                  ? 'bg-green-900/30 text-green-400 hover:bg-green-900/50'
+                                  : 'bg-red-900/30 text-red-400 hover:bg-red-900/50'
+                              }`}
+                            >
                               {game.is_active ? 'Active' : 'Inactive'}
-                            </span>
+                            </button>
                           </td>
                           <td className="px-6 py-4 text-sm text-slate-400">
                             {new Date(game.created_at).toLocaleDateString()}
@@ -1513,22 +2084,44 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                           <td className="px-6 py-4 text-sm">
                             <div className="flex gap-2">
                               <button
+                                onClick={() => handleSearchImages(game)}
+                                className="text-purple-400 hover:text-purple-300 transition"
+                                title="Search Images"
+                              >
+                                <Search className="w-4 h-4" />
+                              </button>
+                              {game.is_shooter && game.can_fetch_weapons && (
+                                <button
+                                  onClick={() => handleFetchWeapons(game)}
+                                  disabled={fetchingWeapons === game.id}
+                                  className="text-orange-400 hover:text-orange-300 transition disabled:opacity-50"
+                                  title="Fetch Weapons"
+                                >
+                                  {fetchingWeapons === game.id ? (
+                                    <Loader className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <span className="text-xs font-bold">W</span>
+                                  )}
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleFetchSettings(game)}
+                                disabled={fetchingSettings === game.id}
+                                className="text-cyan-400 hover:text-cyan-300 transition disabled:opacity-50"
+                                title="Fetch Settings"
+                              >
+                                {fetchingSettings === game.id ? (
+                                  <Loader className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <span className="text-xs font-bold">S</span>
+                                )}
+                              </button>
+                              <button
                                 onClick={() => handleEditGame(game)}
                                 className="text-blue-400 hover:text-blue-300 transition"
                                 title="Edit"
                               >
                                 <Edit className="w-4 h-4" />
-                              </button>
-                              <button
-                                onClick={() => handleActionClick('game_toggle', undefined, game)}
-                                className={`transition ${
-                                  game.is_active
-                                    ? 'text-yellow-400 hover:text-yellow-300'
-                                    : 'text-green-400 hover:text-green-300'
-                                }`}
-                                title={game.is_active ? 'Deactivate' : 'Activate'}
-                              >
-                                <Ban className="w-4 h-4" />
                               </button>
                               <button
                                 onClick={() => handleActionClick('game_delete', undefined, game)}
@@ -1626,6 +2219,27 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
 
                     <div>
                       <label className="block text-sm font-medium text-slate-300 mb-2">
+                        Game Type *
+                      </label>
+                      <select
+                        value={gameForm.game_type}
+                        onChange={(e) => setGameForm({ ...gameForm, game_type: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:border-blue-500"
+                      >
+                        <option value="shooter">Shooter</option>
+                        <option value="racing">Racing</option>
+                        <option value="sports">Sports</option>
+                        <option value="rpg">RPG</option>
+                        <option value="strategy">Strategy</option>
+                        <option value="simulation">Simulation</option>
+                        <option value="adventure">Adventure</option>
+                        <option value="other">Other</option>
+                      </select>
+                      <p className="text-xs text-slate-400 mt-1">Shooter games can have weapons auto-fetched</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">
                         Image (optional)
                       </label>
                       <div className="flex items-center gap-4">
@@ -1668,6 +2282,68 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                       Cancel
                     </button>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {/* Image Search Modal */}
+            {showImageSearchModal && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 w-[600px] max-h-[80vh] overflow-y-auto">
+                  <div className="flex justify-between items-center mb-4">
+                    <h2 className="text-xl font-bold text-white">
+                      Search Images for: {imageSearchGame?.name}
+                    </h2>
+                    <button
+                      onClick={() => {
+                        setShowImageSearchModal(false);
+                        setImageSearchGame(null);
+                        setImageSearchResults([]);
+                      }}
+                      className="text-slate-400 hover:text-white"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  {imageSearchLoading ? (
+                    <div className="flex flex-col items-center justify-center py-12">
+                      <Loader className="w-8 h-8 animate-spin text-blue-500 mb-4" />
+                      <p className="text-slate-400">Searching for images...</p>
+                    </div>
+                  ) : imageSearchResults.length === 0 ? (
+                    <div className="text-center py-12 text-slate-400">
+                      <p>No images found</p>
+                      <p className="text-sm mt-2">Try editing the game name or upload an image manually</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-4">
+                      {imageSearchResults.map((result, index) => (
+                        <div
+                          key={index}
+                          className="relative group cursor-pointer rounded-lg overflow-hidden bg-slate-700"
+                          onClick={() => handleSelectImage(result.url)}
+                        >
+                          <img
+                            src={result.url}
+                            alt={`Option ${index + 1}`}
+                            className="w-full h-32 object-cover"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).style.display = 'none';
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-blue-600/0 group-hover:bg-blue-600/50 transition flex items-center justify-center">
+                            <span className="text-white opacity-0 group-hover:opacity-100 font-medium">
+                              Select
+                            </span>
+                          </div>
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1">
+                            <span className="text-xs text-slate-300">{result.source}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -1828,22 +2504,52 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
             <div className="mb-8 flex justify-between items-start">
               <div>
                 <h1 className="text-3xl font-bold text-white mb-2">Weapons Management</h1>
-                <p className="text-slate-400">Manage weapon loadouts</p>
+                <p className="text-slate-400">Manage weapon loadouts - Only shows shooter games - Weapons inactive by default</p>
               </div>
-              <button
-                onClick={() => setShowWeaponForm(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
-              >
-                <Plus className="w-4 h-4" /> Add Weapon
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleBulkActivateWeapons}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                  title={selectedWeapons.size > 0 ? `Activate ${selectedWeapons.size} selected weapons` : "Activate all weapons on current page"}
+                >
+                  <Check className="w-4 h-4" /> {selectedWeapons.size > 0 ? `Activate (${selectedWeapons.size})` : 'Activate All'}
+                </button>
+                <button
+                  onClick={handleBulkDeactivateWeapons}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                  title={selectedWeapons.size > 0 ? `Deactivate ${selectedWeapons.size} selected weapons` : "Deactivate all weapons on current page"}
+                >
+                  <Ban className="w-4 h-4" /> {selectedWeapons.size > 0 ? `Deactivate (${selectedWeapons.size})` : 'Deactivate All'}
+                </button>
+                <button
+                  onClick={() => setShowWeaponForm(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                >
+                  <Plus className="w-4 h-4" /> Add Weapon
+                </button>
+              </div>
             </div>
 
-            <div className="mb-6">
-              <SearchBar 
-                value={weaponSearch}
-                onChange={handleWeaponSearchChange}
-                placeholder="Search weapons..."
-              />
+            <div className="mb-6 flex gap-4 items-center">
+              <div className="flex-1">
+                <SearchBar 
+                  value={weaponSearch}
+                  onChange={handleWeaponSearchChange}
+                  placeholder="Search weapons..."
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-slate-400">Image:</label>
+                <select
+                  value={weaponImageFilter}
+                  onChange={(e) => setWeaponImageFilter(e.target.value as 'all' | 'with' | 'without')}
+                  className="px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white text-sm focus:outline-none focus:border-blue-500"
+                >
+                  <option value="all">All</option>
+                  <option value="with">With Image</option>
+                  <option value="without">No Image</option>
+                </select>
+              </div>
             </div>
 
             {loading ? (
@@ -1856,18 +2562,49 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-slate-700 bg-slate-900">
+                        <th className="px-4 py-4 text-left">
+                          <input
+                            type="checkbox"
+                            checked={weapons.length > 0 && selectedWeapons.size === weapons.length}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedWeapons(new Set(weapons.map(w => w.id)));
+                              } else {
+                                setSelectedWeapons(new Set());
+                              }
+                            }}
+                            className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-800"
+                          />
+                        </th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Name</th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Category</th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Image</th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Size</th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Color</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Active</th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Created</th>
                         <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {weapons.map((weapon) => (
-                        <tr key={weapon.id} className="border-b border-slate-700 hover:bg-slate-700/50">
+                        <tr key={weapon.id} className={`border-b border-slate-700 hover:bg-slate-700/50 ${!weapon.is_active ? 'opacity-50' : ''}`}>
+                          <td className="px-4 py-4">
+                            <input
+                              type="checkbox"
+                              checked={selectedWeapons.has(weapon.id)}
+                              onChange={(e) => {
+                                const newSelected = new Set(selectedWeapons);
+                                if (e.target.checked) {
+                                  newSelected.add(weapon.id);
+                                } else {
+                                  newSelected.delete(weapon.id);
+                                }
+                                setSelectedWeapons(newSelected);
+                              }}
+                              className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-800"
+                            />
+                          </td>
                           <td className="px-6 py-4 text-sm text-white">{weapon.name}</td>
                           <td className="px-6 py-4 text-sm text-slate-300">{getCategoryName(weapon.category)}</td>
                           <td className="px-6 py-4 text-sm">
@@ -1884,6 +2621,18 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                               />
                               <span className="text-slate-400">{weapon.text_color}</span>
                             </div>
+                          </td>
+                          <td className="px-6 py-4 text-sm">
+                            <button
+                              onClick={() => handleToggleWeaponActive(weapon)}
+                              className={`px-3 py-1 rounded-full text-xs font-medium transition ${
+                                weapon.is_active
+                                  ? 'bg-green-900/30 text-green-400 hover:bg-green-900/50'
+                                  : 'bg-red-900/30 text-red-400 hover:bg-red-900/50'
+                              }`}
+                            >
+                              {weapon.is_active ? 'Active' : 'Inactive'}
+                            </button>
                           </td>
                           <td className="px-6 py-4 text-sm text-slate-400">
                             {new Date(weapon.created_at).toLocaleDateString()}
@@ -2029,6 +2778,23 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                         <option value="large">Large</option>
                       </select>
                     </div>
+
+                    <div className="flex items-center justify-between">
+                      <label className="text-sm font-medium text-slate-300">
+                        Active
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setWeaponForm({ ...weaponForm, is_active: !weaponForm.is_active })}
+                        className={`px-3 py-1 rounded text-xs font-medium transition ${
+                          weaponForm.is_active
+                            ? 'bg-green-600 hover:bg-green-700 text-white'
+                            : 'bg-red-600 hover:bg-red-700 text-white'
+                        }`}
+                      >
+                        {weaponForm.is_active ? 'Active' : 'Inactive'}
+                      </button>
+                    </div>
                   </div>
 
                   <div className="flex gap-2 mt-6">
@@ -2151,27 +2917,28 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
 
                     return weaponIds.map(weaponId => {
                       const weaponAttachments = groupedByWeapon[weaponId];
-                      const weaponName = getWeaponName(weaponId);
+                      // Use weapon_name from attachment if available, otherwise fall back to lookup
+                      const weaponName = weaponAttachments[0]?.weapon_name || getWeaponName(weaponId);
                       const isExpanded = expandedWeaponsInAttachments.has(weaponId);
 
                       return (
                         <div key={weaponId} className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
                           {/* Weapon Header */}
-                          <button
-                            onClick={() => {
-                              setExpandedWeaponsInAttachments(prev => {
-                                const newSet = new Set(prev);
-                                if (newSet.has(weaponId)) {
-                                  newSet.delete(weaponId);
-                                } else {
-                                  newSet.add(weaponId);
-                                }
-                                return newSet;
-                              });
-                            }}
-                            className="w-full px-6 py-4 flex items-center justify-between hover:bg-slate-700/50 transition"
-                          >
-                            <div className="flex items-center gap-3">
+                          <div className="flex items-center justify-between px-6 py-4 hover:bg-slate-700/50 transition">
+                            <button
+                              onClick={() => {
+                                setExpandedWeaponsInAttachments(prev => {
+                                  const newSet = new Set(prev);
+                                  if (newSet.has(weaponId)) {
+                                    newSet.delete(weaponId);
+                                  } else {
+                                    newSet.add(weaponId);
+                                  }
+                                  return newSet;
+                                });
+                              }}
+                              className="flex-1 flex items-center gap-3 text-left"
+                            >
                               {isExpanded ? (
                                 <ChevronDown className="w-5 h-5 text-blue-400" />
                               ) : (
@@ -2181,8 +2948,18 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                               <span className="text-sm text-slate-400">
                                 ({weaponAttachments.length} attachment{weaponAttachments.length !== 1 ? 's' : ''})
                               </span>
-                            </div>
-                          </button>
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteAllAttachmentsForWeapon(weaponId, weaponName);
+                              }}
+                              className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition"
+                              title={`Delete all attachments for ${weaponName}`}
+                            >
+                              <Trash2 className="w-5 h-5" />
+                            </button>
+                          </div>
 
                           {/* Attachments List */}
                           {isExpanded && (
@@ -2202,7 +2979,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                                       <td className="px-6 py-3 text-sm text-white">{attachment.name}</td>
                                       <td className="px-6 py-3 text-sm">
                                         <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-400/10 text-blue-400">
-                                          {attachment.type}
+                                          {attachment.attachment_type_name || attachment.type || 'Unknown'}
                                         </span>
                                       </td>
                                       <td className="px-6 py-3 text-sm text-slate-400">
@@ -2352,19 +3129,14 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                         Type *
                       </label>
                       <select
-                        value={attachmentForm.type}
-                        onChange={(e) => setAttachmentForm({ ...attachmentForm, type: e.target.value as Attachment['type'] | '' })}
+                        value={attachmentForm.attachment_type || ''}
+                        onChange={(e) => setAttachmentForm({ ...attachmentForm, attachment_type: e.target.value ? parseInt(e.target.value) : null })}
                         className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
                       >
                         <option value="">Select a type</option>
-                        <option value="Muzzle">Muzzle</option>
-                        <option value="Optic">Optic</option>
-                        <option value="Stock">Stock</option>
-                        <option value="Grip">Grip</option>
-                        <option value="Magazine">Magazine</option>
-                        <option value="Underbarrel">Underbarrel</option>
-                        <option value="Ammunition">Ammunition</option>
-                        <option value="Perk">Perk</option>
+                        {attachmentTypes.map(type => (
+                          <option key={type.id} value={type.id}>{type.display_name}</option>
+                        ))}
                       </select>
                     </div>
 
@@ -2407,6 +3179,158 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                     </button>
                     <button
                       onClick={handleCancelAttachmentForm}
+                      className="flex-1 px-4 py-2 bg-slate-700 text-white rounded hover:bg-slate-600 transition"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'attachment-types' && (
+          <div className="p-8">
+            <div className="mb-8 flex justify-between items-start">
+              <div>
+                <h1 className="text-3xl font-bold text-white mb-2">Attachment Types</h1>
+                <p className="text-slate-400">Manage attachment type categories and their display names</p>
+              </div>
+              <button
+                onClick={() => setShowAttachmentTypeForm(true)}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Add Attachment Type
+              </button>
+            </div>
+
+            {error && (
+              <div className="mb-6 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400">
+                {error}
+              </div>
+            )}
+
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader className="w-8 h-8 animate-spin text-blue-500" />
+              </div>
+            ) : (
+              <div className="overflow-x-auto bg-slate-800 rounded-lg border border-slate-700">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-slate-700 bg-slate-900">
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Order</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Internal Name</th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Display Name</th>
+                      <th className="px-6 py-4 text-right text-sm font-semibold text-slate-300">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {attachmentTypes.map((type) => (
+                      <tr key={type.id} className="border-b border-slate-700 hover:bg-slate-700/50">
+                        <td className="px-6 py-4 text-slate-300">{type.order}</td>
+                        <td className="px-6 py-4 text-slate-300 font-mono text-sm">{type.name}</td>
+                        <td className="px-6 py-4 text-white font-medium">{type.display_name}</td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <button
+                              onClick={() => handleEditAttachmentType(type)}
+                              className="p-2 text-blue-400 hover:text-blue-300 hover:bg-slate-700 rounded transition"
+                              title="Edit"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteAttachmentType(type.id)}
+                              className="p-2 text-red-400 hover:text-red-300 hover:bg-slate-700 rounded transition"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {attachmentTypes.length === 0 && !loading && (
+              <div className="text-center py-12 text-slate-400">
+                <p>No attachment types found</p>
+              </div>
+            )}
+
+            {/* Attachment Type Form Modal */}
+            {showAttachmentTypeForm && (
+              <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+                <div className="bg-slate-800 rounded-lg p-6 w-full max-w-md border border-slate-700">
+                  <h2 className="text-xl font-bold text-white mb-4">
+                    {attachmentTypeForm.id ? 'Edit Attachment Type' : 'Add Attachment Type'}
+                  </h2>
+
+                  {error && (
+                    <div className="mb-4 p-3 bg-red-500/20 border border-red-500/50 rounded text-red-400 text-sm">
+                      {error}
+                    </div>
+                  )}
+
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">
+                        Internal Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={attachmentTypeForm.name}
+                        onChange={(e) => setAttachmentTypeForm({ ...attachmentTypeForm, name: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="e.g., muzzle"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">Used internally, should be lowercase with no spaces</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">
+                        Display Name *
+                      </label>
+                      <input
+                        type="text"
+                        value={attachmentTypeForm.display_name}
+                        onChange={(e) => setAttachmentTypeForm({ ...attachmentTypeForm, display_name: e.target.value })}
+                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        placeholder="e.g., Muzzle"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">The name shown to users in the UI</p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-slate-300 mb-2">
+                        Order
+                      </label>
+                      <input
+                        type="number"
+                        value={attachmentTypeForm.order}
+                        onChange={(e) => setAttachmentTypeForm({ ...attachmentTypeForm, order: parseInt(e.target.value) || 0 })}
+                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        min="0"
+                      />
+                      <p className="text-xs text-slate-500 mt-1">Controls the display order (lower numbers appear first)</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2 mt-6">
+                    <button
+                      onClick={handleSaveAttachmentType}
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                    >
+                      {attachmentTypeForm.id ? 'Update' : 'Create'}
+                    </button>
+                    <button
+                      onClick={handleCancelAttachmentTypeForm}
                       className="flex-1 px-4 py-2 bg-slate-700 text-white rounded hover:bg-slate-600 transition"
                     >
                       Cancel
@@ -2966,8 +3890,8 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                         {/* Info about checkboxes */}
                         <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mt-4">
                           <p className="text-blue-400 text-sm">
-                            💡 <strong>Tip:</strong> Vink alleen de settings aan die je wilt opnemen in dit profiel. 
-                            Settings zonder vinkje worden niet opgeslagen.
+                            💡 <strong>Tip:</strong> Only check the settings you want to include in this profile. 
+                            Unchecked settings will not be saved.
                           </p>
                         </div>
 

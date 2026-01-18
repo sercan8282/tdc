@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ChevronDown, ChevronRight, Loader, Search, Crosshair, Filter } from 'lucide-react';
+import Pagination from '../components/Pagination';
 
 interface Attachment {
   id: number;
@@ -43,6 +44,8 @@ export default function Weapons() {
   const [selectedGame, setSelectedGame] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [expandedWeapons, setExpandedWeapons] = useState<Set<number>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(25);
 
   useEffect(() => {
     fetchGames();
@@ -115,6 +118,16 @@ export default function Weapons() {
     .filter(cat => selectedCategory === null || cat.id === selectedCategory)
     .flatMap(cat => cat.weapons?.map(w => ({ ...w, categoryName: cat.name })) || [])
     .filter(weapon => weapon.name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredWeapons.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedWeapons = filteredWeapons.slice(startIndex, startIndex + itemsPerPage);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory, selectedGame, itemsPerPage]);
 
   const getImageSizeClass = (size: string) => {
     switch (size) {
@@ -203,10 +216,25 @@ export default function Weapons() {
           </div>
         </div>
 
-        {/* Results count */}
-        <div className="mb-4 text-slate-400">
-          {filteredWeapons.length} weapon{filteredWeapons.length !== 1 ? 's' : ''} found
-          {selectedCategory !== null && ` in ${categories.find(c => c.id === selectedCategory)?.name}`}
+        {/* Results count and items per page */}
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+          <div className="text-slate-400">
+            Showing {filteredWeapons.length > 0 ? startIndex + 1 : 0}-{Math.min(startIndex + itemsPerPage, filteredWeapons.length)} of {filteredWeapons.length} weapon{filteredWeapons.length !== 1 ? 's' : ''}
+            {selectedCategory !== null && ` in ${categories.find(c => c.id === selectedCategory)?.name}`}
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-slate-400 text-sm">Show:</span>
+            <select
+              value={itemsPerPage}
+              onChange={(e) => setItemsPerPage(Number(e.target.value))}
+              className="px-3 py-1.5 bg-slate-800 border border-slate-700 rounded-lg text-white text-sm focus:outline-none focus:border-blue-500"
+            >
+              <option value={25}>25</option>
+              <option value={50}>50</option>
+              <option value={75}>75</option>
+            </select>
+            <span className="text-slate-400 text-sm">per page</span>
+          </div>
         </div>
 
         {/* Weapons Grid */}
@@ -219,7 +247,7 @@ export default function Weapons() {
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredWeapons.map(weapon => (
+            {paginatedWeapons.map(weapon => (
               <div key={weapon.id} className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
                 {/* Weapon Header */}
                 <button
@@ -300,6 +328,17 @@ export default function Weapons() {
                 )}
               </div>
             ))}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-6">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
           </div>
         )}
       </div>

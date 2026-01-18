@@ -29,6 +29,7 @@ export default function Sidebar({ onLogout, onAdminTabChange, activeAdminTab = '
     { id: 'categories', label: 'Categories' },
     { id: 'weapons', label: 'Weapons' },
     { id: 'attachments', label: 'Attachments' },
+    { id: 'attachment-types', label: 'Attachment Types' },
     { id: 'game-settings', label: 'Game Settings' },
     { id: 'settings', label: 'Global Settings' },
   ];
