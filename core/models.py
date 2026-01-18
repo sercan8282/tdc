@@ -3,11 +3,23 @@ from django.utils.text import slugify
 
 
 class Game(models.Model):
+    GAME_TYPE_CHOICES = [
+        ('shooter', 'Shooter'),
+        ('racing', 'Racing'),
+        ('sports', 'Sports'),
+        ('rpg', 'RPG'),
+        ('strategy', 'Strategy'),
+        ('simulation', 'Simulation'),
+        ('adventure', 'Adventure'),
+        ('other', 'Other'),
+    ]
+
     name = models.CharField(max_length=100, unique=True)
     slug = models.SlugField(unique=True)
     description = models.TextField(blank=True, null=True)
     image = models.ImageField(upload_to='games/', blank=True, null=True)
-    is_active = models.BooleanField(default=True)
+    game_type = models.CharField(max_length=20, choices=GAME_TYPE_CHOICES, default='other')
+    is_active = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -16,6 +28,10 @@ class Game(models.Model):
 
     def __str__(self):
         return self.name
+
+    @property
+    def is_shooter(self):
+        return self.game_type == 'shooter'
 
     def save(self, *args, **kwargs):
         if not self.slug:
@@ -58,6 +74,7 @@ class Weapon(models.Model):
         choices=SIZE_CHOICES,
         default='medium'
     )
+    is_active = models.BooleanField(default=False, help_text='Only active weapons are shown on the site')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -69,31 +86,50 @@ class Weapon(models.Model):
         return self.name
 
 
-class Attachment(models.Model):
-    TYPE_CHOICES = [
-        ('Muzzle', 'Muzzle'),
-        ('Optic', 'Optic'),
-        ('Stock', 'Stock'),
-        ('Grip', 'Grip'),
-        ('Magazine', 'Magazine'),
-        ('Underbarrel', 'Underbarrel'),
-        ('Ammunition', 'Ammunition'),
-        ('Perk', 'Perk'),
-    ]
+class AttachmentType(models.Model):
+    """Dynamic attachment types that can be managed by admins"""
+    name = models.CharField(max_length=50, unique=True)
+    display_name = models.CharField(max_length=100)
+    order = models.IntegerField(default=0, help_text='Display order')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        ordering = ['order', 'name']
+
+    def __str__(self):
+        return self.display_name
+
+
+class Attachment(models.Model):
     name = models.CharField(max_length=150)
     weapon = models.ForeignKey(Weapon, on_delete=models.CASCADE, related_name='attachments')
-    type = models.CharField(max_length=50, choices=TYPE_CHOICES)
+    attachment_type = models.ForeignKey(
+        AttachmentType, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True,
+        related_name='attachments'
+    )
+    # Keep legacy type field for backwards compatibility
+    type = models.CharField(max_length=50, blank=True, null=True)
     image = models.ImageField(upload_to='attachments/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['type', 'name']
+        ordering = ['attachment_type__order', 'attachment_type__name', 'name']
         unique_together = ('name', 'weapon')
 
     def __str__(self):
         return self.name
+    
+    @property
+    def type_name(self):
+        """Get the type name from either the new FK or legacy field"""
+        if self.attachment_type:
+            return self.attachment_type.display_name
+        return self.type or ''
 
 
 class GlobalSettings(models.Model):

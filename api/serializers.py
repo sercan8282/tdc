@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from core.models import Game, Category, Weapon, Attachment, GameSettingDefinition, GameSettingProfile
+from core.models import Game, Category, Weapon, Attachment, AttachmentType, GameSettingDefinition, GameSettingProfile
 from forum.models import Thread, Post, Notification, Like
 
 User = get_user_model()
@@ -20,12 +20,24 @@ class UserListSerializer(serializers.ModelSerializer):
         fields = ['id', 'email', 'nickname', 'is_blocked', 'is_verified', 'is_staff']
 
 
+# Attachment Type Serializer
+class AttachmentTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AttachmentType
+        fields = ['id', 'name', 'display_name', 'order', 'created_at']
+        read_only_fields = ['created_at']
+
+
 # Core Serializers
 class AttachmentSerializer(serializers.ModelSerializer):
+    type_name = serializers.CharField(read_only=True)
+    attachment_type_name = serializers.CharField(source='attachment_type.display_name', read_only=True)
+    weapon_name = serializers.CharField(source='weapon.name', read_only=True)
+
     class Meta:
         model = Attachment
-        fields = ['id', 'name', 'weapon', 'type', 'image', 'created_at']
-        read_only_fields = ['created_at']
+        fields = ['id', 'name', 'weapon', 'weapon_name', 'attachment_type', 'type', 'type_name', 'attachment_type_name', 'image', 'created_at']
+        read_only_fields = ['created_at', 'type_name', 'attachment_type_name', 'weapon_name']
 
 
 class WeaponSerializer(serializers.ModelSerializer):
@@ -35,25 +47,48 @@ class WeaponSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Weapon
-        fields = ['id', 'name', 'category', 'image', 'text_color', 'image_size', 'attachments', 'game_slug', 'category_slug', 'created_at']
+        fields = ['id', 'name', 'category', 'image', 'text_color', 'image_size', 'is_active', 'attachments', 'game_slug', 'category_slug', 'created_at']
         read_only_fields = ['created_at']
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    weapons = WeaponSerializer(many=True, read_only=True)
+    weapons = serializers.SerializerMethodField()
 
     class Meta:
         model = Category
         fields = ['id', 'name', 'game', 'weapons', 'created_at']
         read_only_fields = ['created_at']
 
+    def get_weapons(self, obj):
+        """Only return active weapons for public API"""
+        request = self.context.get('request')
+        is_admin = request and request.user and request.user.is_staff
+        show_all = request and request.query_params.get('all', 'false').lower() == 'true'
+        
+        if is_admin and show_all:
+            weapons = obj.weapons.all()
+        else:
+            weapons = obj.weapons.filter(is_active=True)
+        
+        return WeaponSerializer(weapons, many=True, context=self.context).data
+
 
 class GameSerializer(serializers.ModelSerializer):
     categories = CategorySerializer(many=True, read_only=True)
+    is_shooter = serializers.BooleanField(read_only=True)
+    can_fetch_weapons = serializers.SerializerMethodField()
 
     class Meta:
         model = Game
-        fields = ['id', 'name', 'slug', 'description', 'image', 'is_active', 'categories']
+        fields = ['id', 'name', 'slug', 'description', 'image', 'is_active', 'game_type', 'is_shooter', 'can_fetch_weapons', 'categories']
+
+    def get_can_fetch_weapons(self, obj):
+        """Check if this game supports automatic weapon fetching"""
+        try:
+            from core.services.weapon_fetch import weapon_fetch_service
+            return weapon_fetch_service.can_fetch_weapons(obj)
+        except:
+            return False
 
 
 # Game Settings Serializers

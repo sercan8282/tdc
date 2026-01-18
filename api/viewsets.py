@@ -4,11 +4,13 @@ from rest_framework.response import Response
 from rest_framework.filters import SearchFilter, OrderingFilter
 from django_filters.rest_framework import DjangoFilterBackend
 from django.contrib.auth import get_user_model
-from core.models import Game, Category, Weapon, Attachment, GameSettingDefinition, GameSettingProfile
+from django.db import models
+from core.models import Game, Category, Weapon, Attachment, AttachmentType, GameSettingDefinition, GameSettingProfile
 from forum.models import Thread, Post, Notification
 from .serializers import (
     UserDetailSerializer, UserListSerializer,
     GameSerializer, CategorySerializer, WeaponSerializer, AttachmentSerializer,
+    AttachmentTypeSerializer,
     GameSettingDefinitionSerializer, GameSettingProfileSerializer,
     ThreadSerializer, ThreadListSerializer,
     PostSerializer, NotificationSerializer
@@ -95,11 +97,165 @@ class UserViewSet(viewsets.ModelViewSet):
 
 # Game ViewSet - Admin can edit, all can read
 class GameViewSet(viewsets.ModelViewSet):
-    queryset = Game.objects.filter(is_active=True)
     serializer_class = GameSerializer
     permission_classes = [IsAdminOrReadOnly]
-    filter_backends = [SearchFilter]
+    filter_backends = [SearchFilter, DjangoFilterBackend]
     search_fields = ['name']
+    filterset_fields = ['is_active', 'game_type']
+
+    def get_queryset(self):
+        """
+        Return all games for admin users, only active games for regular users.
+        Supports filtering by has_image parameter.
+        """
+        queryset = Game.objects.all()
+        
+        # Check if user is admin
+        is_admin = self.request.user and self.request.user.is_staff
+        
+        # If 'all' parameter is passed and user is admin, show all games
+        show_all = self.request.query_params.get('all', 'false').lower() == 'true'
+        
+        # Filter by has_image
+        has_image = self.request.query_params.get('has_image', None)
+        if has_image is not None:
+            if has_image.lower() == 'true':
+                queryset = queryset.exclude(image__isnull=True).exclude(image='')
+            elif has_image.lower() == 'false':
+                queryset = queryset.filter(models.Q(image__isnull=True) | models.Q(image=''))
+        
+        if is_admin and show_all:
+            return queryset
+        
+        # For non-admin or when not requesting all, only show active games
+        is_active_filter = self.request.query_params.get('is_active', None)
+        if is_active_filter is None and not is_admin:
+            queryset = queryset.filter(is_active=True)
+        
+        return queryset
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
+    def activate(self, request, pk=None):
+        """Activate a game"""
+        game = self.get_object()
+        game.is_active = True
+        game.save()
+        return Response({'status': 'game activated', 'is_active': True})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
+    def deactivate(self, request, pk=None):
+        """Deactivate a game"""
+        game = self.get_object()
+        game.is_active = False
+        game.save()
+        return Response({'status': 'game deactivated', 'is_active': False})
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAdminUser])
+    def bulk_activate(self, request):
+        """Activate multiple games by IDs"""
+        game_ids = request.data.get('ids', [])
+        if not game_ids:
+            return Response({'error': 'No game IDs provided'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        updated = Game.objects.filter(id__in=game_ids).update(is_active=True)
+        return Response({'status': f'{updated} games activated'})
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAdminUser])
+    def bulk_deactivate(self, request):
+        """Deactivate multiple games by IDs"""
+        game_ids = request.data.get('ids', [])
+        if not game_ids:
+            return Response({'error': 'No game IDs provided'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        updated = Game.objects.filter(id__in=game_ids).update(is_active=False)
+        return Response({'status': f'{updated} games deactivated'})
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAdminUser])
+    def search_images(self, request):
+        """Search for game images from various sources"""
+        from core.services.image_search import image_search_service
+        
+        game_name = request.query_params.get('name', '')
+        if not game_name:
+            return Response({'error': 'Game name is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        results = image_search_service.search_game_images(game_name)
+        return Response({'results': results})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
+    def set_image_from_url(self, request, pk=None):
+        """Download and set game image from URL"""
+        from core.services.image_search import image_search_service
+        from django.core.files.base import ContentFile
+        
+        game = self.get_object()
+        image_url = request.data.get('url', '')
+        
+        if not image_url:
+            return Response({'error': 'Image URL is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            image_bytes = image_search_service.download_and_process_image(image_url)
+            if image_bytes:
+                filename = f"{game.slug}.jpg"
+                game.image.save(filename, ContentFile(image_bytes), save=True)
+                return Response({
+                    'status': 'Image saved',
+                    'image_url': game.image.url if game.image else None
+                })
+            return Response({'error': 'Failed to download image'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
+    def fetch_weapons(self, request, pk=None):
+        """Fetch weapons for a shooter game from external sources"""
+        from core.services.weapon_fetch import weapon_fetch_service
+        
+        game = self.get_object()
+        download_images = request.data.get('download_images', True)
+        
+        if not game.is_shooter:
+            return Response({'error': 'Game is not a shooter'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if not weapon_fetch_service.can_fetch_weapons(game.slug):
+            return Response({
+                'error': f'Automatic weapon fetching not available for {game.name}',
+                'supported_games': weapon_fetch_service.get_supported_games()
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        result = weapon_fetch_service.fetch_weapons_for_game(game, download_images)
+        return Response(result)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
+    def fetch_settings(self, request, pk=None):
+        """Fetch and create game settings definitions"""
+        from core.services.game_settings_fetch import game_settings_service
+        
+        game = self.get_object()
+        result = game_settings_service.fetch_settings_for_game(game)
+        return Response(result)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAdminUser])
+    def supported_weapon_sources(self, request):
+        """Get list of games that support automatic weapon fetching"""
+        from core.services.weapon_fetch import weapon_fetch_service
+        return Response({'supported_games': weapon_fetch_service.get_supported_games()})
+
+    @action(detail=False, methods=['get'])
+    def shooter_games(self, request):
+        """Get only shooter games (for weapon management)"""
+        queryset = Game.objects.filter(game_type='shooter')
+        
+        # Check if user is admin
+        is_admin = request.user and request.user.is_staff
+        show_all = request.query_params.get('all', 'false').lower() == 'true'
+        
+        if not (is_admin and show_all):
+            queryset = queryset.filter(is_active=True)
+        
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 # Category ViewSet
@@ -114,14 +270,135 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
 # Weapon ViewSet
 class WeaponViewSet(viewsets.ModelViewSet):
-    queryset = Weapon.objects.all()
     serializer_class = WeaponSerializer
     permission_classes = [IsAdminOrReadOnly]
     filter_backends = [SearchFilter, DjangoFilterBackend, OrderingFilter]
     search_fields = ['name']
-    filterset_fields = ['category', 'category__game']
+    filterset_fields = ['category', 'category__game', 'is_active']
     ordering_fields = ['name', 'created_at']
     ordering = ['name']
+
+    def get_queryset(self):
+        """
+        Return all weapons for admin users, only active weapons for regular users.
+        Admin can also filter by is_active parameter and has_image.
+        Only returns weapons from shooter games.
+        """
+        # Only get weapons from shooter games
+        queryset = Weapon.objects.filter(category__game__game_type='shooter')
+        
+        # Check if user is admin
+        is_admin = self.request.user and self.request.user.is_staff
+        
+        # If 'all' parameter is passed and user is admin, show all weapons
+        show_all = self.request.query_params.get('all', 'false').lower() == 'true'
+        
+        # Filter by has_image
+        has_image = self.request.query_params.get('has_image', None)
+        if has_image is not None:
+            if has_image.lower() == 'true':
+                queryset = queryset.exclude(image__isnull=True).exclude(image='')
+            elif has_image.lower() == 'false':
+                queryset = queryset.filter(models.Q(image__isnull=True) | models.Q(image=''))
+        
+        if is_admin and show_all:
+            return queryset
+        
+        # For non-admin or when not requesting all, only show active weapons
+        # Unless there's an explicit is_active filter
+        is_active_filter = self.request.query_params.get('is_active', None)
+        if is_active_filter is None and not is_admin:
+            queryset = queryset.filter(is_active=True)
+        
+        return queryset
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
+    def activate(self, request, pk=None):
+        """Activate a weapon"""
+        weapon = self.get_object()
+        weapon.is_active = True
+        weapon.save()
+        return Response({'status': 'weapon activated', 'is_active': True})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
+    def deactivate(self, request, pk=None):
+        """Deactivate a weapon"""
+        weapon = self.get_object()
+        weapon.is_active = False
+        weapon.save()
+        return Response({'status': 'weapon deactivated', 'is_active': False})
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAdminUser])
+    def bulk_activate(self, request):
+        """Activate multiple weapons by IDs"""
+        weapon_ids = request.data.get('ids', [])
+        if not weapon_ids:
+            return Response({'error': 'No weapon IDs provided'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        updated = Weapon.objects.filter(id__in=weapon_ids).update(is_active=True)
+        return Response({'status': f'{updated} weapons activated'})
+
+    @action(detail=False, methods=['post'], permission_classes=[IsAdminUser])
+    def bulk_deactivate(self, request):
+        """Deactivate multiple weapons by IDs"""
+        weapon_ids = request.data.get('ids', [])
+        if not weapon_ids:
+            return Response({'error': 'No weapon IDs provided'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        updated = Weapon.objects.filter(id__in=weapon_ids).update(is_active=False)
+        return Response({'status': f'{updated} weapons deactivated'})
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAdminUser])
+    def search_images(self, request):
+        """Search for weapon images"""
+        from core.services.image_search import image_search_service
+        
+        weapon_name = request.query_params.get('name', '')
+        game_name = request.query_params.get('game', '')
+        
+        if not weapon_name:
+            return Response({'error': 'Weapon name is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        search_query = f"{weapon_name} {game_name} weapon" if game_name else f"{weapon_name} weapon"
+        results = image_search_service.search_game_images(search_query)
+        return Response({'results': results})
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
+    def set_image_from_url(self, request, pk=None):
+        """Download and set weapon image from URL"""
+        from core.services.image_search import image_search_service
+        from django.core.files.base import ContentFile
+        from django.utils.text import slugify
+        
+        weapon = self.get_object()
+        image_url = request.data.get('url', '')
+        
+        if not image_url:
+            return Response({'error': 'Image URL is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            image_bytes = image_search_service.download_and_process_image(image_url, max_width=400, max_height=300)
+            if image_bytes:
+                filename = f"{slugify(weapon.name)}.jpg"
+                weapon.image.save(filename, ContentFile(image_bytes), save=True)
+                return Response({
+                    'status': 'Image saved',
+                    'image_url': weapon.image.url if weapon.image else None
+                })
+            return Response({'error': 'Failed to download image'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# Attachment Type ViewSet
+class AttachmentTypeViewSet(viewsets.ModelViewSet):
+    queryset = AttachmentType.objects.all()
+    serializer_class = AttachmentTypeSerializer
+    permission_classes = [IsAdminOrReadOnly]
+    filter_backends = [SearchFilter, OrderingFilter]
+    search_fields = ['name', 'display_name']
+    ordering_fields = ['order', 'name', 'created_at']
+    ordering = ['order', 'name']
 
 
 # Attachment ViewSet
@@ -131,9 +408,9 @@ class AttachmentViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
     filter_backends = [SearchFilter, DjangoFilterBackend, OrderingFilter]
     search_fields = ['name']
-    filterset_fields = ['weapon', 'type']
-    ordering_fields = ['name', 'type', 'created_at']
-    ordering = ['type', 'name']
+    filterset_fields = ['weapon', 'attachment_type', 'type']
+    ordering_fields = ['name', 'attachment_type__order', 'created_at']
+    ordering = ['attachment_type__order', 'name']
 
 
 # Thread ViewSet
