@@ -15,16 +15,19 @@ class CustomUserSerializer(serializers.ModelSerializer):
     """Custom serializer that explicitly includes is_staff"""
     class Meta:
         model = User
-        fields = ('id', 'email', 'nickname', 'avatar', 'is_verified', 'is_blocked', 'is_staff', 'is_superuser', 'created_at')
-        read_only_fields = ('id', 'is_verified', 'is_blocked', 'is_staff', 'is_superuser', 'created_at')
+        fields = ('id', 'email', 'nickname', 'avatar', 'is_verified', 'is_blocked', 'is_staff', 'is_superuser', 'mfa_enabled', 'created_at')
+        read_only_fields = ('id', 'is_verified', 'is_blocked', 'is_staff', 'is_superuser', 'mfa_enabled', 'created_at')
 
 
 class RegistrationSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, min_length=8)
+    password_confirm = serializers.CharField(write_only=True)
+    captcha_token = serializers.CharField(write_only=True)
+    captcha_answer = serializers.IntegerField(write_only=True)
 
     class Meta:
         model = User
-        fields = ['email', 'nickname', 'password']
+        fields = ['email', 'nickname', 'password', 'password_confirm', 'captcha_token', 'captcha_answer']
 
     def validate_email(self, value):
         if User.objects.filter(email=value).exists():
@@ -32,14 +35,114 @@ class RegistrationSerializer(serializers.ModelSerializer):
         return value
 
     def validate_nickname(self, value):
+        if len(value) < 3:
+            raise serializers.ValidationError('Nickname must be at least 3 characters')
         if User.objects.filter(nickname=value).exists():
             raise serializers.ValidationError('Nickname already exists')
         return value
 
+    def validate(self, data):
+        # Check passwords match
+        if data['password'] != data['password_confirm']:
+            raise serializers.ValidationError({'password_confirm': 'Passwords do not match'})
+        
+        # Verify captcha
+        from users.services.captcha import captcha_service
+        is_valid, message = captcha_service.verify_captcha(
+            data['captcha_token'], 
+            data['captcha_answer']
+        )
+        if not is_valid:
+            raise serializers.ValidationError({'captcha_answer': message})
+        
+        return data
+
     def create(self, validated_data):
+        # Remove extra fields
+        validated_data.pop('password_confirm', None)
+        validated_data.pop('captcha_token', None)
+        validated_data.pop('captcha_answer', None)
+        
         user = User.objects.create_user(
             email=validated_data['email'],
             nickname=validated_data['nickname'],
-            password=validated_data['password']
+            password=validated_data['password'],
+            is_verified=False  # Requires admin approval
         )
         return user
+
+
+class MFASetupSerializer(serializers.Serializer):
+    """Serializer for MFA setup response."""
+    qr_code = serializers.CharField()
+    secret = serializers.CharField()
+
+
+class MFAVerifySerializer(serializers.Serializer):
+    """Serializer for MFA code verification."""
+    code = serializers.CharField(max_length=6, min_length=6)
+
+
+class GameSimpleSerializer(serializers.Serializer):
+    """Simple game serializer for profile."""
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    slug = serializers.CharField()
+    image = serializers.ImageField()
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    """Serializer for user profile with all details."""
+    favorite_games = serializers.ListField(
+        child=serializers.CharField(),
+        read_only=True
+    )
+    full_name = serializers.CharField(read_only=True)
+    
+    class Meta:
+        model = User
+        fields = [
+            'id', 'email', 'nickname', 'first_name', 'last_name', 'full_name',
+            'avatar', 'favorite_games', 'mfa_enabled', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'email', 'mfa_enabled', 'created_at', 'updated_at']
+
+
+class ProfileUpdateSerializer(serializers.ModelSerializer):
+    """Serializer for updating user profile."""
+    favorite_games = serializers.ListField(
+        child=serializers.CharField(max_length=100),
+        required=False,
+        allow_empty=True
+    )
+    
+    class Meta:
+        model = User
+        fields = ['nickname', 'first_name', 'last_name', 'favorite_games']
+    
+    def validate_nickname(self, value):
+        user = self.instance
+        if User.objects.filter(nickname=value).exclude(pk=user.pk).exists():
+            raise serializers.ValidationError('Nickname already exists')
+        if len(value) < 3:
+            raise serializers.ValidationError('Nickname must be at least 3 characters')
+        return value
+    
+    def validate_favorite_games(self, value):
+        if len(value) > 10:
+            raise serializers.ValidationError('Maximum 10 favorite games allowed')
+        # Clean up: strip whitespace and remove duplicates while preserving order
+        seen = set()
+        cleaned = []
+        for game in value:
+            game = game.strip()
+            if game and game.lower() not in seen:
+                seen.add(game.lower())
+                cleaned.append(game)
+        return cleaned
+    
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance

@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { AlertCircle, Loader } from 'lucide-react';
+import { AlertCircle, Loader, Shield, Mail, Lock } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [mfaCode, setMfaCode] = useState('');
+  const [mfaRequired, setMfaRequired] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -17,11 +19,31 @@ export default function Login() {
     setLoading(true);
 
     try {
-      await login(email, password);
-      navigate('/');
-    } catch (err) {
-      setError('Invalid email or password');
-      console.error(err);
+      const result = await login(email, password, mfaRequired ? mfaCode : undefined);
+      
+      // Check if MFA is required
+      if (result?.mfa_required) {
+        setMfaRequired(true);
+        setLoading(false);
+        return;
+      }
+      
+      // Check if MFA setup is required
+      if (result?.mfa_setup_required) {
+        navigate('/mfa-setup');
+      } else {
+        navigate('/');
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Invalid email or password');
+      }
+      // Reset MFA if error
+      if (mfaRequired) {
+        setMfaCode('');
+      }
     } finally {
       setLoading(false);
     }
@@ -31,8 +53,15 @@ export default function Login() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="bg-slate-800 rounded-lg border border-slate-700 shadow-2xl p-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Admin Login</h1>
-          <p className="text-slate-400 mb-8">Enter your credentials to access the admin panel</p>
+          <h1 className="text-3xl font-bold text-white mb-2">
+            {mfaRequired ? 'Two-Factor Authentication' : 'Login'}
+          </h1>
+          <p className="text-slate-400 mb-8">
+            {mfaRequired 
+              ? 'Enter the code from your authenticator app'
+              : 'Enter your credentials to access TDC'
+            }
+          </p>
 
           {error && (
             <div className="mb-6 p-4 bg-red-900/20 border border-red-700 rounded flex items-start gap-3">
@@ -42,49 +71,101 @@ export default function Login() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@example.com"
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
+            {!mfaRequired ? (
+              <>
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-2">
+                    Email
+                  </label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="your@email.com"
+                      className="w-full pl-10 pr-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-2">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-2">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <input
+                      id="password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full pl-10 pr-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      required
+                    />
+                  </div>
+                </div>
+              </>
+            ) : (
+              <div>
+                <label htmlFor="mfaCode" className="block text-sm font-medium text-slate-300 mb-2">
+                  Authentication Code
+                </label>
+                <div className="relative">
+                  <Shield className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <input
+                    id="mfaCode"
+                    type="text"
+                    value={mfaCode}
+                    onChange={(e) => setMfaCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    placeholder="000000"
+                    className="w-full pl-10 pr-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white text-center text-xl tracking-widest font-mono placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    maxLength={6}
+                    required
+                    autoFocus
+                  />
+                </div>
+                <p className="text-slate-500 text-xs mt-2">
+                  Open your authenticator app to view your code
+                </p>
+              </div>
+            )}
 
             <button
               type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-blue-800 disabled:cursor-not-allowed text-white font-medium py-2 rounded transition flex items-center justify-center gap-2"
+              disabled={loading || (mfaRequired && mfaCode.length !== 6)}
+              className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-medium py-3 rounded-lg transition flex items-center justify-center gap-2"
             >
               {loading && <Loader className="w-4 h-4 animate-spin" />}
-              {loading ? 'Logging in...' : 'Login'}
+              {loading ? 'Verifying...' : mfaRequired ? 'Verify Code' : 'Login'}
             </button>
+
+            {mfaRequired && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMfaRequired(false);
+                  setMfaCode('');
+                  setError('');
+                }}
+                className="w-full text-slate-400 hover:text-slate-300 text-sm py-2 transition"
+              >
+                ← Back to login
+              </button>
+            )}
           </form>
 
-          <p className="text-slate-400 text-sm text-center mt-6">
-            Demo: admin@example.com / admin123
-          </p>
+          {!mfaRequired && (
+            <p className="text-slate-400 text-sm text-center mt-6">
+              Don't have an account?{' '}
+              <Link to="/register" className="text-blue-400 hover:text-blue-300">
+                Register
+              </Link>
+            </p>
+          )}
         </div>
       </div>
     </div>

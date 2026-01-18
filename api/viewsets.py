@@ -40,6 +40,14 @@ class UserViewSet(viewsets.ModelViewSet):
     ordering_fields = ['created_at', 'email']
     ordering = ['-created_at']
 
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        # Filter for pending (unverified) users only
+        pending = self.request.query_params.get('pending')
+        if pending and pending.lower() == 'true':
+            queryset = queryset.filter(is_verified=False)
+        return queryset
+
     def get_serializer_class(self):
         if self.action == 'retrieve':
             return UserDetailSerializer
@@ -51,6 +59,18 @@ class UserViewSet(viewsets.ModelViewSet):
         user.is_verified = True
         user.save()
         return Response({'status': 'user verified'})
+
+    @action(detail=True, methods=['post'])
+    def reject_user(self, request, pk=None):
+        """Reject a pending user registration - deletes the user"""
+        user = self.get_object()
+        if user.is_verified:
+            return Response(
+                {'error': 'Cannot reject an already verified user'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        user.delete()
+        return Response({'status': 'user registration rejected'})
 
     @action(detail=True, methods=['post'])
     def block_user(self, request, pk=None):
@@ -107,13 +127,15 @@ class GameViewSet(viewsets.ModelViewSet):
         """
         Return all games for admin users, only active games for regular users.
         Supports filtering by has_image parameter.
+        Authenticated users can use ?all=true to see all games (for favorites).
         """
         queryset = Game.objects.all()
         
-        # Check if user is admin
-        is_admin = self.request.user and self.request.user.is_authenticated and self.request.user.is_staff
+        # Check if user is authenticated
+        is_authenticated = self.request.user and self.request.user.is_authenticated
+        is_admin = is_authenticated and self.request.user.is_staff
         
-        # If 'all' parameter is passed and user is admin, show all games
+        # If 'all' parameter is passed and user is authenticated, show all games
         show_all = self.request.query_params.get('all', 'false').lower() == 'true'
         
         # Filter by has_image
@@ -124,7 +146,8 @@ class GameViewSet(viewsets.ModelViewSet):
             elif has_image.lower() == 'false':
                 queryset = queryset.filter(models.Q(image__isnull=True) | models.Q(image=''))
         
-        if is_admin and show_all:
+        # Authenticated users (including admins) can see all games with ?all=true
+        if is_authenticated and show_all:
             return queryset
         
         # Default behavior: only show active games

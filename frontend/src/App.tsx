@@ -8,9 +8,12 @@ import GameSettings from './pages/GameSettings';
 import Forum from './pages/Forum';
 import Admin from './pages/Admin';
 import Login from './pages/Login';
+import Register from './pages/Register';
+import MFASetup from './pages/MFASetup';
+import Profile from './pages/Profile';
 import './App.css';
 import { useState } from 'react';
-import { Gamepad2, Crosshair, MessageSquare, Shield, LogIn, Settings } from 'lucide-react';
+import { Gamepad2, Crosshair, MessageSquare, Shield, LogIn, Settings, UserPlus, User, LogOut } from 'lucide-react';
 
 // Publiek navigatie menu component
 function PublicNav() {
@@ -56,29 +59,69 @@ function PublicNav() {
             })}
           </div>
 
-          {/* Admin/Login Link */}
-          <div>
-            {isAuthenticated && isAdmin ? (
-              <Link
-                to="/admin"
-                className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
-              >
-                <Shield className="w-5 h-5" />
-                Admin
-              </Link>
+          {/* Admin/Profile/Login/Register Links */}
+          <div className="flex items-center gap-2">
+            {isAuthenticated ? (
+              <>
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
+                  >
+                    <Shield className="w-5 h-5" />
+                    Admin
+                  </Link>
+                )}
+                <Link
+                  to="/profile"
+                  className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition"
+                >
+                  <User className="w-5 h-5" />
+                  Profile
+                </Link>
+                <LogoutButton />
+              </>
             ) : (
-              <Link
-                to="/login"
-                className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
-              >
-                <LogIn className="w-5 h-5" />
-                Login
-              </Link>
+              <>
+                <Link
+                  to="/register"
+                  className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition"
+                >
+                  <UserPlus className="w-5 h-5" />
+                  Register
+                </Link>
+                <Link
+                  to="/login"
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                >
+                  <LogIn className="w-5 h-5" />
+                  Login
+                </Link>
+              </>
             )}
           </div>
         </div>
       </div>
     </nav>
+  );
+}
+
+// Logout button component
+function LogoutButton() {
+  const { logout } = useAuth();
+  
+  const handleLogout = () => {
+    logout();
+  };
+  
+  return (
+    <button
+      onClick={handleLogout}
+      className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-red-600/20 hover:text-red-400 rounded-lg transition"
+    >
+      <LogOut className="w-5 h-5" />
+      Logout
+    </button>
   );
 }
 
@@ -122,6 +165,27 @@ function AppContent() {
       <Route path="/settings" element={<PublicLayout><GameSettings /></PublicLayout>} />
       <Route path="/forum" element={<PublicLayout><Forum /></PublicLayout>} />
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      
+      {/* MFA Setup - alleen voor ingelogde gebruikers */}
+      <Route 
+        path="/mfa-setup" 
+        element={
+          isAuthenticated 
+            ? <MFASetup /> 
+            : <Navigate to="/login" replace />
+        } 
+      />
+      
+      {/* Profile - alleen voor ingelogde gebruikers */}
+      <Route 
+        path="/profile" 
+        element={
+          isAuthenticated 
+            ? <PublicLayout><Profile /></PublicLayout>
+            : <Navigate to="/login" replace />
+        } 
+      />
       
       {/* Admin route - alleen toegankelijk voor admins */}
       <Route 
