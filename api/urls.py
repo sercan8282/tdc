@@ -7,6 +7,7 @@ from .viewsets import (
     ThreadViewSet, PostViewSet, NotificationViewSet
 )
 from core.views import SiteSettingsViewSet
+from core.security_views import SecurityEventViewSet, IPBlockViewSet
 
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')
@@ -21,6 +22,8 @@ router.register(r'threads', ThreadViewSet, basename='thread')
 router.register(r'posts', PostViewSet, basename='post')
 router.register(r'notifications', NotificationViewSet, basename='notification')
 router.register(r'site-settings', SiteSettingsViewSet, basename='site-settings')
+router.register(r'security-events', SecurityEventViewSet, basename='security-event')
+router.register(r'ip-blocks', IPBlockViewSet, basename='ip-block')
 
 urlpatterns = [
     path('', include(router.urls)),

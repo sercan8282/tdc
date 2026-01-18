@@ -7,13 +7,14 @@ import hashlib
 import time
 from io import BytesIO
 from PIL import Image, ImageDraw, ImageFont
+from django.conf import settings
 
 
 class CaptchaService:
     """Generate math captcha puzzles as images."""
     
-    # Simple secret for signing captcha tokens (in production use settings.SECRET_KEY)
-    SECRET = "tdc-captcha-secret-key-2024"
+    # Use Django's SECRET_KEY or dedicated CAPTCHA_SECRET for signing tokens
+    SECRET = getattr(settings, 'CAPTCHA_SECRET', settings.SECRET_KEY)
     
     # Captcha expires after 5 minutes
     EXPIRY_SECONDS = 300

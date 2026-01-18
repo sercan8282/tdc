@@ -252,7 +252,8 @@ class TopicCreateSerializer(serializers.ModelSerializer):
     """Serializer for creating topics."""
     class Meta:
         model = Topic
-        fields = ['title', 'content', 'category']
+        fields = ['id', 'title', 'content', 'category']
+        read_only_fields = ['id']
     
     def validate_title(self, value):
         if len(value.strip()) < 5:

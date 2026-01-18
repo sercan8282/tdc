@@ -1,6 +1,9 @@
 from django.db import models
 from django.utils.text import slugify
 
+# Import security models
+from .security_models import SecurityEvent, IPBlock, RateLimitTracker
+
 
 class Game(models.Model):
     GAME_TYPE_CHOICES = [

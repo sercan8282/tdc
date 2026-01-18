@@ -15,6 +15,8 @@ import ForumAdmin from './pages/ForumAdmin';
 import Admin from './pages/Admin';
 import AdminSettings from './pages/AdminSettings';
 import UserManagement from './pages/UserManagement';
+import SecurityDashboard from './pages/SecurityDashboard';
+import IPBlockManagement from './pages/IPBlockManagement';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import MFASetup from './pages/MFASetup';
@@ -164,6 +166,14 @@ function PublicNav() {
                         >
                           <UsersIcon className="w-4 h-4" />
                           User Management
+                        </Link>
+                        <Link
+                          to="/admin/security"
+                          onClick={() => setAdminDropdown(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                        >
+                          <Shield className="w-4 h-4" />
+                          Security Monitor
                         </Link>
                         {user?.is_superuser && (
                           <Link
@@ -333,6 +343,26 @@ function AppContent() {
         element={
           isAuthenticated && isAdmin 
             ? <PublicLayout><UserManagement /></PublicLayout>
+            : <Navigate to="/login" replace />
+        } 
+      />
+      
+      {/* Security Dashboard - alleen voor admins */}
+      <Route 
+        path="/admin/security" 
+        element={
+          isAuthenticated && isAdmin 
+            ? <PublicLayout><SecurityDashboard /></PublicLayout>
+            : <Navigate to="/login" replace />
+        } 
+      />
+      
+      {/* IP Block Management - alleen voor admins */}
+      <Route 
+        path="/admin/security/ip-blocks" 
+        element={
+          isAuthenticated && isAdmin 
+            ? <PublicLayout><IPBlockManagement /></PublicLayout>
             : <Navigate to="/login" replace />
         } 
       />

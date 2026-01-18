@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-ww^6ksd16#gpo%wet=u8v(3kf3tyalptrinbz10ba&qzese3=o'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
 
 
 # Application definition
@@ -55,6 +56,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'core.middleware.SecurityMiddleware',  # Rate limiting & IP blocking
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -186,3 +188,29 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_CREDENTIALS = True
 STATIC_URL = 'static/'
+
+# Security Settings
+CAPTCHA_SECRET = config('CAPTCHA_SECRET', default=SECRET_KEY)
+
+# Rate Limiting Configuration
+RATE_LIMIT_WINDOW = config('RATE_LIMIT_WINDOW', default=300, cast=int)
+MAX_LOGIN_ATTEMPTS = config('MAX_LOGIN_ATTEMPTS', default=5, cast=int)
+MAX_REGISTER_ATTEMPTS = config('MAX_REGISTER_ATTEMPTS', default=3, cast=int)
+MAX_API_CALLS_PER_MINUTE = config('MAX_API_CALLS_PER_MINUTE', default=60, cast=int)
+
+# IP Blocking Configuration
+AUTO_BLOCK_THRESHOLD = config('AUTO_BLOCK_THRESHOLD', default=10, cast=int)
+BLOCK_DURATION_HOURS = config('BLOCK_DURATION_HOURS', default=24, cast=int)
+
+# Production Security Settings (activated when DEBUG=False)
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    X_FRAME_OPTIONS = 'DENY'
+
