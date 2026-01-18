@@ -5,6 +5,7 @@ interface User {
   email: string;
   nickname: string;
   is_staff: boolean;
+  is_superuser: boolean;
   is_verified: boolean;
   mfa_enabled: boolean;
 }

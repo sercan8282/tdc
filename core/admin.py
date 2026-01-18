@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.db.models import Count
-from .models import Game, Category, Weapon, Attachment, GlobalSettings
+from .models import Game, Category, Weapon, Attachment, GlobalSettings, SiteSettings
 
 
 class AttachmentInline(admin.TabularInline):
@@ -56,6 +56,31 @@ class GlobalSettingsAdmin(admin.ModelAdmin):
 
     def has_add_permission(self, request):
         return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+
+@admin.register(SiteSettings)
+class SiteSettingsAdmin(admin.ModelAdmin):
+    list_display = ['site_name', 'updated_at']
+    readonly_fields = ['created_at', 'updated_at']
+    fieldsets = (
+        ('General', {
+            'fields': ('site_name',)
+        }),
+        ('Branding', {
+            'fields': ('logo', 'favicon')
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+    def has_add_permission(self, request):
+        # Only allow one instance
+        return not SiteSettings.objects.exists()
 
     def has_delete_permission(self, request, obj=None):
         return False

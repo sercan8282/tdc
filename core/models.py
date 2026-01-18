@@ -207,3 +207,31 @@ class GameSettingProfile(models.Model):
 
     def __str__(self):
         return f"{self.game.name} - {self.name}"
+
+
+class SiteSettings(models.Model):
+    """Global site configuration - Singleton model"""
+    site_name = models.CharField(max_length=200, default='TDC Gaming')
+    logo = models.ImageField(upload_to='site/', blank=True, null=True)
+    favicon = models.ImageField(upload_to='site/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Site Settings'
+        verbose_name_plural = 'Site Settings'
+
+    def __str__(self):
+        return self.site_name
+
+    def save(self, *args, **kwargs):
+        # Ensure only one instance exists
+        if not self.pk and SiteSettings.objects.exists():
+            raise ValueError('Only one SiteSettings instance is allowed')
+        super().save(*args, **kwargs)
+
+    @classmethod
+    def get_settings(cls):
+        """Get or create the singleton settings instance"""
+        settings, created = cls.objects.get_or_create(pk=1)
+        return settings

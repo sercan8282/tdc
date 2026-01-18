@@ -13,18 +13,75 @@ import ForumNewTopic from './pages/ForumNewTopic';
 import Leaderboard from './pages/Leaderboard';
 import ForumAdmin from './pages/ForumAdmin';
 import Admin from './pages/Admin';
+import AdminSettings from './pages/AdminSettings';
+import UserManagement from './pages/UserManagement';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import MFASetup from './pages/MFASetup';
 import Profile from './pages/Profile';
 import './App.css';
-import { useState } from 'react';
-import { Gamepad2, Crosshair, MessageSquare, Shield, LogIn, Settings, UserPlus, User, LogOut } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Gamepad2, Crosshair, MessageSquare, Shield, LogIn, Settings, UserPlus, User, LogOut, ChevronDown, Users as UsersIcon, Globe } from 'lucide-react';
+
+interface SiteSettings {
+  site_name: string;
+  logo_url: string | null;
+  favicon_url: string | null;
+}
 
 // Publiek navigatie menu component
 function PublicNav() {
   const location = useLocation();
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin, user } = useAuth();
+  const [adminDropdown, setAdminDropdown] = useState(false);
+  const [siteSettings, setSiteSettings] = useState<SiteSettings>({
+    site_name: 'TDC',
+    logo_url: null,
+    favicon_url: null,
+  });
+
+  useEffect(() => {
+    fetchSiteSettings();
+    
+    // Close dropdown when clicking outside
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (adminDropdown && !target.closest('.admin-dropdown-container')) {
+        setAdminDropdown(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [adminDropdown]);
+
+  const fetchSiteSettings = async () => {
+    try {
+      const res = await fetch('http://localhost:8000/api/site-settings/');
+      const data = await res.json();
+      setSiteSettings({
+        site_name: data.site_name || 'TDC',
+        logo_url: data.logo_url,
+        favicon_url: data.favicon_url,
+      });
+      
+      // Update favicon
+      if (data.favicon_url) {
+        let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
+        if (!link) {
+          link = document.createElement('link');
+          link.rel = 'icon';
+          document.getElementsByTagName('head')[0].appendChild(link);
+        }
+        link.href = data.favicon_url;
+      }
+      
+      // Update page title
+      document.title = data.site_name || 'TDC Gaming';
+    } catch (error) {
+      console.error('Failed to fetch site settings:', error);
+    }
+  };
   
   const navItems = [
     { path: '/', label: 'Games', icon: Gamepad2 },
@@ -39,8 +96,17 @@ function PublicNav() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2">
-            <Crosshair className="w-8 h-8 text-blue-500" />
-            <span className="text-xl font-bold text-white">TDC</span>
+            {siteSettings.logo_url ? (
+              <>
+                <img src={siteSettings.logo_url} alt={siteSettings.site_name} className="h-10 object-contain" />
+                <span className="text-xl font-bold text-white">{siteSettings.site_name}</span>
+              </>
+            ) : (
+              <>
+                <Crosshair className="w-8 h-8 text-blue-500" />
+                <span className="text-xl font-bold text-white">{siteSettings.site_name}</span>
+              </>
+            )}
           </Link>
 
           {/* Nav Items */}
@@ -71,13 +137,55 @@ function PublicNav() {
               <>
                 <NotificationBell />
                 {isAdmin && (
-                  <Link
-                    to="/admin"
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
-                  >
-                    <Shield className="w-5 h-5" />
-                    Admin
-                  </Link>
+                  <div className="relative admin-dropdown-container">
+                    <button
+                      onClick={() => setAdminDropdown(!adminDropdown)}
+                      className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
+                    >
+                      <Shield className="w-5 h-5" />
+                      Admin
+                      <ChevronDown className={`w-4 h-4 transition-transform ${adminDropdown ? 'rotate-180' : ''}`} />
+                    </button>
+                    
+                    {adminDropdown && (
+                      <div className="absolute right-0 mt-2 w-56 bg-slate-800 border border-slate-700 rounded-lg shadow-xl py-2 z-50">
+                        <Link
+                          to="/admin"
+                          onClick={() => setAdminDropdown(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                        >
+                          <Shield className="w-4 h-4" />
+                          Admin Dashboard
+                        </Link>
+                        <Link
+                          to="/admin/users"
+                          onClick={() => setAdminDropdown(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                        >
+                          <UsersIcon className="w-4 h-4" />
+                          User Management
+                        </Link>
+                        {user?.is_superuser && (
+                          <Link
+                            to="/admin/settings"
+                            onClick={() => setAdminDropdown(false)}
+                            className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                          >
+                            <Globe className="w-4 h-4" />
+                            Site Settings
+                          </Link>
+                        )}
+                        <Link
+                          to="/forum/admin"
+                          onClick={() => setAdminDropdown(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                        >
+                          <MessageSquare className="w-4 h-4" />
+                          Forum Admin
+                        </Link>
+                      </div>
+                    )}
+                  </div>
                 )}
                 <Link
                   to="/profile"
@@ -205,6 +313,26 @@ function AppContent() {
         element={
           isAuthenticated && isAdmin 
             ? <AdminLayout /> 
+            : <Navigate to="/login" replace />
+        } 
+      />
+      
+      {/* Admin Settings - alleen voor superusers */}
+      <Route 
+        path="/admin/settings" 
+        element={
+          isAuthenticated && isAdmin 
+            ? <PublicLayout><AdminSettings /></PublicLayout>
+            : <Navigate to="/login" replace />
+        } 
+      />
+      
+      {/* User Management - alleen voor staff/superusers */}
+      <Route 
+        path="/admin/users" 
+        element={
+          isAuthenticated && isAdmin 
+            ? <PublicLayout><UserManagement /></PublicLayout>
             : <Navigate to="/login" replace />
         } 
       />

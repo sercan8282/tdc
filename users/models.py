@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
+from django.utils import timezone
 
 
 class CustomUserManager(BaseUserManager):
@@ -41,6 +42,7 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         help_text='TOTP secret for MFA'
     )
     mfa_enabled = models.BooleanField(default=False)  # MFA activated by user
+    banned_until = models.DateTimeField(blank=True, null=True, help_text='User is banned until this date')
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -69,4 +71,20 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def unblock(self):
         self.is_blocked = False
+        self.save()
+
+    def is_banned(self):
+        """Check if user is currently banned"""
+        if self.banned_until:
+            return timezone.now() < self.banned_until
+        return False
+
+    def ban(self, days):
+        """Ban user for specified number of days"""
+        self.banned_until = timezone.now() + timezone.timedelta(days=days)
+        self.save()
+
+    def unban(self):
+        """Unban user immediately"""
+        self.banned_until = None
         self.save()

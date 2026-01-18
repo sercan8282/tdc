@@ -114,6 +114,117 @@ class UserViewSet(viewsets.ModelViewSet):
         user.save()
         return Response({'status': 'user activated'})
 
+    @action(detail=True, methods=['post'])
+    def promote_to_superuser(self, request, pk=None):
+        """Only superusers can promote other users to superuser"""
+        if not request.user.is_superuser:
+            return Response(
+                {'error': 'Only superusers can promote users to superuser'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        user = self.get_object()
+        if user.is_superuser:
+            return Response(
+                {'error': 'User is already a superuser'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        user.is_superuser = True
+        user.is_staff = True  # Superusers are also staff
+        user.save()
+        return Response({'status': 'user promoted to superuser'})
+
+    @action(detail=True, methods=['post'])
+    def demote_from_superuser(self, request, pk=None):
+        """Only superusers can demote other superusers"""
+        if not request.user.is_superuser:
+            return Response(
+                {'error': 'Only superusers can demote superusers'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        user = self.get_object()
+        if not user.is_superuser:
+            return Response(
+                {'error': 'User is not a superuser'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Prevent demoting yourself
+        if user == request.user:
+            return Response(
+                {'error': 'You cannot demote yourself'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        user.is_superuser = False
+        user.save()
+        return Response({'status': 'user demoted from superuser'})
+
+    @action(detail=True, methods=['post'])
+    def ban_user(self, request, pk=None):
+        """Staff can ban users (but not superusers). Requires 'days' parameter."""
+        user = self.get_object()
+        
+        # Only staff can ban
+        if not request.user.is_staff:
+            return Response(
+                {'error': 'Only staff can ban users'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Cannot ban superusers (unless you are also a superuser)
+        if user.is_superuser and not request.user.is_superuser:
+            return Response(
+                {'error': 'Staff cannot ban superusers'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Cannot ban yourself
+        if user == request.user:
+            return Response(
+                {'error': 'You cannot ban yourself'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Get days from request
+        days = request.data.get('days')
+        if not days:
+            return Response(
+                {'error': 'Number of days is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            days = int(days)
+            if days <= 0:
+                raise ValueError()
+        except (ValueError, TypeError):
+            return Response(
+                {'error': 'Days must be a positive integer'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        user.ban(days)
+        return Response({
+            'status': 'user banned',
+            'banned_until': user.banned_until
+        })
+
+    @action(detail=True, methods=['post'])
+    def unban_user(self, request, pk=None):
+        """Staff can unban users"""
+        if not request.user.is_staff:
+            return Response(
+                {'error': 'Only staff can unban users'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        user = self.get_object()
+        user.unban()
+        return Response({'status': 'user unbanned'})
+
 
 # Game ViewSet - Admin can edit, all can read
 class GameViewSet(viewsets.ModelViewSet):
