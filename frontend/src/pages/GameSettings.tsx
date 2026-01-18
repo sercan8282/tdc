@@ -484,18 +484,81 @@ export default function GameSettings() {
                               {getCategoryIcon(category)}
                               {getCategoryLabel(category)}
                             </h4>
-                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-                              {activeSettings.map(def => (
-                                <div 
-                                  key={def.id}
-                                  className="bg-slate-800 rounded px-3 py-2 border border-slate-700"
-                                >
-                                  <span className="text-xs text-slate-400 block">{def.display_name}</span>
-                                  <span className="text-white font-medium">
-                                    {formatValue(profile.values[def.name])}
-                                  </span>
-                                </div>
-                              ))}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                              {activeSettings.map(def => {
+                                const value = profile.values[def.name];
+                                
+                                return (
+                                  <div 
+                                    key={def.id}
+                                    className="bg-slate-800 rounded-lg px-4 py-3 border border-slate-700"
+                                  >
+                                    <span className="text-xs text-slate-400 block mb-2">{def.display_name}</span>
+                                    
+                                    {/* Slider visualization for number fields */}
+                                    {def.field_type === 'number' && (
+                                      <div className="flex items-center gap-2">
+                                        <div className="flex-1 relative">
+                                          <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                                            <div 
+                                              className="h-full bg-blue-500 rounded-full"
+                                              style={{ 
+                                                width: `${((Number(value) - (def.min_value || 0)) / ((def.max_value || 100) - (def.min_value || 0))) * 100}%` 
+                                              }}
+                                            />
+                                          </div>
+                                        </div>
+                                        <span className="text-white font-medium min-w-[3rem] text-right">
+                                          {value}
+                                        </span>
+                                      </div>
+                                    )}
+
+                                    {/* Toggle visualization */}
+                                    {def.field_type === 'toggle' && (
+                                      <div className="flex items-center gap-2">
+                                        <div 
+                                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                                            value === true || value === 'On' ? 'bg-green-600' : 'bg-slate-600'
+                                          }`}
+                                        >
+                                          <span
+                                            className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                              value === true || value === 'On' ? 'translate-x-6' : 'translate-x-1'
+                                            }`}
+                                          />
+                                        </div>
+                                        <span className={`font-medium ${value === true || value === 'On' ? 'text-green-400' : 'text-slate-400'}`}>
+                                          {value === true || value === 'On' ? 'On' : 'Off'}
+                                        </span>
+                                      </div>
+                                    )}
+
+                                    {/* Dropdown/Select visualization */}
+                                    {def.field_type === 'select' && (
+                                      <div className="flex items-center gap-2">
+                                        <span className="px-3 py-1 bg-slate-700 rounded text-white font-medium">
+                                          {String(value)}
+                                        </span>
+                                      </div>
+                                    )}
+
+                                    {/* Text field visualization */}
+                                    {def.field_type === 'text' && (
+                                      <span className="text-white font-medium">
+                                        {String(value)}
+                                      </span>
+                                    )}
+
+                                    {/* Fallback for unknown types */}
+                                    {!['number', 'toggle', 'select', 'text'].includes(def.field_type) && (
+                                      <span className="text-white font-medium">
+                                        {formatValue(value)}
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         );

@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import SearchBar from '../components/SearchBar';
 import Pagination from '../components/Pagination';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { Shield, Check, Ban, Trash2, Loader, Plus, Edit, Trash, ChevronDown, ChevronRight, Copy, Search } from 'lucide-react';
+import { Shield, Check, Ban, Trash2, Loader, Plus, Edit, Trash, ChevronDown, ChevronRight, Copy, Search, X, GripVertical } from 'lucide-react';
 
 interface User {
   id: number;
@@ -179,8 +179,36 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
     ram: string;
     graphic_card: string;
     values: Record<string, string | number | boolean>;
-  }>({ id: null, name: '', description: '', processor_type: '', ram: '', graphic_card: '', values: {} });
+    enabledSettings: Set<string>;
+  }>({ id: null, name: '', description: '', processor_type: '', ram: '', graphic_card: '', values: {}, enabledSettings: new Set() });
   const [showProfileForm, setShowProfileForm] = useState(false);
+  
+  // Setting Definition Form state
+  const [showSettingDefinitionForm, setShowSettingDefinitionForm] = useState(false);
+  const [settingDefinitionForm, setSettingDefinitionForm] = useState<{
+    id: number | null;
+    name: string;
+    display_name: string;
+    field_type: 'select' | 'number' | 'toggle' | 'text';
+    category: 'display' | 'graphics' | 'advanced' | 'postprocess' | 'view' | 'audio' | 'controls';
+    options: string[];
+    min_value: number;
+    max_value: number;
+    default_value: string;
+    order: number;
+  }>({ 
+    id: null, 
+    name: '', 
+    display_name: '', 
+    field_type: 'select', 
+    category: 'graphics', 
+    options: [], 
+    min_value: 0, 
+    max_value: 100, 
+    default_value: '', 
+    order: 0 
+  });
+  const [newOptionInput, setNewOptionInput] = useState('');
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -972,7 +1000,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
       setError('Please select a game first');
       return;
     }
-    // Initialize values with defaults from definitions
+    // Initialize values with defaults from definitions, but nothing enabled by default
     const defaultValues: Record<string, string | number | boolean> = {};
     settingDefinitions.forEach(def => {
       if (def.default_value) {
@@ -985,11 +1013,13 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         }
       }
     });
-    setProfileForm({ id: null, name: '', description: '', processor_type: '', ram: '', graphic_card: '', values: defaultValues });
+    setProfileForm({ id: null, name: '', description: '', processor_type: '', ram: '', graphic_card: '', values: defaultValues, enabledSettings: new Set() });
     setShowProfileForm(true);
   };
 
   const handleEditProfile = (profile: GameSettingProfile) => {
+    // When editing, enable all settings that have values
+    const enabledSettings = new Set(Object.keys(profile.values));
     setProfileForm({
       id: profile.id,
       name: profile.name,
@@ -998,6 +1028,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
       ram: profile.ram || '',
       graphic_card: profile.graphic_card || '',
       values: profile.values,
+      enabledSettings,
     });
     setShowProfileForm(true);
   };
@@ -1008,6 +1039,14 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
       return;
     }
     setError(null);
+
+    // Only save values for enabled settings
+    const filteredValues: Record<string, string | number | boolean> = {};
+    profileForm.enabledSettings.forEach(settingName => {
+      if (profileForm.values[settingName] !== undefined) {
+        filteredValues[settingName] = profileForm.values[settingName];
+      }
+    });
 
     try {
       const url = profileForm.id
@@ -1028,14 +1067,14 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
           processor_type: profileForm.processor_type,
           ram: profileForm.ram,
           graphic_card: profileForm.graphic_card,
-          values: profileForm.values,
+          values: filteredValues,
           is_active: true,
         }),
       });
 
       if (response.ok) {
         setShowProfileForm(false);
-        setProfileForm({ id: null, name: '', description: '', processor_type: '', ram: '', graphic_card: '', values: {} });
+        setProfileForm({ id: null, name: '', description: '', processor_type: '', ram: '', graphic_card: '', values: {}, enabledSettings: new Set() });
         fetchSettingProfiles(selectedGameForSettings);
       } else {
         const errorData = await response.json();
@@ -1064,8 +1103,168 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
 
   const handleCancelProfileForm = () => {
     setShowProfileForm(false);
-    setProfileForm({ id: null, name: '', description: '', processor_type: '', ram: '', graphic_card: '', values: {} });
+    setProfileForm({ id: null, name: '', description: '', processor_type: '', ram: '', graphic_card: '', values: {}, enabledSettings: new Set() });
     setError(null);
+  };
+
+  const toggleSettingEnabled = (settingName: string) => {
+    setProfileForm(prev => {
+      const newEnabled = new Set(prev.enabledSettings);
+      if (newEnabled.has(settingName)) {
+        newEnabled.delete(settingName);
+      } else {
+        newEnabled.add(settingName);
+      }
+      return { ...prev, enabledSettings: newEnabled };
+    });
+  };
+
+  // Setting Definition Handlers
+  const handleStartNewSettingDefinition = () => {
+    if (!selectedGameForSettings) {
+      setError('Please select a game first');
+      return;
+    }
+    const maxOrder = settingDefinitions.length > 0 
+      ? Math.max(...settingDefinitions.map(d => d.order)) + 1 
+      : 0;
+    setSettingDefinitionForm({
+      id: null,
+      name: '',
+      display_name: '',
+      field_type: 'select',
+      category: 'graphics',
+      options: [],
+      min_value: 0,
+      max_value: 100,
+      default_value: '',
+      order: maxOrder,
+    });
+    setNewOptionInput('');
+    setShowSettingDefinitionForm(true);
+  };
+
+  const handleEditSettingDefinition = (definition: GameSettingDefinition) => {
+    setSettingDefinitionForm({
+      id: definition.id,
+      name: definition.name,
+      display_name: definition.display_name,
+      field_type: definition.field_type,
+      category: definition.category,
+      options: definition.options || [],
+      min_value: definition.min_value || 0,
+      max_value: definition.max_value || 100,
+      default_value: definition.default_value || '',
+      order: definition.order,
+    });
+    setNewOptionInput('');
+    setShowSettingDefinitionForm(true);
+  };
+
+  const handleSaveSettingDefinition = async () => {
+    if (!selectedGameForSettings || !settingDefinitionForm.name.trim() || !settingDefinitionForm.display_name.trim()) {
+      setError('Name and display name are required');
+      return;
+    }
+
+    if (settingDefinitionForm.field_type === 'select' && settingDefinitionForm.options.length === 0) {
+      setError('Dropdown settings need at least one option');
+      return;
+    }
+
+    setError(null);
+
+    try {
+      const url = settingDefinitionForm.id
+        ? `http://localhost:8000/api/game-setting-definitions/${settingDefinitionForm.id}/`
+        : 'http://localhost:8000/api/game-setting-definitions/';
+      const method = settingDefinitionForm.id ? 'PUT' : 'POST';
+
+      const payload: Record<string, unknown> = {
+        game: selectedGameForSettings,
+        name: settingDefinitionForm.name.toLowerCase().replace(/\s+/g, '_'),
+        display_name: settingDefinitionForm.display_name,
+        field_type: settingDefinitionForm.field_type,
+        category: settingDefinitionForm.category,
+        order: settingDefinitionForm.order,
+        default_value: settingDefinitionForm.default_value,
+      };
+
+      if (settingDefinitionForm.field_type === 'select') {
+        payload.options = settingDefinitionForm.options;
+      } else if (settingDefinitionForm.field_type === 'number') {
+        payload.min_value = settingDefinitionForm.min_value;
+        payload.max_value = settingDefinitionForm.max_value;
+      }
+
+      const response = await fetch(url, {
+        method,
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (response.ok) {
+        setShowSettingDefinitionForm(false);
+        setSettingDefinitionForm({
+          id: null, name: '', display_name: '', field_type: 'select', category: 'graphics',
+          options: [], min_value: 0, max_value: 100, default_value: '', order: 0
+        });
+        fetchSettingDefinitions(selectedGameForSettings);
+      } else {
+        const errorData = await response.json();
+        setError(errorData.name?.[0] || errorData.non_field_errors?.[0] || 'Failed to save setting definition');
+      }
+    } catch (err) {
+      console.error('Failed to save setting definition:', err);
+      setError('Failed to save setting definition');
+    }
+  };
+
+  const handleDeleteSettingDefinition = async (definition: GameSettingDefinition) => {
+    if (!confirm(`Are you sure you want to delete "${definition.display_name}"?`)) return;
+    
+    try {
+      const response = await fetch(`http://localhost:8000/api/game-setting-definitions/${definition.id}/`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Token ${token}` },
+      });
+
+      if (response.ok) {
+        fetchSettingDefinitions(selectedGameForSettings || undefined);
+      }
+    } catch (err) {
+      console.error('Failed to delete setting definition:', err);
+    }
+  };
+
+  const handleCancelSettingDefinitionForm = () => {
+    setShowSettingDefinitionForm(false);
+    setSettingDefinitionForm({
+      id: null, name: '', display_name: '', field_type: 'select', category: 'graphics',
+      options: [], min_value: 0, max_value: 100, default_value: '', order: 0
+    });
+    setNewOptionInput('');
+    setError(null);
+  };
+
+  const addOption = () => {
+    if (newOptionInput.trim() && !settingDefinitionForm.options.includes(newOptionInput.trim())) {
+      setSettingDefinitionForm(prev => ({
+        ...prev,
+        options: [...prev.options, newOptionInput.trim()]
+      }));
+      setNewOptionInput('');
+    }
+  };
+
+  const removeOption = (optionToRemove: string) => {
+    setSettingDefinitionForm(prev => ({
+      ...prev,
+      options: prev.options.filter(opt => opt !== optionToRemove)
+    }));
   };
 
   const handleActionClick = (action: string, user?: User, game?: Game, category?: Category, weapon?: Weapon, attachment?: Attachment) => {
@@ -2224,7 +2423,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
             <div className="mb-8 flex justify-between items-start">
               <div>
                 <h1 className="text-3xl font-bold text-white mb-2">Game Settings</h1>
-                <p className="text-slate-400">Create and manage graphics settings profiles for each game</p>
+                <p className="text-slate-400">Create and manage graphics settings definitions and profiles for each game</p>
               </div>
             </div>
 
@@ -2257,15 +2456,25 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
               <>
                 {/* Available Settings for this Game */}
                 <div className="mb-6 bg-slate-800 rounded-lg border border-slate-700 p-4">
-                  <h2 className="text-lg font-semibold text-white mb-4">
-                    Available Settings for {games.find(g => g.id === selectedGameForSettings)?.name}
-                  </h2>
-                  <p className="text-slate-400 text-sm mb-4">
-                    These are the graphics settings fields that will be available when creating a profile.
-                  </p>
+                  <div className="flex justify-between items-center mb-4">
+                    <div>
+                      <h2 className="text-lg font-semibold text-white">
+                        Setting Definitions for {games.find(g => g.id === selectedGameForSettings)?.name}
+                      </h2>
+                      <p className="text-slate-400 text-sm">
+                        Define which settings are available for profiles. Click on a setting to edit or delete it.
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleStartNewSettingDefinition}
+                      className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                    >
+                      <Plus className="w-4 h-4" /> New Setting
+                    </button>
+                  </div>
                   
                   {/* Group by category */}
-                  {(['display', 'graphics', 'advanced', 'postprocess', 'view'] as const).map(category => {
+                  {(['display', 'graphics', 'advanced', 'postprocess', 'view', 'audio', 'controls'] as const).map(category => {
                     const categorySettings = settingDefinitions.filter(s => s.category === category);
                     if (categorySettings.length === 0) return null;
                     
@@ -2275,6 +2484,15 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                       advanced: 'Advanced Graphics',
                       postprocess: 'Post Processing',
                       view: 'View Settings',
+                      audio: 'Audio',
+                      controls: 'Controls',
+                    };
+
+                    const fieldTypeLabels: Record<string, string> = {
+                      select: 'Dropdown',
+                      number: 'Slider',
+                      toggle: 'On/Off',
+                      text: 'Text',
                     };
 
                     return (
@@ -2284,18 +2502,33 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                         </h3>
                         <div className="flex flex-wrap gap-2">
                           {categorySettings.map(setting => (
-                            <span
+                            <div
                               key={setting.id}
-                              className="px-2 py-1 bg-slate-700 rounded text-xs text-slate-300"
-                              title={`Type: ${setting.field_type}${setting.options ? `, Options: ${setting.options.join(', ')}` : ''}`}
+                              className="group relative px-3 py-2 bg-slate-700 rounded text-sm text-slate-300 hover:bg-slate-600 cursor-pointer flex items-center gap-2"
+                              onClick={() => handleEditSettingDefinition(setting)}
                             >
-                              {setting.display_name}
-                            </span>
+                              <span>{setting.display_name}</span>
+                              <span className="text-xs text-slate-500">({fieldTypeLabels[setting.field_type]})</span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteSettingDefinition(setting);
+                                }}
+                                className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 ml-1"
+                                title="Delete"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
                           ))}
                         </div>
                       </div>
                     );
                   })}
+
+                  {settingDefinitions.length === 0 && (
+                    <p className="text-slate-500 text-center py-4">No settings defined yet. Click "New Setting" to create one.</p>
+                  )}
                 </div>
 
                 {/* Profiles List */}
@@ -2370,6 +2603,285 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                         </div>
                       </div>
                     ))}
+                  </div>
+                )}
+
+                {/* Setting Definition Form Modal */}
+                {showSettingDefinitionForm && (
+                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto py-8">
+                    <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 w-full max-w-xl mx-4">
+                      <h2 className="text-xl font-semibold text-white mb-4">
+                        {settingDefinitionForm.id ? 'Edit Setting Definition' : 'New Setting Definition'}
+                      </h2>
+
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-1">
+                              Display Name *
+                            </label>
+                            <input
+                              type="text"
+                              value={settingDefinitionForm.display_name}
+                              onChange={(e) => {
+                                const displayName = e.target.value;
+                                const name = displayName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
+                                setSettingDefinitionForm({ ...settingDefinitionForm, display_name: displayName, name });
+                              }}
+                              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+                              placeholder="e.g., Texture Quality"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-1">
+                              Internal Name
+                            </label>
+                            <input
+                              type="text"
+                              value={settingDefinitionForm.name}
+                              onChange={(e) => setSettingDefinitionForm({ ...settingDefinitionForm, name: e.target.value })}
+                              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-slate-400 placeholder-slate-400 focus:outline-none focus:border-blue-500"
+                              placeholder="texture_quality"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-1">
+                              Field Type *
+                            </label>
+                            <select
+                              value={settingDefinitionForm.field_type}
+                              onChange={(e) => setSettingDefinitionForm({ 
+                                ...settingDefinitionForm, 
+                                field_type: e.target.value as 'select' | 'number' | 'toggle' | 'text'
+                              })}
+                              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:border-blue-500"
+                            >
+                              <option value="select">Dropdown (keuzemenu)</option>
+                              <option value="number">Slider (schuifbalk)</option>
+                              <option value="toggle">Toggle (On/Off)</option>
+                              <option value="text">Text (vrije tekst)</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-1">
+                              Category
+                            </label>
+                            <select
+                              value={settingDefinitionForm.category}
+                              onChange={(e) => setSettingDefinitionForm({ 
+                                ...settingDefinitionForm, 
+                                category: e.target.value as 'display' | 'graphics' | 'advanced' | 'postprocess' | 'view' | 'audio' | 'controls'
+                              })}
+                              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:border-blue-500"
+                            >
+                              <option value="display">Display</option>
+                              <option value="graphics">Graphics Quality</option>
+                              <option value="advanced">Advanced Graphics</option>
+                              <option value="postprocess">Post Processing</option>
+                              <option value="view">View Settings</option>
+                              <option value="audio">Audio</option>
+                              <option value="controls">Controls</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        {/* Dropdown Options */}
+                        {settingDefinitionForm.field_type === 'select' && (
+                          <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-1">
+                              Dropdown Options *
+                            </label>
+                            <div className="flex gap-2 mb-2">
+                              <input
+                                type="text"
+                                value={newOptionInput}
+                                onChange={(e) => setNewOptionInput(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.preventDefault();
+                                    addOption();
+                                  }
+                                }}
+                                className="flex-1 px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+                                placeholder="Type an option and press Enter or click Add"
+                              />
+                              <button
+                                onClick={addOption}
+                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                              >
+                                Add
+                              </button>
+                            </div>
+                            <div className="flex flex-wrap gap-2 min-h-[40px] p-2 bg-slate-900 rounded border border-slate-600">
+                              {settingDefinitionForm.options.length === 0 ? (
+                                <span className="text-slate-500 text-sm">No options added yet</span>
+                              ) : (
+                                settingDefinitionForm.options.map((option, index) => (
+                                  <span
+                                    key={index}
+                                    className="flex items-center gap-1 px-2 py-1 bg-slate-700 rounded text-sm text-white"
+                                  >
+                                    {option}
+                                    <button
+                                      onClick={() => removeOption(option)}
+                                      className="text-slate-400 hover:text-red-400"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </span>
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Slider Min/Max */}
+                        {settingDefinitionForm.field_type === 'number' && (
+                          <div>
+                            <div className="grid grid-cols-2 gap-4 mb-3">
+                              <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-1">
+                                  Minimum Value
+                                </label>
+                                <input
+                                  type="number"
+                                  value={settingDefinitionForm.min_value}
+                                  onChange={(e) => setSettingDefinitionForm({ ...settingDefinitionForm, min_value: parseInt(e.target.value) || 0 })}
+                                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:border-blue-500"
+                                />
+                              </div>
+                              <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-1">
+                                  Maximum Value
+                                </label>
+                                <input
+                                  type="number"
+                                  value={settingDefinitionForm.max_value}
+                                  onChange={(e) => setSettingDefinitionForm({ ...settingDefinitionForm, max_value: parseInt(e.target.value) || 100 })}
+                                  className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:border-blue-500"
+                                />
+                              </div>
+                            </div>
+                            {/* Slider Preview */}
+                            <div className="p-3 bg-slate-900 rounded border border-slate-600">
+                              <label className="block text-xs font-medium text-slate-400 mb-2">
+                                Preview
+                              </label>
+                              <div className="flex items-center gap-3">
+                                <span className="text-slate-500 text-sm w-10">{settingDefinitionForm.min_value}</span>
+                                <input
+                                  type="range"
+                                  min={settingDefinitionForm.min_value}
+                                  max={settingDefinitionForm.max_value}
+                                  value={parseInt(settingDefinitionForm.default_value) || Math.round((settingDefinitionForm.min_value + settingDefinitionForm.max_value) / 2)}
+                                  onChange={(e) => setSettingDefinitionForm({ ...settingDefinitionForm, default_value: e.target.value })}
+                                  className="flex-1 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                                />
+                                <span className="text-slate-500 text-sm w-10 text-right">{settingDefinitionForm.max_value}</span>
+                                <span className="text-white font-medium w-16 text-center bg-slate-700 rounded px-2 py-1">
+                                  {settingDefinitionForm.default_value || Math.round((settingDefinitionForm.min_value + settingDefinitionForm.max_value) / 2)}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Toggle Preview */}
+                        {settingDefinitionForm.field_type === 'toggle' && (
+                          <div className="p-3 bg-slate-900 rounded border border-slate-600">
+                            <label className="block text-xs font-medium text-slate-400 mb-2">
+                              Preview & Default Value (klik om te wisselen)
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => setSettingDefinitionForm({ 
+                                ...settingDefinitionForm, 
+                                default_value: settingDefinitionForm.default_value === 'On' ? 'Off' : 'On' 
+                              })}
+                              className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors ${
+                                settingDefinitionForm.default_value === 'On'
+                                  ? 'bg-green-600'
+                                  : 'bg-slate-600'
+                              }`}
+                            >
+                              <span
+                                className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
+                                  settingDefinitionForm.default_value === 'On' ? 'translate-x-9' : 'translate-x-1'
+                                }`}
+                              />
+                            </button>
+                            <span className="ml-3 text-white font-medium">
+                              {settingDefinitionForm.default_value === 'On' ? 'On' : 'Off'}
+                            </span>
+                          </div>
+                        )}
+
+                        {/* Dropdown Preview */}
+                        {settingDefinitionForm.field_type === 'select' && settingDefinitionForm.options.length > 0 && (
+                          <div className="p-3 bg-slate-900 rounded border border-slate-600">
+                            <label className="block text-xs font-medium text-slate-400 mb-2">
+                              Preview & Default Value
+                            </label>
+                            <select
+                              value={settingDefinitionForm.default_value}
+                              onChange={(e) => setSettingDefinitionForm({ ...settingDefinitionForm, default_value: e.target.value })}
+                              className="w-full max-w-xs px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:border-blue-500"
+                            >
+                              <option value="">-- Select default --</option>
+                              {settingDefinitionForm.options.map(opt => (
+                                <option key={opt} value={opt}>{opt}</option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+
+                        {/* Text Field Default Value */}
+                        {settingDefinitionForm.field_type === 'text' && (
+                          <div>
+                            <label className="block text-sm font-medium text-slate-300 mb-1">
+                              Default Value
+                            </label>
+                            <input
+                              type="text"
+                              value={settingDefinitionForm.default_value}
+                              onChange={(e) => setSettingDefinitionForm({ ...settingDefinitionForm, default_value: e.target.value })}
+                              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+                              placeholder="Default value (optional)"
+                            />
+                          </div>
+                        )}
+
+                        <div>
+                          <label className="block text-sm font-medium text-slate-300 mb-1">
+                            Order (sortering)
+                          </label>
+                          <input
+                            type="number"
+                            value={settingDefinitionForm.order}
+                            onChange={(e) => setSettingDefinitionForm({ ...settingDefinitionForm, order: parseInt(e.target.value) || 0 })}
+                            className="w-full max-w-[120px] px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2 mt-6">
+                        <button
+                          onClick={handleSaveSettingDefinition}
+                          className="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                        >
+                          {settingDefinitionForm.id ? 'Update Setting' : 'Create Setting'}
+                        </button>
+                        <button
+                          onClick={handleCancelSettingDefinitionForm}
+                          className="flex-1 px-4 py-2 bg-slate-700 text-white rounded hover:bg-slate-600 transition"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
 
@@ -2451,8 +2963,16 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                           </div>
                         </div>
 
-                        {/* Settings Fields by Category */}
-                        {(['display', 'graphics', 'advanced', 'postprocess', 'view'] as const).map(category => {
+                        {/* Info about checkboxes */}
+                        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mt-4">
+                          <p className="text-blue-400 text-sm">
+                            💡 <strong>Tip:</strong> Vink alleen de settings aan die je wilt opnemen in dit profiel. 
+                            Settings zonder vinkje worden niet opgeslagen.
+                          </p>
+                        </div>
+
+                        {/* Settings Fields by Category with Checkboxes */}
+                        {(['display', 'graphics', 'advanced', 'postprocess', 'view', 'audio', 'controls'] as const).map(category => {
                           const categorySettings = settingDefinitions.filter(s => s.category === category);
                           if (categorySettings.length === 0) return null;
                           
@@ -2462,106 +2982,142 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                             advanced: 'Advanced Graphics',
                             postprocess: 'Post Processing',
                             view: 'View Settings',
+                            audio: 'Audio',
+                            controls: 'Controls',
                           };
+
+                          const enabledCount = categorySettings.filter(s => profileForm.enabledSettings.has(s.name)).length;
 
                           return (
                             <div key={category} className="border-t border-slate-700 pt-4">
-                              <h3 className="text-sm font-semibold text-slate-400 uppercase mb-3">
-                                {categoryLabels[category]}
-                              </h3>
+                              <div className="flex justify-between items-center mb-3">
+                                <h3 className="text-sm font-semibold text-slate-400 uppercase">
+                                  {categoryLabels[category]}
+                                </h3>
+                                <span className="text-xs text-slate-500">
+                                  {enabledCount} / {categorySettings.length} geselecteerd
+                                </span>
+                              </div>
                               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {categorySettings.map(setting => (
-                                  <div key={setting.id}>
-                                    <label className="block text-sm font-medium text-slate-300 mb-1">
-                                      {setting.display_name}
-                                    </label>
-                                    
-                                    {setting.field_type === 'select' && setting.options && (
-                                      <select
-                                        value={profileForm.values[setting.name] as string || setting.default_value || ''}
-                                        onChange={(e) => setProfileForm({
-                                          ...profileForm,
-                                          values: { ...profileForm.values, [setting.name]: e.target.value }
-                                        })}
-                                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:border-blue-500"
-                                      >
-                                        {setting.options.map(opt => (
-                                          <option key={opt} value={opt}>{opt}</option>
-                                        ))}
-                                      </select>
-                                    )}
-
-                                    {setting.field_type === 'number' && (
-                                      <div className="flex items-center gap-2">
+                                {categorySettings.map(setting => {
+                                  const isEnabled = profileForm.enabledSettings.has(setting.name);
+                                  return (
+                                    <div 
+                                      key={setting.id} 
+                                      className={`p-3 rounded-lg border transition ${
+                                        isEnabled 
+                                          ? 'bg-slate-700/50 border-blue-500/50' 
+                                          : 'bg-slate-900/50 border-slate-700 opacity-60'
+                                      }`}
+                                    >
+                                      {/* Checkbox header */}
+                                      <label className="flex items-center gap-2 mb-2 cursor-pointer">
                                         <input
-                                          type="range"
-                                          min={setting.min_value || 0}
-                                          max={setting.max_value || 100}
-                                          value={profileForm.values[setting.name] as number || parseInt(setting.default_value || '50')}
-                                          onChange={(e) => setProfileForm({
-                                            ...profileForm,
-                                            values: { ...profileForm.values, [setting.name]: parseInt(e.target.value) }
-                                          })}
-                                          className="flex-1"
+                                          type="checkbox"
+                                          checked={isEnabled}
+                                          onChange={() => toggleSettingEnabled(setting.name)}
+                                          className="w-4 h-4 rounded border-slate-500 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-800"
                                         />
-                                        <span className="text-white w-12 text-center">
-                                          {profileForm.values[setting.name] || setting.default_value || 50}
+                                        <span className={`text-sm font-medium ${isEnabled ? 'text-slate-200' : 'text-slate-500'}`}>
+                                          {setting.display_name}
                                         </span>
+                                      </label>
+                                      
+                                      {/* Setting input (only interactive when enabled) */}
+                                      <div className={!isEnabled ? 'pointer-events-none' : ''}>
+                                        {setting.field_type === 'select' && setting.options && (
+                                          <select
+                                            value={profileForm.values[setting.name] as string || setting.default_value || ''}
+                                            onChange={(e) => setProfileForm({
+                                              ...profileForm,
+                                              values: { ...profileForm.values, [setting.name]: e.target.value }
+                                            })}
+                                            className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:border-blue-500 text-sm"
+                                            disabled={!isEnabled}
+                                          >
+                                            {setting.options.map(opt => (
+                                              <option key={opt} value={opt}>{opt}</option>
+                                            ))}
+                                          </select>
+                                        )}
+
+                                        {setting.field_type === 'number' && (
+                                          <div className="flex items-center gap-2">
+                                            <input
+                                              type="range"
+                                              min={setting.min_value || 0}
+                                              max={setting.max_value || 100}
+                                              value={profileForm.values[setting.name] as number || parseInt(setting.default_value || '50')}
+                                              onChange={(e) => setProfileForm({
+                                                ...profileForm,
+                                                values: { ...profileForm.values, [setting.name]: parseInt(e.target.value) }
+                                              })}
+                                              className="flex-1"
+                                              disabled={!isEnabled}
+                                            />
+                                            <span className="text-white w-12 text-center text-sm">
+                                              {profileForm.values[setting.name] ?? setting.default_value ?? 50}
+                                            </span>
+                                          </div>
+                                        )}
+
+                                        {setting.field_type === 'toggle' && (
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              if (!isEnabled) return;
+                                              const currentValue = profileForm.values[setting.name];
+                                              const newValue = currentValue === undefined 
+                                                ? setting.default_value !== 'On'
+                                                : !currentValue;
+                                              setProfileForm({
+                                                ...profileForm,
+                                                values: { ...profileForm.values, [setting.name]: newValue }
+                                              });
+                                            }}
+                                            className={`px-4 py-2 rounded w-full text-sm ${
+                                              (profileForm.values[setting.name] === undefined 
+                                                ? setting.default_value === 'On' 
+                                                : profileForm.values[setting.name])
+                                                ? 'bg-green-600 text-white'
+                                                : 'bg-slate-600 text-slate-400'
+                                            }`}
+                                            disabled={!isEnabled}
+                                          >
+                                            {(profileForm.values[setting.name] === undefined 
+                                              ? setting.default_value === 'On' 
+                                              : profileForm.values[setting.name]) ? 'On' : 'Off'}
+                                          </button>
+                                        )}
+
+                                        {setting.field_type === 'text' && (
+                                          <input
+                                            type="text"
+                                            value={profileForm.values[setting.name] as string || setting.default_value || ''}
+                                            onChange={(e) => setProfileForm({
+                                              ...profileForm,
+                                              values: { ...profileForm.values, [setting.name]: e.target.value }
+                                            })}
+                                            className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:border-blue-500 text-sm"
+                                            disabled={!isEnabled}
+                                          />
+                                        )}
                                       </div>
-                                    )}
-
-                                    {setting.field_type === 'toggle' && (
-                                      <button
-                                        type="button"
-                                        onClick={() => {
-                                          const currentValue = profileForm.values[setting.name];
-                                          const newValue = currentValue === undefined 
-                                            ? setting.default_value !== 'On'
-                                            : !currentValue;
-                                          setProfileForm({
-                                            ...profileForm,
-                                            values: { ...profileForm.values, [setting.name]: newValue }
-                                          });
-                                        }}
-                                        className={`px-4 py-2 rounded w-full ${
-                                          (profileForm.values[setting.name] === undefined 
-                                            ? setting.default_value === 'On' 
-                                            : profileForm.values[setting.name])
-                                            ? 'bg-green-600 text-white'
-                                            : 'bg-slate-700 text-slate-400'
-                                        }`}
-                                      >
-                                        {(profileForm.values[setting.name] === undefined 
-                                          ? setting.default_value === 'On' 
-                                          : profileForm.values[setting.name]) ? 'On' : 'Off'}
-                                      </button>
-                                    )}
-
-                                    {setting.field_type === 'text' && (
-                                      <input
-                                        type="text"
-                                        value={profileForm.values[setting.name] as string || setting.default_value || ''}
-                                        onChange={(e) => setProfileForm({
-                                          ...profileForm,
-                                          values: { ...profileForm.values, [setting.name]: e.target.value }
-                                        })}
-                                        className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded text-white focus:outline-none focus:border-blue-500"
-                                      />
-                                    )}
-                                  </div>
-                                ))}
+                                    </div>
+                                  );
+                                })}
                               </div>
                             </div>
                           );
                         })}
                       </div>
 
-                      <div className="flex gap-2 mt-6">
+                      <div className="flex gap-2 mt-6 sticky bottom-0 bg-slate-800 pt-4 border-t border-slate-700">
                         <button
                           onClick={handleSaveProfile}
                           className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
                         >
-                          {profileForm.id ? 'Update Profile' : 'Create Profile'}
+                          {profileForm.id ? 'Update Profile' : 'Create Profile'} ({profileForm.enabledSettings.size} settings)
                         </button>
                         <button
                           onClick={handleCancelProfileForm}
