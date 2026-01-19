@@ -20,7 +20,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path('django-admin/', admin.site.urls),  # Django admin (changed from /admin/ to avoid React route conflict)
     path('api/', include('api.urls')),
     path('api/auth/', include('users.urls')),  # Custom auth endpoints (captcha, register, MFA)
     path('api/auth/', include('djoser.urls')),

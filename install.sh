@@ -480,8 +480,8 @@ server {
         proxy_read_timeout 60s;
     }
     
-    # Django Admin
-    location /admin/ {
+    # Django Admin (separate URL to avoid conflict with React /admin routes)
+    location /django-admin/ {
         proxy_pass http://django_${APP_NAME};
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
