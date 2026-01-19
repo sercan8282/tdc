@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Loader, Gamepad2, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 interface Category {
   id: number;
@@ -22,16 +23,28 @@ interface Game {
 
 export default function Games() {
   const navigate = useNavigate();
+  const { token, user } = useAuth();
   const [games, setGames] = useState<Game[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchGames();
-  }, []);
+  }, [token]);
 
   const fetchGames = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/games/');
+      // Als admin, haal alle games op (inclusief inactieve)
+      const isAdmin = user?.is_staff;
+      const url = isAdmin 
+        ? 'http://localhost:8000/api/games/?all=true'
+        : 'http://localhost:8000/api/games/';
+      
+      const headers: HeadersInit = {};
+      if (token) {
+        headers['Authorization'] = `Token ${token}`;
+      }
+      
+      const response = await fetch(url, { headers });
       if (response.ok) {
         const data = await response.json();
         setGames(Array.isArray(data) ? data : data.results || []);
@@ -74,19 +87,28 @@ export default function Games() {
 
         {/* Games Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {games.filter(game => game.is_active !== false).map((game) => (
+          {games.map((game) => (
             <button
               key={game.id}
               onClick={() => handleGameClick(game.slug)}
-              className="bg-slate-800 rounded-xl border border-slate-700 p-5 text-left hover:bg-slate-750 hover:border-blue-500/50 transition-all group"
+              className={`bg-slate-800 rounded-xl border p-5 text-left hover:bg-slate-750 transition-all group ${
+                game.is_active 
+                  ? 'border-slate-700 hover:border-blue-500/50' 
+                  : 'border-red-500/50 opacity-60'
+              }`}
             >
               <div className="flex gap-4">
                 {/* Game Image */}
-                <div className="w-20 h-20 bg-slate-700 rounded-lg overflow-hidden flex items-center justify-center group-hover:bg-blue-600/20 transition flex-shrink-0">
+                <div className="w-20 h-20 bg-slate-700 rounded-lg overflow-hidden flex items-center justify-center group-hover:bg-blue-600/20 transition flex-shrink-0 relative">
                   {game.image ? (
                     <img src={game.image} alt={game.name} className="w-full h-full object-cover" />
                   ) : (
                     <Gamepad2 className="w-10 h-10 text-slate-400 group-hover:text-blue-400 transition" />
+                  )}
+                  {!game.is_active && (
+                    <div className="absolute inset-0 bg-red-900/50 flex items-center justify-center">
+                      <span className="text-xs font-bold text-red-300">INACTIVE</span>
+                    </div>
                   )}
                 </div>
 

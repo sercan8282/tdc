@@ -106,7 +106,7 @@ interface GameSettingProfile {
   updated_at: string;
 }
 
-type AdminTab = 'users' | 'games' | 'categories' | 'weapons' | 'attachments' | 'attachment-types' | 'settings' | 'game-settings';
+type AdminTab = 'users' | 'pending-users' | 'games' | 'categories' | 'weapons' | 'attachments' | 'attachment-types' | 'settings' | 'game-settings';
 
 export default function Admin({ initialTab = 'users' }: { initialTab?: string | AdminTab }) {
   const { token } = useAuth();
@@ -122,6 +122,13 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
   const [userSearch, setUserSearch] = useState('');
   const [userPage, setUserPage] = useState(1);
   const [userTotalPages, setUserTotalPages] = useState(1);
+  
+  // Pending Users state
+  const [pendingUsers, setPendingUsers] = useState<User[]>([]);
+  const [pendingUserSearch, setPendingUserSearch] = useState('');
+  const [pendingUserPage, setPendingUserPage] = useState(1);
+  const [pendingUserTotalPages, setPendingUserTotalPages] = useState(1);
+  const [pendingLoading, setPendingLoading] = useState(false);
   
   // Games state
   const [games, setGames] = useState<Game[]>([]);
@@ -294,7 +301,36 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
     }
   }, [userSearch, userPage, token]);
 
+  const fetchPendingUsers = useCallback(async () => {
+    setPendingLoading(true);
+    try {
+      const params = new URLSearchParams({
+        search: pendingUserSearch,
+        page: pendingUserPage.toString(),
+        page_size: itemsPerPage.toString(),
+        pending: 'true', // Filter for unverified users only
+      });
+
+      const response = await fetch(`http://localhost:8000/api/users/?${params}`, {
+        headers: {
+          'Authorization': `Token ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setPendingUsers(data.results || data);
+        setPendingUserTotalPages(Math.ceil((data.count || data.length) / itemsPerPage));
+      }
+    } catch (error) {
+      console.error('Failed to fetch pending users:', error);
+    } finally {
+      setPendingLoading(false);
+    }
+  }, [pendingUserSearch, pendingUserPage, token]);
+
   const fetchGames = useCallback(async () => {
+    console.log('=== FETCH GAMES CALLED ===');
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -311,6 +347,8 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         params.append('has_image', 'false');
       }
 
+      console.log('Fetching games with token:', token ? 'present' : 'missing', 'URL:', `http://localhost:8000/api/games/?${params}`);
+      
       const response = await fetch(`http://localhost:8000/api/games/?${params}`, {
         headers: {
           'Authorization': `Token ${token}`,
@@ -319,6 +357,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Games received:', data.count || data.length);
         setGames(data.results || data);
         setGameTotalPages(Math.ceil((data.count || data.length) / itemsPerPage));
         setSelectedGames(new Set());
@@ -528,6 +567,13 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
     }
   }, [userSearch, userPage, activeTab, fetchUsers]);
 
+  // Pending Users Effects
+  useEffect(() => {
+    if (activeTab === 'pending-users') {
+      fetchPendingUsers();
+    }
+  }, [pendingUserSearch, pendingUserPage, activeTab, fetchPendingUsers]);
+
   // Games Effects
   useEffect(() => {
     if (activeTab === 'games') {
@@ -599,6 +645,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         if (response.ok) {
           setConfirmAction(null);
           fetchUsers();
+          fetchPendingUsers(); // Also refresh pending users list
         }
       } else if (action.startsWith('game_')) {
         const gameAction = action.replace('game_', '');
@@ -1759,7 +1806,8 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
 
   const getActionLabel = (action: string) => {
     const labels: Record<string, string> = {
-      user_verify_user: 'Verify',
+      user_verify_user: 'Approve',
+      user_reject_user: 'Reject Registration',
       user_block_user: 'Block',
       user_unblock_user: 'Unblock',
       user_make_staff: 'Make Staff',
@@ -1776,10 +1824,10 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
   };
 
   const getActionColor = (action: string) => {
-    if (action.includes('block') || action.includes('remove') || action.includes('deactivate') || action.includes('delete')) {
+    if (action.includes('block') || action.includes('remove') || action.includes('deactivate') || action.includes('delete') || action.includes('reject')) {
       return 'text-red-400 hover:text-red-300';
     }
-    if (action.includes('verify') || action.includes('make') || action.includes('activate')) {
+    if (action.includes('verify') || action.includes('make') || action.includes('activate') || action.includes('approve')) {
       return 'text-green-400 hover:text-green-300';
     }
     return 'text-blue-400 hover:text-blue-300';
@@ -1931,6 +1979,100 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                       currentPage={userPage}
                       totalPages={userTotalPages}
                       onPageChange={setUserPage}
+                    />
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {activeTab === 'pending-users' && (
+          <div className="p-8">
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-white mb-2">Pending User Registrations</h1>
+              <p className="text-slate-400">Review and approve new user registrations</p>
+            </div>
+
+            <div className="mb-6">
+              <SearchBar 
+                value={pendingUserSearch}
+                onChange={(value) => {
+                  setPendingUserSearch(value);
+                  setPendingUserPage(1);
+                }}
+                placeholder="Search by email or nickname..."
+              />
+            </div>
+
+            {pendingLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader className="w-8 h-8 animate-spin text-blue-500" />
+              </div>
+            ) : (
+              <>
+                <div className="overflow-x-auto bg-slate-800 rounded-lg border border-slate-700">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-slate-700 bg-slate-900">
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Email</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Nickname</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Registered</th>
+                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pendingUsers.map((user) => (
+                        <tr key={user.id} className="border-b border-slate-700 hover:bg-slate-700/50">
+                          <td className="px-6 py-4 text-sm text-white">{user.email}</td>
+                          <td className="px-6 py-4 text-sm text-slate-300">{user.nickname}</td>
+                          <td className="px-6 py-4 text-sm text-slate-400">
+                            {new Date(user.created_at).toLocaleDateString('nl-NL', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </td>
+                          <td className="px-6 py-4 text-sm">
+                            <div className="flex gap-2">
+                              <button
+                                onClick={() => handleActionClick('user_verify_user', user)}
+                                className="flex items-center gap-1 text-xs px-3 py-1.5 rounded bg-green-600 hover:bg-green-700 text-white transition"
+                              >
+                                <Check className="w-3 h-3" /> Approve
+                              </button>
+                              <button
+                                onClick={() => handleActionClick('user_reject_user', user)}
+                                className="flex items-center gap-1 text-xs px-3 py-1.5 rounded bg-red-600 hover:bg-red-700 text-white transition"
+                              >
+                                <X className="w-3 h-3" /> Reject
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {pendingUsers.length === 0 && (
+                  <div className="text-center py-12 text-slate-400">
+                    <div className="flex flex-col items-center gap-3">
+                      <Check className="w-12 h-12 text-green-500" />
+                      <p>No pending registrations to review</p>
+                      <p className="text-sm">All user registrations have been processed</p>
+                    </div>
+                  </div>
+                )}
+
+                {pendingUserTotalPages > 1 && (
+                  <div className="mt-6">
+                    <Pagination
+                      currentPage={pendingUserPage}
+                      totalPages={pendingUserTotalPages}
+                      onPageChange={setPendingUserPage}
                     />
                   </div>
                 )}

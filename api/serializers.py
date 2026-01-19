@@ -10,14 +10,14 @@ User = get_user_model()
 class UserDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'email', 'nickname', 'avatar', 'is_blocked', 'is_verified', 'is_staff', 'is_active', 'created_at']
+        fields = ['id', 'email', 'nickname', 'avatar', 'is_blocked', 'is_verified', 'is_staff', 'is_superuser', 'is_active', 'banned_until', 'mfa_enabled', 'created_at']
         read_only_fields = ['created_at']
 
 
 class UserListSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'email', 'nickname', 'is_blocked', 'is_verified', 'is_staff']
+        fields = ['id', 'email', 'nickname', 'is_blocked', 'is_verified', 'is_staff', 'is_superuser', 'is_active', 'banned_until', 'created_at']
 
 
 # Attachment Type Serializer

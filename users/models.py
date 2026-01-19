@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
+from django.utils import timezone
 
 
 class CustomUserManager(BaseUserManager):
@@ -22,15 +23,29 @@ class CustomUserManager(BaseUserManager):
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     nickname = models.CharField(max_length=100, unique=True)
+    first_name = models.CharField(max_length=100, blank=True)
+    last_name = models.CharField(max_length=100, blank=True)
     avatar = models.ImageField(upload_to='avatars/', blank=True, null=True)
+    favorite_games = models.JSONField(
+        default=list,
+        blank=True,
+        help_text='List of favorite game names as tags'
+    )
+    is_streamer = models.BooleanField(default=False)
+    stream_url = models.URLField(max_length=500, blank=True, null=True, help_text='Twitch stream URL')
+    youtube_url = models.URLField(max_length=500, blank=True, null=True, help_text='YouTube channel URL')
+    kick_url = models.URLField(max_length=500, blank=True, null=True, help_text='Kick channel URL')
+    discord_url = models.URLField(max_length=500, blank=True, null=True, help_text='Discord profile or server URL')
     is_blocked = models.BooleanField(default=False)
-    is_verified = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)  # Admin approval required
     mfa_secret = models.CharField(
         max_length=32,
         blank=True,
         null=True,
         help_text='TOTP secret for MFA'
     )
+    mfa_enabled = models.BooleanField(default=False)  # MFA activated by user
+    banned_until = models.DateTimeField(blank=True, null=True, help_text='User is banned until this date')
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -47,10 +62,32 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
+    @property
+    def full_name(self):
+        if self.first_name or self.last_name:
+            return f"{self.first_name} {self.last_name}".strip()
+        return self.nickname
+
     def block(self):
         self.is_blocked = True
         self.save()
 
     def unblock(self):
         self.is_blocked = False
+        self.save()
+
+    def is_banned(self):
+        """Check if user is currently banned"""
+        if self.banned_until:
+            return timezone.now() < self.banned_until
+        return False
+
+    def ban(self, days):
+        """Ban user for specified number of days"""
+        self.banned_until = timezone.now() + timezone.timedelta(days=days)
+        self.save()
+
+    def unban(self):
+        """Unban user immediately"""
+        self.banned_until = None
         self.save()

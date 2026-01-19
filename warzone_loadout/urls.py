@@ -22,8 +22,11 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('api.urls')),
+    path('api/auth/', include('users.urls')),  # Custom auth endpoints (captcha, register, MFA)
     path('api/auth/', include('djoser.urls')),
     path('api/auth/', include('djoser.urls.authtoken')),
+    path('api/forum/', include('forum.urls')),  # Forum endpoints
+    path('api/videos/', include('videos.urls')),  # Video platform endpoints
 ]
 
 if settings.DEBUG:
