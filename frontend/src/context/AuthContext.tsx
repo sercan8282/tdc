@@ -55,7 +55,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(getInitialUser);
   const [token, setToken] = useState<string | null>(getInitialToken);
   const [, setPendingCredentials] = useState<{email: string, password: string} | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
 
   // Validate token on mount
   useEffect(() => {
@@ -87,7 +86,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // Keep the user logged in if it's just a network error
         }
       }
-      setIsInitialized(true);
     };
 
     validateToken();
