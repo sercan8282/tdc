@@ -50,13 +50,23 @@ sudo bash install.sh
 8. **SSL certificaat** (optioneel):
    - Haalt Let's Encrypt certificaat op via Certbot
    - Configureert auto-renewal (dagelijks om 3 uur 's nachts)
+
+9. **Firewall (UFW)**:
+   - Installeert UFW indien niet aanwezig
+   - Blokkeert alle inkomende verbindingen (standaard)
+   - Staat SSH (22), HTTP (80), HTTPS (443) toe
+   - Rate limiting op SSH tegen brute force attacks
+
+10. **Scheduled tasks (cron jobs)**:
+    - Message cleanup (elk uur) - verwijdert gelezen berichten na 24 uur
+    - SSL certificate renewal (dagelijks)
    
-9. **Systemd service**:
-   - Maakt service file aan
-   - Installeert gunicorn
-   - Start applicatie als service
+11. **Systemd service**:
+    - Maakt service file aan
+    - Installeert gunicorn
+    - Start applicatie als service
    
-10. **Zet permissies**:
+12. **Zet permissies**:
     - Ownership naar service account
     - Correcte directory/file permissions
     - Beveiligt .env bestand

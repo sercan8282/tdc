@@ -294,21 +294,29 @@ class NotificationSerializer(serializers.ModelSerializer):
         ]
     
     def get_topic_id(self, obj):
-        """Get the topic ID from the related reply."""
+        """Get the topic ID from the related reply or topic."""
         if obj.content_type.model == 'reply':
             try:
                 reply = Reply.objects.get(pk=obj.object_id)
                 return reply.topic.id
             except Reply.DoesNotExist:
                 pass
+        elif obj.content_type.model == 'topic':
+            return obj.object_id
         return None
     
     def get_topic_title(self, obj):
-        """Get the topic title from the related reply."""
+        """Get the topic title from the related reply or topic."""
         if obj.content_type.model == 'reply':
             try:
                 reply = Reply.objects.get(pk=obj.object_id)
                 return reply.topic.title
             except Reply.DoesNotExist:
+                pass
+        elif obj.content_type.model == 'topic':
+            try:
+                topic = Topic.objects.get(pk=obj.object_id)
+                return topic.title
+            except Topic.DoesNotExist:
                 pass
         return None

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Bell } from 'lucide-react';
+import { Bell, Trash2, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -119,6 +119,54 @@ export default function NotificationBell() {
     }
   };
 
+  const deleteNotification = async (notificationId: number, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering the notification click
+    if (!token) return;
+    
+    try {
+      const response = await fetch(`http://localhost:8000/api/forum/notifications/${notificationId}/`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Token ${token}`,
+        },
+      });
+      
+      if (response.ok || response.status === 204) {
+        // Remove from local state
+        const notification = notifications.find(n => n.id === notificationId);
+        setNotifications(prev => prev.filter(n => n.id !== notificationId));
+        if (notification && !notification.is_read) {
+          setUnreadCount(prev => Math.max(0, prev - 1));
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    }
+  };
+
+  const deleteAllNotifications = async () => {
+    if (!token) return;
+    
+    setLoading(true);
+    try {
+      const response = await fetch('http://localhost:8000/api/forum/notifications/delete_all/', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Token ${token}`,
+        },
+      });
+      
+      if (response.ok) {
+        setNotifications([]);
+        setUnreadCount(0);
+      }
+    } catch (error) {
+      console.error('Error deleting all notifications:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleNotificationClick = async (notification: Notification) => {
     if (!notification.is_read) {
       await markAsRead(notification.id);
@@ -180,19 +228,32 @@ export default function NotificationBell() {
           />
           
           {/* Dropdown */}
-          <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-20 max-h-[500px] overflow-hidden flex flex-col">
+          <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-[60] max-h-[500px] overflow-hidden flex flex-col">
             {/* Header */}
             <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
               <h3 className="font-semibold text-gray-800">Notifications</h3>
-              {unreadCount > 0 && (
-                <button
-                  onClick={markAllAsRead}
-                  disabled={loading}
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50"
-                >
-                  Mark all read
-                </button>
-              )}
+              <div className="flex items-center gap-2">
+                {unreadCount > 0 && (
+                  <button
+                    onClick={markAllAsRead}
+                    disabled={loading}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50"
+                  >
+                    Mark all read
+                  </button>
+                )}
+                {notifications.length > 0 && (
+                  <button
+                    onClick={deleteAllNotifications}
+                    disabled={loading}
+                    className="text-sm text-red-600 hover:text-red-700 font-medium disabled:opacity-50 flex items-center gap-1"
+                    title="Delete all notifications"
+                  >
+                    <Trash2 size={14} />
+                    Clear all
+                  </button>
+                )}
+              </div>
             </div>
 
             {/* Notifications list */}
@@ -236,12 +297,19 @@ export default function NotificationBell() {
                         </p>
                       </div>
                       
-                      {/* Unread indicator */}
-                      {!notification.is_read && (
-                        <div className="flex-shrink-0 mt-2">
+                      {/* Unread indicator & Delete button */}
+                      <div className="flex-shrink-0 flex items-center gap-2 mt-1">
+                        {!notification.is_read && (
                           <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                        </div>
-                      )}
+                        )}
+                        <button
+                          onClick={(e) => deleteNotification(notification.id, e)}
+                          className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                          title="Delete notification"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))

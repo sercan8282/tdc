@@ -1,9 +1,9 @@
 from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from .models import SiteSettings
-from .serializers import SiteSettingsSerializer
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
+from .models import SiteSettings, EventBanner
+from .serializers import SiteSettingsSerializer, EventBannerSerializer
 
 
 class SiteSettingsViewSet(viewsets.ModelViewSet):
@@ -67,3 +67,37 @@ class SiteSettingsViewSet(viewsets.ModelViewSet):
             {'error': 'Site settings cannot be deleted'},
             status=status.HTTP_400_BAD_REQUEST
         )
+
+
+class EventBannerViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for managing event banners.
+    Staff can create/update/delete banners.
+    Anyone can view active banners.
+    """
+    queryset = EventBanner.objects.all()
+    serializer_class = EventBannerSerializer
+
+    def get_permissions(self):
+        """Staff can manage banners, anyone can read"""
+        if self.action in ['create', 'update', 'partial_update', 'destroy']:
+            return [IsAdminUser()]
+        return [AllowAny()]
+
+    @action(detail=False, methods=['get'])
+    def active(self, request):
+        """Get the currently active banner (if any)"""
+        banner = EventBanner.get_active_banner()
+        if banner:
+            serializer = self.get_serializer(banner)
+            return Response(serializer.data)
+        return Response(None)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
+    def toggle_active(self, request, pk=None):
+        """Toggle banner active status"""
+        banner = self.get_object()
+        banner.is_active = not banner.is_active
+        banner.save()
+        serializer = self.get_serializer(banner)
+        return Response(serializer.data)

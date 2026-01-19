@@ -4,10 +4,12 @@ ViewSets for private messaging with security controls.
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.throttling import UserRateThrottle
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.utils import timezone
 from datetime import timedelta
+import bleach
 
 from .messaging_models import PrivateMessage
 from .messaging_serializers import (
@@ -17,6 +19,19 @@ from .messaging_serializers import (
 )
 
 User = get_user_model()
+
+
+class MessageRateThrottle(UserRateThrottle):
+    """Limit message sending to 30 per minute to prevent spam."""
+    rate = '30/minute'
+
+
+def sanitize_message_content(content):
+    """Sanitize message content to prevent XSS attacks."""
+    if not content:
+        return content
+    # Strip all HTML tags
+    return bleach.clean(content, tags=[], attributes={}, strip=True)
 
 
 class IsMessageParticipant(permissions.BasePermission):
@@ -38,9 +53,12 @@ class PrivateMessageViewSet(viewsets.ModelViewSet):
     - Cannot read other people's messages
     - Admins cannot see message content (only metadata for moderation)
     - Messages auto-delete after 24h of being read
+    - Rate limiting: 30 messages per minute
+    - XSS prevention via content sanitization
     """
     serializer_class = PrivateMessageSerializer
     permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [MessageRateThrottle]
     
     def get_queryset(self):
         """
@@ -61,7 +79,7 @@ class PrivateMessageViewSet(viewsets.ModelViewSet):
         return [permissions.IsAuthenticated()]
     
     def create(self, request, *args, **kwargs):
-        """Send a new message"""
+        """Send a new message with security validations"""
         # Check if sender is blocked or unverified
         if request.user.is_blocked:
             return Response(
@@ -74,6 +92,49 @@ class PrivateMessageViewSet(viewsets.ModelViewSet):
                 {'error': 'Only verified users can send messages'},
                 status=status.HTTP_403_FORBIDDEN
             )
+        
+        # Validate recipient exists
+        recipient_id = request.data.get('recipient')
+        if not recipient_id:
+            return Response(
+                {'error': 'Recipient is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            recipient = User.objects.get(id=recipient_id)
+        except (User.DoesNotExist, ValueError, TypeError):
+            return Response(
+                {'error': 'Recipient not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+        
+        # Cannot message yourself
+        if recipient == request.user:
+            return Response(
+                {'error': 'Cannot send messages to yourself'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Sanitize message content
+        if 'content' in request.data:
+            mutable_data = request.data.copy()
+            content = mutable_data.get('content', '').strip()
+            
+            if not content:
+                return Response(
+                    {'error': 'Message content is required'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            if len(content) > 5000:
+                return Response(
+                    {'error': 'Message too long (max 5000 characters)'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            mutable_data['content'] = sanitize_message_content(content)
+            request._full_data = mutable_data
         
         return super().create(request, *args, **kwargs)
     
@@ -101,7 +162,13 @@ class PrivateMessageViewSet(viewsets.ModelViewSet):
             )
         
         try:
+            other_user_id = int(other_user_id)
             other_user = User.objects.get(id=other_user_id)
+        except (ValueError, TypeError):
+            return Response(
+                {'error': 'Invalid user_id'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
         except User.DoesNotExist:
             return Response(
                 {'error': 'User not found'},

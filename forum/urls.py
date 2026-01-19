@@ -11,6 +11,7 @@ router.register(r'ranks', views.UserRankViewSet, basename='forum-rank')
 router.register(r'notifications', views.NotificationViewSet, basename='forum-notification')
 router.register(r'stats', views.ForumStatsViewSet, basename='forum-stats')
 router.register(r'images', views.ForumImageUploadView, basename='forum-images')
+router.register(r'users', views.UserSearchViewSet, basename='forum-users')
 
 # Nested router for replies under topics
 topics_router = routers.NestedDefaultRouter(router, r'topics', lookup='topic')

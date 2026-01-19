@@ -124,9 +124,9 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'email', 'nickname', 'first_name', 'last_name', 'full_name',
             'avatar', 'favorite_games', 'is_streamer', 'stream_url', 'youtube_url', 'kick_url', 'discord_url',
-            'mfa_enabled', 'created_at', 'updated_at'
+            'is_staff', 'is_superuser', 'mfa_enabled', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'email', 'mfa_enabled', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'email', 'is_staff', 'is_superuser', 'mfa_enabled', 'created_at', 'updated_at']
 
 
 class ProfileUpdateSerializer(serializers.ModelSerializer):

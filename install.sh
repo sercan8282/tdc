@@ -521,6 +521,76 @@ setup_ssl() {
 }
 
 ################################################################################
+# Setup Firewall (UFW)
+################################################################################
+
+setup_firewall() {
+    print_header "Setting up Firewall (UFW)"
+    
+    # Check if ufw is installed
+    if ! command -v ufw &> /dev/null; then
+        print_info "Installing UFW..."
+        apt-get update && apt-get install -y ufw
+    fi
+    
+    print_info "Configuring firewall rules..."
+    
+    # Reset UFW to default (deny incoming, allow outgoing)
+    ufw --force reset > /dev/null 2>&1
+    
+    # Default policies
+    ufw default deny incoming
+    ufw default allow outgoing
+    
+    # Allow SSH (important - don't lock yourself out!)
+    print_info "Allowing SSH (port 22)..."
+    ufw allow ssh
+    
+    # Allow HTTP
+    print_info "Allowing HTTP (port 80)..."
+    ufw allow 80/tcp
+    
+    # Allow HTTPS
+    print_info "Allowing HTTPS (port 443)..."
+    ufw allow 443/tcp
+    
+    # Rate limiting for SSH (prevent brute force)
+    print_info "Enabling SSH rate limiting..."
+    ufw limit ssh/tcp
+    
+    # Enable UFW
+    print_info "Enabling firewall..."
+    echo "y" | ufw enable
+    
+    print_success "Firewall configured and enabled"
+    
+    # Show status
+    echo -e "\n${BLUE}Firewall Status:${NC}"
+    ufw status verbose
+    echo ""
+}
+
+################################################################################
+# Setup Scheduled Tasks (Cron Jobs)
+################################################################################
+
+setup_cron_jobs() {
+    print_header "Setting up Scheduled Tasks"
+    
+    # Message cleanup cron job (runs every hour)
+    print_info "Setting up message cleanup job..."
+    CLEANUP_CMD="0 * * * * cd $APP_DIR && source venv/bin/activate && python manage.py cleanup_old_messages >> /var/log/${APP_NAME}/cleanup.log 2>&1"
+    
+    # Create log directory if it doesn't exist
+    mkdir -p /var/log/${APP_NAME}
+    chown $SERVICE_USER:$SERVICE_USER /var/log/${APP_NAME}
+    
+    # Add cron job for service user
+    (crontab -u $SERVICE_USER -l 2>/dev/null | grep -v "cleanup_old_messages"; echo "$CLEANUP_CMD") | crontab -u $SERVICE_USER -
+    print_success "Message cleanup job configured (hourly)"
+}
+
+################################################################################
 # Create Systemd Service
 ################################################################################
 
@@ -656,17 +726,25 @@ print_final_report() {
     echo -e "📁 Installation Path: ${INSTALL_PATH}"
     echo -e "👤 Service User: ${SERVICE_USER}"
     echo -e "🗄  Database: ${DB_NAME}"
+    echo -e "🔥 Firewall: UFW enabled (SSH, HTTP, HTTPS)"
     echo -e ""
     echo -e "${YELLOW}${LOCK} Initial Admin Credentials:${NC}"
     echo -e "   Email: ${GREEN}admin@${DOMAIN_NAME}${NC}"
     echo -e "   Password: ${GREEN}${TEMP_PASSWORD}${NC}"
     echo -e "   ${RED}⚠ CHANGE PASSWORD IMMEDIATELY AFTER FIRST LOGIN!${NC}"
     echo -e ""
+    echo -e "${BLUE}Security Features:${NC}"
+    echo -e "   ✓ Firewall (UFW) configured"
+    echo -e "   ✓ SSH rate limiting enabled"
+    echo -e "   ✓ SSL/HTTPS ready"
+    echo -e "   ✓ Secure file permissions"
+    echo -e ""
     echo -e "${BLUE}Useful Commands:${NC}"
     echo -e "   View logs: ${GREEN}journalctl -u ${APP_NAME}.service -f${NC}"
     echo -e "   Restart: ${GREEN}systemctl restart ${APP_NAME}.service${NC}"
     echo -e "   Status: ${GREEN}systemctl status ${APP_NAME}.service${NC}"
     echo -e "   Update: ${GREEN}${INSTALL_PATH}/update.sh${NC}"
+    echo -e "   Firewall: ${GREEN}ufw status${NC}"
     echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}\n"
     
     echo -e "${GREEN}${CHECKMARK} Installation completed successfully!${NC}\n"
@@ -694,6 +772,8 @@ main() {
     setup_frontend
     configure_nginx
     setup_ssl
+    setup_firewall
+    setup_cron_jobs
     create_systemd_service
     set_permissions
     create_update_script

@@ -482,9 +482,7 @@ def search_users(request):
     query = request.query_params.get('q', '').strip()
     
     if not query or len(query) < 2:
-        return Response({
-            'results': []
-        })
+        return Response([])
     
     # Search by nickname or email, exclude current user
     users = User.objects.filter(

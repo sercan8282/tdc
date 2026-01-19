@@ -328,13 +328,27 @@ class ReplyViewSet(viewsets.ModelViewSet):
         return Response({'is_solution': True})
 
 
-class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
+class NotificationViewSet(viewsets.ModelViewSet):
     """User notifications."""
     serializer_class = NotificationSerializer
     permission_classes = [IsAuthenticated]
+    http_method_names = ['get', 'delete']  # Only allow GET and DELETE
     
     def get_queryset(self):
         return Notification.objects.filter(user=self.request.user).select_related('notifier').order_by('-created_at')
+    
+    def destroy(self, request, *args, **kwargs):
+        """Delete a notification."""
+        notification = self.get_object()
+        notification.delete()
+        return Response(status=204)
+    
+    @action(detail=False, methods=['delete'])
+    def delete_all(self, request):
+        """Delete all notifications for the current user."""
+        count = self.get_queryset().count()
+        self.get_queryset().delete()
+        return Response({'deleted_count': count})
     
     @action(detail=False, methods=['get'])
     def unread_count(self, request):
@@ -355,6 +369,36 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
         """Mark all notifications as read."""
         self.get_queryset().update(is_read=True)
         return Response({'status': 'all marked as read'})
+
+
+class UserSearchViewSet(viewsets.ViewSet):
+    """Search users for @mentions."""
+    permission_classes = [IsAuthenticated]
+    
+    def list(self, request):
+        """Search users by nickname."""
+        query = request.query_params.get('q', '').strip()
+        if len(query) < 1:
+            return Response([])
+        
+        users = User.objects.filter(
+            nickname__icontains=query,
+            is_active=True
+        ).exclude(id=request.user.id)[:10]
+        
+        result = []
+        for user in users:
+            avatar_url = None
+            if hasattr(user, 'avatar') and user.avatar:
+                avatar_url = request.build_absolute_uri(user.avatar.url)
+            
+            result.append({
+                'id': user.id,
+                'nickname': user.nickname,
+                'avatar_url': avatar_url,
+            })
+        
+        return Response(result)
 
 
 class ForumStatsViewSet(viewsets.ViewSet):

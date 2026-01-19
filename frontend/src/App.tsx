@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation, us
 import { useAuth } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
 import NotificationBell from './components/NotificationBell';
+import EventBanner from './components/EventBanner';
 import Dashboard from './pages/Dashboard';
 import Games from './pages/Games';
 import Weapons from './pages/Weapons';
@@ -19,13 +20,16 @@ import SecurityDashboard from './pages/SecurityDashboard';
 import IPBlockManagement from './pages/IPBlockManagement';
 import Messages from './pages/Messages';
 import UserProfile from './pages/UserProfile';
+import Videos from './pages/Videos';
+import VideoAdmin from './pages/VideoAdmin';
+import EventBannerAdmin from './pages/EventBannerAdmin';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import MFASetup from './pages/MFASetup';
 import Profile from './pages/Profile';
 import './App.css';
 import { useState, useEffect } from 'react';
-import { Gamepad2, Crosshair, MessageSquare, Shield, LogIn, Settings, UserPlus, User, LogOut, ChevronDown, Users as UsersIcon, Globe, Mail } from 'lucide-react';
+import { Gamepad2, Crosshair, MessageSquare, Shield, LogIn, Settings, UserPlus, User, LogOut, ChevronDown, Users as UsersIcon, Globe, Mail, Film } from 'lucide-react';
 
 interface SiteSettings {
   site_name: string;
@@ -141,10 +145,13 @@ function PublicNav() {
     { path: '/weapons', label: 'Weapons', icon: Crosshair },
     { path: '/settings', label: 'Game Settings', icon: Settings },
     { path: '/forum', label: 'Forum', icon: MessageSquare },
+    { path: '/videos', label: 'Videos', icon: Film },
   ];
 
   return (
-    <nav className="bg-slate-800 border-b border-slate-700">
+    <>
+      <EventBanner />
+      <nav className="bg-slate-800 border-b border-slate-700">
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -245,6 +252,22 @@ function PublicNav() {
                           <MessageSquare className="w-4 h-4" />
                           Forum Admin
                         </Link>
+                        <Link
+                          to="/admin/videos"
+                          onClick={() => setAdminDropdown(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                        >
+                          <Film className="w-4 h-4" />
+                          Video Management
+                        </Link>
+                        <Link
+                          to="/admin/banners"
+                          onClick={() => setAdminDropdown(false)}
+                          className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                        >
+                          📢
+                          Event Banners
+                        </Link>
                       </div>
                     )}
                   </div>
@@ -280,6 +303,7 @@ function PublicNav() {
         </div>
       </div>
     </nav>
+    </>
   );
 }
 
@@ -379,6 +403,12 @@ function AppContent() {
         } 
       />
       
+      {/* Videos - visible to all, content requires login */}
+      <Route 
+        path="/videos" 
+        element={<PublicLayout><Videos /></PublicLayout>} 
+      />
+      
       {/* Admin route - alleen toegankelijk voor admins */}
       <Route 
         path="/admin" 
@@ -425,6 +455,26 @@ function AppContent() {
         element={
           isAuthenticated && isAdmin 
             ? <PublicLayout><IPBlockManagement /></PublicLayout>
+            : <Navigate to="/login" replace />
+        } 
+      />
+      
+      {/* Video Admin - alleen voor admins */}
+      <Route 
+        path="/admin/videos" 
+        element={
+          isAuthenticated && isAdmin 
+            ? <PublicLayout><VideoAdmin /></PublicLayout>
+            : <Navigate to="/login" replace />
+        } 
+      />
+      
+      {/* Event Banner Admin - alleen voor admins */}
+      <Route 
+        path="/admin/banners" 
+        element={
+          isAuthenticated && isAdmin 
+            ? <PublicLayout><EventBannerAdmin /></PublicLayout>
             : <Navigate to="/login" replace />
         } 
       />

@@ -26,6 +26,7 @@ urlpatterns = [
     path('api/auth/', include('djoser.urls')),
     path('api/auth/', include('djoser.urls.authtoken')),
     path('api/forum/', include('forum.urls')),  # Forum endpoints
+    path('api/videos/', include('videos.urls')),  # Video platform endpoints
 ]
 
 if settings.DEBUG:

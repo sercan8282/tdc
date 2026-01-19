@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import SiteSettings
+from .models import SiteSettings, EventBanner
 from PIL import Image
 from io import BytesIO
 from django.core.files.base import ContentFile
@@ -93,3 +93,54 @@ class SiteSettingsSerializer(serializers.ModelSerializer):
         instance.save()
         
         return instance
+
+
+class EventBannerSerializer(serializers.ModelSerializer):
+    """Serializer for event banners"""
+    image_url = serializers.SerializerMethodField()
+    time_remaining = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = EventBanner
+        fields = [
+            'id', 'title', 'subtitle', 'banner_type', 'color_scheme',
+            'image', 'image_url', 'event_date', 'show_countdown', 'time_remaining',
+            'link_url', 'link_text', 'is_active', 'is_dismissible', 'priority',
+            'start_date', 'end_date', 'created_at', 'updated_at'
+        ]
+        extra_kwargs = {
+            'image': {'write_only': True, 'required': False},
+        }
+    
+    def get_image_url(self, obj):
+        if obj.image:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.image.url)
+            return obj.image.url
+        return None
+    
+    def get_time_remaining(self, obj):
+        """Calculate time remaining until event"""
+        if not obj.event_date:
+            return None
+        
+        from django.utils import timezone
+        now = timezone.now()
+        diff = obj.event_date - now
+        
+        if diff.total_seconds() <= 0:
+            return {'expired': True, 'total_seconds': 0}
+        
+        days = diff.days
+        hours, remainder = divmod(diff.seconds, 3600)
+        minutes, seconds = divmod(remainder, 60)
+        
+        return {
+            'expired': False,
+            'total_seconds': int(diff.total_seconds()),
+            'days': days,
+            'hours': hours,
+            'minutes': minutes,
+            'seconds': seconds
+        }

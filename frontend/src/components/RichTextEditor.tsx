@@ -1,5 +1,11 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Image as ImageIcon, Loader } from 'lucide-react';
+
+interface MentionUser {
+  id: number;
+  nickname: string;
+  avatar_url: string | null;
+}
 
 interface RichTextEditorProps {
   value: string;
@@ -10,8 +16,128 @@ interface RichTextEditorProps {
 
 export default function RichTextEditor({ value, onChange, placeholder, token }: RichTextEditorProps) {
   const [uploading, setUploading] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState('');
+  const [mentionUsers, setMentionUsers] = useState<MentionUser[]>([]);
+  const [showMentions, setShowMentions] = useState(false);
+  const [mentionPosition, setMentionPosition] = useState({ top: 0, left: 0 });
+  const [selectedMentionIndex, setSelectedMentionIndex] = useState(0);
+  const [mentionStartPos, setMentionStartPos] = useState<number | null>(null);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const mentionRef = useRef<HTMLDivElement>(null);
+
+  // Search for users when mention query changes
+  useEffect(() => {
+    if (mentionQuery.length >= 1) {
+      const searchUsers = async () => {
+        try {
+          const response = await fetch(
+            `http://localhost:8000/api/forum/users/?q=${encodeURIComponent(mentionQuery)}`,
+            {
+              headers: { 'Authorization': `Token ${token}` },
+            }
+          );
+          if (response.ok) {
+            const users = await response.json();
+            setMentionUsers(users);
+            setShowMentions(users.length > 0);
+            setSelectedMentionIndex(0);
+          }
+        } catch (error) {
+          console.error('Failed to search users:', error);
+        }
+      };
+      searchUsers();
+    } else {
+      setMentionUsers([]);
+      setShowMentions(false);
+    }
+  }, [mentionQuery, token]);
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    const cursorPos = e.target.selectionStart;
+    
+    onChange(newValue);
+    
+    // Check for @ mention
+    const textBeforeCursor = newValue.substring(0, cursorPos);
+    const atMatch = textBeforeCursor.match(/@(\w*)$/);
+    
+    if (atMatch) {
+      setMentionQuery(atMatch[1]);
+      setMentionStartPos(cursorPos - atMatch[0].length);
+      
+      // Calculate position for dropdown
+      const textarea = textareaRef.current;
+      if (textarea) {
+        // Simple positioning - could be improved with a library
+        const lines = textBeforeCursor.split('\n');
+        const lineHeight = 24; // approximate
+        const top = Math.min(lines.length * lineHeight, 150);
+        setMentionPosition({ top: top + 10, left: 10 });
+      }
+    } else {
+      setMentionQuery('');
+      setShowMentions(false);
+      setMentionStartPos(null);
+    }
+  };
+
+  const insertMention = useCallback((user: MentionUser) => {
+    if (mentionStartPos === null) return;
+    
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    
+    const cursorPos = textarea.selectionStart;
+    const beforeMention = value.substring(0, mentionStartPos);
+    const afterMention = value.substring(cursorPos);
+    const newValue = `${beforeMention}@${user.nickname} ${afterMention}`;
+    
+    onChange(newValue);
+    setShowMentions(false);
+    setMentionQuery('');
+    setMentionStartPos(null);
+    
+    // Set cursor position after mention
+    setTimeout(() => {
+      const newCursorPos = mentionStartPos + user.nickname.length + 2; // +2 for @ and space
+      textarea.selectionStart = textarea.selectionEnd = newCursorPos;
+      textarea.focus();
+    }, 0);
+  }, [mentionStartPos, value, onChange]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (!showMentions || mentionUsers.length === 0) return;
+    
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedMentionIndex(prev => 
+          prev < mentionUsers.length - 1 ? prev + 1 : 0
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedMentionIndex(prev => 
+          prev > 0 ? prev - 1 : mentionUsers.length - 1
+        );
+        break;
+      case 'Enter':
+      case 'Tab':
+        if (showMentions) {
+          e.preventDefault();
+          insertMention(mentionUsers[selectedMentionIndex]);
+        }
+        break;
+      case 'Escape':
+        setShowMentions(false);
+        setMentionQuery('');
+        break;
+    }
+  };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -74,11 +200,45 @@ export default function RichTextEditor({ value, onChange, placeholder, token }: 
       <textarea
         ref={textareaRef}
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={handleTextChange}
+        onKeyDown={handleKeyDown}
         placeholder={placeholder}
         className="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[200px] resize-y"
         style={{ paddingBottom: '50px' }}
       />
+      
+      {/* Mention dropdown */}
+      {showMentions && mentionUsers.length > 0 && (
+        <div 
+          ref={mentionRef}
+          className="absolute z-50 bg-slate-800 border border-slate-600 rounded-lg shadow-xl max-h-48 overflow-y-auto"
+          style={{ top: mentionPosition.top, left: mentionPosition.left, minWidth: '200px' }}
+        >
+          {mentionUsers.map((user, index) => (
+            <button
+              key={user.id}
+              type="button"
+              onClick={() => insertMention(user)}
+              className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-slate-700 transition ${
+                index === selectedMentionIndex ? 'bg-slate-700' : ''
+              }`}
+            >
+              {user.avatar_url ? (
+                <img 
+                  src={user.avatar_url} 
+                  alt={user.nickname} 
+                  className="w-8 h-8 rounded-full object-cover"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-slate-600 flex items-center justify-center">
+                  <span className="text-sm text-slate-300">{user.nickname[0].toUpperCase()}</span>
+                </div>
+              )}
+              <span className="text-white font-medium">@{user.nickname}</span>
+            </button>
+          ))}
+        </div>
+      )}
       
       <div className="absolute bottom-3 right-3 flex items-center gap-2">
         <input
@@ -105,7 +265,7 @@ export default function RichTextEditor({ value, onChange, placeholder, token }: 
       </div>
       
       <div className="mt-2 text-xs text-slate-400">
-        Tip: You can use <strong>**bold**</strong>, <em>*italic*</em>, and upload images (max 10MB)
+        Tip: Use <span className="text-blue-400">@username</span> to mention someone, <strong>**bold**</strong>, <em>*italic*</em>, and upload images (max 10MB)
       </div>
     </div>
   );

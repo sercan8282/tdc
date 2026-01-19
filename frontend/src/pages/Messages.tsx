@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { Search, X, UserPlus } from 'lucide-react';
+import { Search, X, UserPlus, Smile } from 'lucide-react';
 
 interface User {
   id: number;
@@ -44,6 +44,89 @@ export default function Messages() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<User[]>([]);
   const [searching, setSearching] = useState(false);
+  
+  // Emoji picker
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  
+  const emojis = [
+    '😀', '😁', '😂', '🤣', '😃', '😄', '😅', '😆', '😉', '😊',
+    '😋', '😎', '😍', '🥰', '😘', '😗', '😙', '😚', '🙂', '🤗',
+    '🤔', '😐', '😑', '😶', '🙄', '😏', '😣', '😥', '😮', '🤐',
+    '😯', '😪', '😫', '😴', '😌', '😛', '😜', '😝', '🤤', '😒',
+    '😓', '😔', '😕', '🙃', '🤑', '😲', '🙁', '😖', '😞', '😟',
+    '😤', '😢', '😭', '😦', '😧', '😨', '😩', '🤯', '😬', '😰',
+    '😱', '🥵', '🥶', '😳', '🤪', '😵', '😡', '😠', '🤬', '😷',
+    '👍', '👎', '👌', '✌️', '🤞', '🤟', '🤘', '👏', '🙌', '👐',
+    '🔥', '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '💯', '💢',
+    '🎮', '🎯', '🏆', '⚔️', '🛡️', '💀', '☠️', '👻', '🤖', '👾'
+  ];
+  
+  const addEmoji = (emoji: string) => {
+    setNewMessage(prev => prev + emoji);
+    setShowEmojiPicker(false);
+  };
+  
+  // Text emoticon to emoji mapping
+  const emoticonMap: { [key: string]: string } = {
+    ':)': '😊', ':-)': '😊', '(:': '😊',
+    ':(': '😢', ':-(': '😢', '):': '😢',
+    ':D': '😃', ':-D': '😃',
+    ';)': '😉', ';-)': '😉',
+    ':P': '😛', ':-P': '😛', ':p': '😛', ':-p': '😛',
+    ':O': '😮', ':-O': '😮', ':o': '😮', ':-o': '😮',
+    '<3': '❤️', '</3': '💔',
+    ':/': '😕', ':-/': '😕', ':\\': '😕', ':-\\': '😕',
+    ':*': '😘', ':-*': '😘',
+    'XD': '😆', 'xD': '😆', 'xd': '😆',
+    ':\'(': '😭', ':\'-(': '😭',
+    'B)': '😎', 'B-)': '😎',
+    '>:(': '😠', '>:-(': '😠',
+    ':S': '😖', ':-S': '😖', ':s': '😖', ':-s': '😖',
+    'o_O': '😳', 'O_o': '😳', 'o_o': '😳', 'O_O': '😳',
+    '-_-': '😑', '=_=': '😑',
+    '^_^': '😄', '^-^': '😄',
+    '>_<': '😣', '>.<': '😣',
+    ':3': '😺', '=3': '😺',
+    'gg': '🎮', 'GG': '🎮',
+    ':fire:': '🔥', ':heart:': '❤️', ':thumbsup:': '👍', ':thumbsdown:': '👎',
+    ':skull:': '💀', ':100:': '💯', ':trophy:': '🏆', ':clap:': '👏',
+  };
+  
+  // Convert text emoticons to emojis
+  const convertEmoticons = (text: string): string => {
+    let result = text;
+    // Sort by length descending to match longer patterns first
+    const sortedEmoticons = Object.keys(emoticonMap).sort((a, b) => b.length - a.length);
+    
+    for (const emoticon of sortedEmoticons) {
+      // Escape special regex characters
+      const escaped = emoticon.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // Only replace if emoticon is at word boundary or surrounded by spaces
+      const regex = new RegExp(`(^|\\s)${escaped}(\\s|$)`, 'g');
+      result = result.replace(regex, `$1${emoticonMap[emoticon]}$2`);
+    }
+    return result;
+  };
+  
+  // Handle message input with emoticon conversion
+  const handleMessageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const text = e.target.value;
+    const converted = convertEmoticons(text);
+    setNewMessage(converted);
+  };
+  
+  // Close emoji picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (emojiPickerRef.current && !emojiPickerRef.current.contains(event.target as Node)) {
+        setShowEmojiPicker(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     fetchCurrentUser();
@@ -89,7 +172,7 @@ export default function Messages() {
   const fetchCurrentUser = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch('http://localhost:8000/api/users/profile/', {
+      const res = await fetch('http://localhost:8000/api/auth/profile/', {
         headers: {
           'Authorization': `Token ${token}`,
         },
@@ -189,7 +272,7 @@ export default function Messages() {
     setSearching(true);
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch(`http://localhost:8000/api/users/search/?q=${encodeURIComponent(query)}`, {
+      const res = await fetch(`http://localhost:8000/api/auth/search/?q=${encodeURIComponent(query)}`, {
         headers: {
           'Authorization': `Token ${token}`,
         },
@@ -413,12 +496,40 @@ export default function Messages() {
 
             {/* Message Input */}
             <form onSubmit={sendMessage} className="p-4 border-t border-gray-700 bg-gray-800">
-              <div className="flex space-x-2">
+              <div className="flex space-x-2 items-center">
+                {/* Emoji Picker */}
+                <div className="relative" ref={emojiPickerRef}>
+                  <button
+                    type="button"
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    className="p-2 text-gray-400 hover:text-yellow-400 hover:bg-gray-700 rounded-lg transition"
+                  >
+                    <Smile className="w-6 h-6" />
+                  </button>
+                  
+                  {showEmojiPicker && (
+                    <div className="absolute bottom-12 left-0 bg-gray-800 border border-gray-600 rounded-lg p-3 shadow-xl z-10 w-72">
+                      <div className="grid grid-cols-10 gap-1 max-h-48 overflow-y-auto">
+                        {emojis.map((emoji, index) => (
+                          <button
+                            key={index}
+                            type="button"
+                            onClick={() => addEmoji(emoji)}
+                            className="text-xl hover:bg-gray-700 rounded p-1 transition"
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
                 <input
                   type="text"
                   value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Type a message..."
+                  onChange={handleMessageChange}
+                  placeholder="Type a message... (try :) or <3)"
                   className="flex-1 bg-gray-700 text-white border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <button

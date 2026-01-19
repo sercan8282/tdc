@@ -238,3 +238,74 @@ class SiteSettings(models.Model):
         """Get or create the singleton settings instance"""
         settings, created = cls.objects.get_or_create(pk=1)
         return settings
+
+
+class EventBanner(models.Model):
+    """Event banner with countdown - shown above navbar"""
+    BANNER_TYPE_CHOICES = [
+        ('event', 'Event'),
+        ('announcement', 'Announcement'),
+        ('maintenance', 'Maintenance'),
+        ('update', 'Update'),
+        ('stream', 'Live Stream'),
+    ]
+    
+    COLOR_SCHEME_CHOICES = [
+        ('blue', 'Blue'),
+        ('purple', 'Purple'),
+        ('green', 'Green'),
+        ('red', 'Red'),
+        ('orange', 'Orange'),
+        ('pink', 'Pink'),
+        ('gradient', 'Gradient'),
+    ]
+
+    title = models.CharField(max_length=200, help_text='Main banner title')
+    subtitle = models.CharField(max_length=300, blank=True, null=True, help_text='Optional subtitle or description')
+    banner_type = models.CharField(max_length=20, choices=BANNER_TYPE_CHOICES, default='event')
+    color_scheme = models.CharField(max_length=20, choices=COLOR_SCHEME_CHOICES, default='blue')
+    
+    # Image
+    image = models.ImageField(upload_to='banners/', blank=True, null=True, help_text='Optional banner image')
+    
+    # Countdown
+    event_date = models.DateTimeField(blank=True, null=True, help_text='Event date/time for countdown')
+    show_countdown = models.BooleanField(default=True, help_text='Show countdown timer')
+    
+    # Link
+    link_url = models.URLField(blank=True, null=True, help_text='Optional link when clicking the banner')
+    link_text = models.CharField(max_length=50, blank=True, null=True, help_text='Link button text')
+    
+    # Display settings
+    is_active = models.BooleanField(default=False, help_text='Show this banner')
+    is_dismissible = models.BooleanField(default=True, help_text='Allow users to close the banner')
+    priority = models.IntegerField(default=0, help_text='Higher priority shows first')
+    
+    # Scheduling
+    start_date = models.DateTimeField(blank=True, null=True, help_text='When to start showing the banner')
+    end_date = models.DateTimeField(blank=True, null=True, help_text='When to stop showing the banner')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Event Banner'
+        verbose_name_plural = 'Event Banners'
+        ordering = ['-priority', '-created_at']
+
+    def __str__(self):
+        return f"{self.title} ({self.banner_type})"
+
+    @classmethod
+    def get_active_banner(cls):
+        """Get the highest priority active banner within schedule"""
+        from django.utils import timezone
+        now = timezone.now()
+        
+        return cls.objects.filter(
+            is_active=True
+        ).filter(
+            models.Q(start_date__isnull=True) | models.Q(start_date__lte=now)
+        ).filter(
+            models.Q(end_date__isnull=True) | models.Q(end_date__gte=now)
+        ).first()
