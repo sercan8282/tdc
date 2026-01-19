@@ -81,7 +81,7 @@ export default function ForumCategory() {
   const fetchData = async () => {
     try {
       // Fetch category info
-      const catRes = await fetch(`http://localhost:8000/api/forum/categories/`);
+      const catRes = await fetch(`/api/forum/categories/`);
       if (catRes.ok) {
         const data = await catRes.json();
         const cat = (data.results || data).find((c: Category) => c.slug === slug);
@@ -89,7 +89,7 @@ export default function ForumCategory() {
       }
 
       // Fetch topics for this category
-      const topicsRes = await fetch(`http://localhost:8000/api/forum/topics/?category=${slug}`);
+      const topicsRes = await fetch(`/api/forum/topics/?category=${slug}`);
       if (topicsRes.ok) {
         const data = await topicsRes.json();
         setTopics(data.results || data);

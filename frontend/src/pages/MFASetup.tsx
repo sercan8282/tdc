@@ -33,7 +33,7 @@ export default function MFASetup() {
 
   const fetchMFASetup = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/auth/mfa/setup/', {
+      const response = await fetch('/api/auth/mfa/setup/', {
         headers: {
           'Authorization': `Token ${token}`,
         },
@@ -60,7 +60,7 @@ export default function MFASetup() {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/mfa/verify/', {
+      const response = await fetch('/api/auth/mfa/verify/', {
         method: 'POST',
         headers: {
           'Authorization': `Token ${token}`,

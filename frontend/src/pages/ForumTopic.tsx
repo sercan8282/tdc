@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { 
   MessageSquare, Eye, Pin, Lock, CheckCircle,
-  Loader, ThumbsUp, Reply, User, Send, AtSign,
+  Loader, ThumbsUp, Reply, User, Send,
   Edit, Trash2, X, Quote
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -111,7 +111,7 @@ export default function ForumTopic() {
 
   const fetchTopic = async () => {
     try {
-      const res = await fetch(`http://localhost:8000/api/forum/topics/${id}/`, {
+      const res = await fetch(`/api/forum/topics/${id}/`, {
         headers: token ? { 'Authorization': `Token ${token}` } : {},
       });
       if (res.ok) {
@@ -131,7 +131,7 @@ export default function ForumTopic() {
 
     setSubmitting(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/forum/topics/${topic.id}/replies/`, {
+      const res = await fetch(`/api/forum/topics/${topic.id}/replies/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -160,7 +160,7 @@ export default function ForumTopic() {
 
     setSubmitting(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/forum/topics/${topic.id}/replies/${replyId}/`, {
+      const res = await fetch(`/api/forum/topics/${topic.id}/replies/${replyId}/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -185,7 +185,7 @@ export default function ForumTopic() {
     if (!topic) return;
 
     try {
-      const res = await fetch(`http://localhost:8000/api/forum/topics/${topic.id}/replies/${replyId}/`, {
+      const res = await fetch(`/api/forum/topics/${topic.id}/replies/${replyId}/`, {
         method: 'DELETE',
         headers: { 'Authorization': `Token ${token}` },
       });
@@ -204,7 +204,7 @@ export default function ForumTopic() {
 
     setSubmitting(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/forum/topics/${topic.id}/`, {
+      const res = await fetch(`/api/forum/topics/${topic.id}/`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -231,7 +231,7 @@ export default function ForumTopic() {
     if (!topic) return;
 
     try {
-      const res = await fetch(`http://localhost:8000/api/forum/topics/${topic.id}/`, {
+      const res = await fetch(`/api/forum/topics/${topic.id}/`, {
         method: 'DELETE',
         headers: { 'Authorization': `Token ${token}` },
       });
@@ -248,7 +248,7 @@ export default function ForumTopic() {
     if (!token) return;
     
     try {
-      await fetch(`http://localhost:8000/api/forum/topics/${topic?.id}/replies/${replyId}/like/`, {
+      await fetch(`/api/forum/topics/${topic?.id}/replies/${replyId}/like/`, {
         method: 'POST',
         headers: { 'Authorization': `Token ${token}` },
       });
@@ -288,19 +288,6 @@ export default function ForumTopic() {
     return '▸'.repeat(count);
   };
 
-  const renderContent = (content: string) => {
-    return content.split(/(@\w+)/g).map((part, i) => {
-      if (part.match(/^@\w+$/)) {
-        return (
-          <span key={i} className="text-blue-400 bg-blue-500/10 px-1 rounded">
-            {part}
-          </span>
-        );
-      }
-      return part;
-    });
-  };
-
   const canEdit = (reply: ReplyData) => {
     if (!user) return false;
     console.log('canEdit check:', { 
@@ -312,7 +299,7 @@ export default function ForumTopic() {
     return reply.is_own || user.is_staff;
   };
 
-  const canDelete = (reply: ReplyData) => {
+  const canDelete = (_reply: ReplyData) => {
     if (!user) return false;
     return user.is_staff; // Only admins can delete
   };

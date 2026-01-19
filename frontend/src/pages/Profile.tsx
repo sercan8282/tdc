@@ -109,7 +109,7 @@ export default function Profile() {
 
   const fetchProfile = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/auth/profile/', {
+      const response = await fetch('/api/auth/profile/', {
         headers: { 'Authorization': `Token ${token}` },
       });
       
@@ -140,7 +140,7 @@ export default function Profile() {
   const fetchRecentReplies = async (page: number) => {
     setRepliesLoading(true);
     try {
-      const response = await fetch(`http://localhost:8000/api/auth/profile/recent-replies/?page=${page}`, {
+      const response = await fetch(`/api/auth/profile/recent-replies/?page=${page}`, {
         headers: { 'Authorization': `Token ${token}` },
       });
       
@@ -165,7 +165,7 @@ export default function Profile() {
     setSuccess(null);
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/profile/', {
+      const response = await fetch('/api/auth/profile/', {
         method: 'PUT',
         headers: {
           'Authorization': `Token ${token}`,
@@ -204,7 +204,7 @@ export default function Profile() {
     formData.append('avatar', file);
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/profile/avatar/', {
+      const response = await fetch('/api/auth/profile/avatar/', {
         method: 'POST',
         headers: { 'Authorization': `Token ${token}` },
         body: formData,
@@ -233,7 +233,7 @@ export default function Profile() {
     if (!confirm('Are you sure you want to delete your avatar?')) return;
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/profile/avatar/delete/', {
+      const response = await fetch('/api/auth/profile/avatar/delete/', {
         method: 'DELETE',
         headers: { 'Authorization': `Token ${token}` },
       });
@@ -261,7 +261,7 @@ export default function Profile() {
     }
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/profile/password/', {
+      const response = await fetch('/api/auth/profile/password/', {
         method: 'POST',
         headers: {
           'Authorization': `Token ${token}`,
@@ -297,7 +297,7 @@ export default function Profile() {
     setMfaResetSuccess(null);
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/mfa/reset/', {
+      const response = await fetch('/api/auth/mfa/reset/', {
         method: 'POST',
         headers: {
           'Authorization': `Token ${token}`,
@@ -398,7 +398,7 @@ export default function Profile() {
               <div className="w-24 h-24 rounded-full bg-slate-700 flex items-center justify-center overflow-hidden border-4 border-slate-600">
                 {profile?.avatar ? (
                   <img
-                    src={`http://localhost:8000${profile.avatar}`}
+                    src={`${profile.avatar}`}
                     alt="Avatar"
                     className="w-full h-full object-cover"
                   />

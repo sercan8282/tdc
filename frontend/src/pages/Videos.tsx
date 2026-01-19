@@ -113,7 +113,7 @@ export default function Videos() {
       params.set('featured_first', 'true');
       
       const response = await axios.get<PaginatedResponse>(
-        `http://localhost:8000/api/videos/?${params.toString()}`,
+        `/api/videos/?${params.toString()}`,
         { headers: { Authorization: `Token ${token}` } }
       );
       
@@ -134,7 +134,7 @@ export default function Videos() {
     
     try {
       const response = await axios.get<VideoTag[]>(
-        'http://localhost:8000/api/videos/tags/popular/?limit=15',
+        '/api/videos/tags/popular/?limit=15',
         { headers: { Authorization: `Token ${token}` } }
       );
       setPopularTags(response.data);
@@ -160,7 +160,7 @@ export default function Videos() {
         setVideoLoading(true);
         try {
           const response = await axios.get<Video>(
-            `http://localhost:8000/api/videos/${watchId}/`,
+            `/api/videos/${watchId}/`,
             { headers: { Authorization: `Token ${token}` } }
           );
           setSelectedVideo(response.data);
@@ -168,7 +168,7 @@ export default function Videos() {
           
           // Record view
           await axios.post(
-            `http://localhost:8000/api/videos/${watchId}/view/`,
+            `/api/videos/${watchId}/view/`,
             {},
             { headers: { Authorization: `Token ${token}` } }
           );
@@ -202,7 +202,7 @@ export default function Videos() {
     try {
       // Fetch full video details
       const response = await axios.get<Video>(
-        `http://localhost:8000/api/videos/${video.id}/`,
+        `/api/videos/${video.id}/`,
         { headers: { Authorization: `Token ${token}` } }
       );
       setSelectedVideo(response.data);
@@ -210,7 +210,7 @@ export default function Videos() {
       
       // Record view
       await axios.post(
-        `http://localhost:8000/api/videos/${video.id}/view/`,
+        `/api/videos/${video.id}/view/`,
         {},
         { headers: { Authorization: `Token ${token}` } }
       );
@@ -234,7 +234,7 @@ export default function Videos() {
     
     try {
       const response = await axios.post(
-        `http://localhost:8000/api/videos/${selectedVideo.id}/react/`,
+        `/api/videos/${selectedVideo.id}/react/`,
         { reaction_type: reactionType },
         { headers: { Authorization: `Token ${token}` } }
       );
@@ -257,7 +257,7 @@ export default function Videos() {
     setSubmittingComment(true);
     try {
       const response = await axios.post(
-        `http://localhost:8000/api/videos/${selectedVideo.id}/comments/`,
+        `/api/videos/${selectedVideo.id}/comments/`,
         { content: newComment.trim() },
         { headers: { Authorization: `Token ${token}` } }
       );
@@ -280,7 +280,7 @@ export default function Videos() {
     
     try {
       await axios.delete(
-        `http://localhost:8000/api/videos/comments/${commentId}/`,
+        `/api/videos/comments/${commentId}/`,
         { headers: { Authorization: `Token ${token}` } }
       );
       

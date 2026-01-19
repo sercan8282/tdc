@@ -77,7 +77,7 @@ export default function ForumAdmin() {
 
   const fetchCategories = useCallback(async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/forum/categories/', {
+      const response = await fetch('/api/forum/categories/', {
         headers: token ? { 'Authorization': `Token ${token}` } : {},
       });
       if (response.ok) {
@@ -91,7 +91,7 @@ export default function ForumAdmin() {
 
   const fetchRanks = useCallback(async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/forum/ranks/', {
+      const response = await fetch('/api/forum/ranks/', {
         headers: token ? { 'Authorization': `Token ${token}` } : {},
       });
       if (response.ok) {
@@ -118,8 +118,8 @@ export default function ForumAdmin() {
     
     try {
       const url = editingCategory
-        ? `http://localhost:8000/api/forum/categories/${editingCategory.id}/`
-        : 'http://localhost:8000/api/forum/categories/';
+        ? `/api/forum/categories/${editingCategory.id}/`
+        : '/api/forum/categories/';
       
       const response = await fetch(url, {
         method: editingCategory ? 'PATCH' : 'POST',
@@ -156,7 +156,7 @@ export default function ForumAdmin() {
     if (!confirm('Are you sure you want to delete this category?')) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/forum/categories/${id}/`, {
+      const response = await fetch(`/api/forum/categories/${id}/`, {
         method: 'DELETE',
         headers: { 'Authorization': `Token ${token}` },
       });
@@ -192,8 +192,8 @@ export default function ForumAdmin() {
     
     try {
       const url = editingRank
-        ? `http://localhost:8000/api/forum/ranks/${editingRank.id}/`
-        : 'http://localhost:8000/api/forum/ranks/';
+        ? `/api/forum/ranks/${editingRank.id}/`
+        : '/api/forum/ranks/';
       
       // Use FormData if there's an image, otherwise use JSON
       let response;
@@ -253,7 +253,7 @@ export default function ForumAdmin() {
     if (!confirm('Are you sure you want to delete this rank?')) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/forum/ranks/${id}/`, {
+      const response = await fetch(`/api/forum/ranks/${id}/`, {
         method: 'DELETE',
         headers: { 'Authorization': `Token ${token}` },
       });
@@ -309,7 +309,7 @@ export default function ForumAdmin() {
     if (editingRank && editingRank.image_url) {
       // Remove image from server
       try {
-        const response = await fetch(`http://localhost:8000/api/forum/ranks/${editingRank.id}/`, {
+        const response = await fetch(`/api/forum/ranks/${editingRank.id}/`, {
           method: 'PATCH',
           headers: {
             'Authorization': `Token ${token}`,

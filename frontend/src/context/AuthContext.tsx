@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getApiUrl } from '../config/api';
 
 interface User {
   id: number;
@@ -27,23 +28,71 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [pendingCredentials, setPendingCredentials] = useState<{email: string, password: string} | null>(null);
+// Helper to safely get initial values from localStorage
+const getInitialToken = (): string | null => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('authToken');
+  }
+  return null;
+};
 
-  // Load from localStorage on mount
-  useEffect(() => {
-    const savedToken = localStorage.getItem('authToken');
+const getInitialUser = (): User | null => {
+  if (typeof window !== 'undefined') {
     const savedUser = localStorage.getItem('user');
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
+    if (savedUser) {
+      try {
+        return JSON.parse(savedUser);
+      } catch {
+        return null;
+      }
     }
+  }
+  return null;
+};
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  // Initialize state directly from localStorage to prevent flash of unauthenticated content
+  const [user, setUser] = useState<User | null>(getInitialUser);
+  const [token, setToken] = useState<string | null>(getInitialToken);
+  const [, setPendingCredentials] = useState<{email: string, password: string} | null>(null);
+
+  // Validate token on mount
+  useEffect(() => {
+    const validateToken = async () => {
+      const savedToken = localStorage.getItem('authToken');
+      if (savedToken) {
+        try {
+          const response = await fetch(getApiUrl('/api/auth/profile/'), {
+            headers: {
+              'Authorization': `Token ${savedToken}`,
+            },
+          });
+          
+          if (response.ok) {
+            const userData = await response.json();
+            setUser(userData);
+            setToken(savedToken);
+            localStorage.setItem('user', JSON.stringify(userData));
+          } else {
+            // Token is invalid, clear everything
+            console.log('Token invalid, logging out');
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('user');
+            setUser(null);
+            setToken(null);
+          }
+        } catch (error) {
+          console.error('Failed to validate token:', error);
+          // Keep the user logged in if it's just a network error
+        }
+      }
+    };
+
+    validateToken();
   }, []);
 
   const fetchUser = async (authToken: string): Promise<User> => {
-    const userResponse = await fetch('http://localhost:8000/api/auth/profile/', {
+    const userResponse = await fetch(getApiUrl('/api/auth/profile/'), {
       headers: {
         'Authorization': `Token ${authToken}`,
       },
@@ -73,7 +122,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Attempting login for:', email);
       
       // Use our custom login endpoint that supports MFA
-      const response = await fetch('http://localhost:8000/api/auth/login/', {
+      const response = await fetch(getApiUrl('/api/auth/login/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

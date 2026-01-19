@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { X } from 'lucide-react';
 
 interface ContentRendererProps {
@@ -11,7 +11,7 @@ export default function ContentRenderer({ content }: ContentRendererProps) {
   const renderContent = () => {
     // Split content by newlines
     const lines = content.split('\n');
-    const elements: JSX.Element[] = [];
+    const elements: React.ReactElement[] = [];
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];

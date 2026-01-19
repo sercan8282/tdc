@@ -36,7 +36,7 @@ export default function ForumNewTopic() {
 
   const fetchCategories = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/forum/categories/');
+      const res = await fetch('/api/forum/categories/');
       if (res.ok) {
         const data = await res.json();
         const cats = data.results || data;
@@ -67,7 +67,7 @@ export default function ForumNewTopic() {
     setError(null);
 
     try {
-      const res = await fetch('http://localhost:8000/api/forum/topics/', {
+      const res = await fetch('/api/forum/topics/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

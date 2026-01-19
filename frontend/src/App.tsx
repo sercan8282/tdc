@@ -3,7 +3,6 @@ import { useAuth } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
 import NotificationBell from './components/NotificationBell';
 import EventBanner from './components/EventBanner';
-import Dashboard from './pages/Dashboard';
 import Games from './pages/Games';
 import Weapons from './pages/Weapons';
 import GameSettings from './pages/GameSettings';
@@ -53,7 +52,7 @@ function MessageIcon() {
   const fetchUnreadCount = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch('http://localhost:8000/api/auth/messages/unread_count/', {
+      const res = await fetch('/api/auth/messages/unread_count/', {
         headers: {
           'Authorization': `Token ${token}`,
         },
@@ -86,7 +85,6 @@ function MessageIcon() {
 // Publiek navigatie menu component
 function PublicNav() {
   const location = useLocation();
-  const navigate = useNavigate();
   const { isAuthenticated, isAdmin, user } = useAuth();
   const [adminDropdown, setAdminDropdown] = useState(false);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
@@ -112,7 +110,7 @@ function PublicNav() {
 
   const fetchSiteSettings = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/site-settings/');
+      const res = await fetch('/api/site-settings/');
       const data = await res.json();
       // API returns array with single item
       const settings = Array.isArray(data) ? data[0] : data;

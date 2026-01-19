@@ -30,7 +30,7 @@ export default function NotificationBell() {
     if (!token) return;
     
     try {
-      const response = await fetch('http://localhost:8000/api/forum/notifications/', {
+      const response = await fetch('/api/forum/notifications/', {
         headers: {
           'Authorization': `Token ${token}`,
         },
@@ -52,7 +52,7 @@ export default function NotificationBell() {
     if (!token) return;
     
     try {
-      const response = await fetch('http://localhost:8000/api/forum/notifications/unread_count/', {
+      const response = await fetch('/api/forum/notifications/unread_count/', {
         headers: {
           'Authorization': `Token ${token}`,
         },
@@ -80,7 +80,7 @@ export default function NotificationBell() {
     if (!token) return;
     
     try {
-      await fetch(`http://localhost:8000/api/forum/notifications/${notificationId}/mark_read/`, {
+      await fetch(`/api/forum/notifications/${notificationId}/mark_read/`, {
         method: 'POST',
         headers: {
           'Authorization': `Token ${token}`,
@@ -102,7 +102,7 @@ export default function NotificationBell() {
     
     setLoading(true);
     try {
-      await fetch('http://localhost:8000/api/forum/notifications/mark_all_read/', {
+      await fetch('/api/forum/notifications/mark_all_read/', {
         method: 'POST',
         headers: {
           'Authorization': `Token ${token}`,
@@ -124,7 +124,7 @@ export default function NotificationBell() {
     if (!token) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/forum/notifications/${notificationId}/`, {
+      const response = await fetch(`/api/forum/notifications/${notificationId}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Token ${token}`,
@@ -149,7 +149,7 @@ export default function NotificationBell() {
     
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/api/forum/notifications/delete_all/', {
+      const response = await fetch('/api/forum/notifications/delete_all/', {
         method: 'DELETE',
         headers: {
           'Authorization': `Token ${token}`,

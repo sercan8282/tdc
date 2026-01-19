@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import SearchBar from '../components/SearchBar';
 import Pagination from '../components/Pagination';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { Shield, Check, Ban, Trash2, Loader, Plus, Edit, Trash, ChevronDown, ChevronRight, Copy, Search, X, GripVertical } from 'lucide-react';
+import { Shield, Check, Ban, Trash2, Loader, Plus, Edit, Trash, ChevronDown, ChevronRight, Copy, Search, X } from 'lucide-react';
 
 interface User {
   id: number;
@@ -283,7 +283,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         page_size: itemsPerPage.toString(),
       });
 
-      const response = await fetch(`http://localhost:8000/api/users/?${params}`, {
+      const response = await fetch(`/api/users/?${params}`, {
         headers: {
           'Authorization': `Token ${token}`,
         },
@@ -311,7 +311,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         pending: 'true', // Filter for unverified users only
       });
 
-      const response = await fetch(`http://localhost:8000/api/users/?${params}`, {
+      const response = await fetch(`/api/users/?${params}`, {
         headers: {
           'Authorization': `Token ${token}`,
         },
@@ -347,9 +347,9 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         params.append('has_image', 'false');
       }
 
-      console.log('Fetching games with token:', token ? 'present' : 'missing', 'URL:', `http://localhost:8000/api/games/?${params}`);
+      console.log('Fetching games with token:', token ? 'present' : 'missing', 'URL:', `/api/games/?${params}`);
       
-      const response = await fetch(`http://localhost:8000/api/games/?${params}`, {
+      const response = await fetch(`/api/games/?${params}`, {
         headers: {
           'Authorization': `Token ${token}`,
         },
@@ -378,7 +378,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         page_size: itemsPerPage.toString(),
       });
 
-      const response = await fetch(`http://localhost:8000/api/categories/?${params}`, {
+      const response = await fetch(`/api/categories/?${params}`, {
         headers: {
           'Authorization': `Token ${token}`,
         },
@@ -413,7 +413,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         params.append('has_image', 'false');
       }
 
-      const response = await fetch(`http://localhost:8000/api/weapons/?${params}`, {
+      const response = await fetch(`/api/weapons/?${params}`, {
         headers: {
           'Authorization': `Token ${token}`,
         },
@@ -440,7 +440,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         page_size: itemsPerPage.toString(),
       });
 
-      const response = await fetch(`http://localhost:8000/api/attachments/?${params}`, {
+      const response = await fetch(`/api/attachments/?${params}`, {
         headers: {
           'Authorization': `Token ${token}`,
         },
@@ -461,7 +461,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
   // Fetch attachment types
   const fetchAttachmentTypes = useCallback(async () => {
     try {
-      const response = await fetch(`http://localhost:8000/api/attachment-types/?page_size=100`, {
+      const response = await fetch(`/api/attachment-types/?page_size=100`, {
         headers: { 'Authorization': `Token ${token}` },
       });
 
@@ -480,7 +480,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
       const params = new URLSearchParams({ page_size: '200' });
       if (gameId) params.append('game', gameId.toString());
 
-      const response = await fetch(`http://localhost:8000/api/game-setting-definitions/?${params}`, {
+      const response = await fetch(`/api/game-setting-definitions/?${params}`, {
         headers: { 'Authorization': `Token ${token}` },
       });
 
@@ -502,7 +502,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
       const params = new URLSearchParams({ page_size: '100' });
       if (gameId) params.append('game', gameId.toString());
 
-      const response = await fetch(`http://localhost:8000/api/game-setting-profiles/?${params}`, {
+      const response = await fetch(`/api/game-setting-profiles/?${params}`, {
         headers: { 'Authorization': `Token ${token}` },
       });
 
@@ -525,13 +525,13 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
     const loadInitialData = async () => {
       try {
         const [gamesRes, categoriesRes, weaponsRes] = await Promise.all([
-          fetch(`http://localhost:8000/api/games/?page_size=100`, {
+          fetch(`/api/games/?page_size=100`, {
             headers: { 'Authorization': `Token ${token}` },
           }),
-          fetch(`http://localhost:8000/api/categories/?page_size=100`, {
+          fetch(`/api/categories/?page_size=100`, {
             headers: { 'Authorization': `Token ${token}` },
           }),
-          fetch(`http://localhost:8000/api/weapons/?page_size=100`, {
+          fetch(`/api/weapons/?page_size=100`, {
             headers: { 'Authorization': `Token ${token}` },
           }),
         ]);
@@ -632,7 +632,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
       if (action.startsWith('user_')) {
         const endpoint = action.replace('user_', '');
         const response = await fetch(
-          `http://localhost:8000/api/users/${user?.id}/${endpoint}/`,
+          `/api/users/${user?.id}/${endpoint}/`,
           {
             method: 'POST',
             headers: {
@@ -652,7 +652,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         
         if (gameAction === 'delete' && game) {
           const response = await fetch(
-            `http://localhost:8000/api/games/${game.id}/`,
+            `/api/games/${game.id}/`,
             {
               method: 'DELETE',
               headers: {
@@ -667,7 +667,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
           }
         } else if (gameAction === 'toggle' && game) {
           const response = await fetch(
-            `http://localhost:8000/api/games/${game.id}/`,
+            `/api/games/${game.id}/`,
             {
               method: 'PATCH',
               headers: {
@@ -688,7 +688,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         
         if (categoryAction === 'delete' && category) {
           const response = await fetch(
-            `http://localhost:8000/api/categories/${category.id}/`,
+            `/api/categories/${category.id}/`,
             {
               method: 'DELETE',
               headers: {
@@ -707,7 +707,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         
         if (weaponAction === 'delete' && weapon) {
           const response = await fetch(
-            `http://localhost:8000/api/weapons/${weapon.id}/`,
+            `/api/weapons/${weapon.id}/`,
             {
               method: 'DELETE',
               headers: {
@@ -726,7 +726,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         
         if (attachmentAction === 'delete' && attachment) {
           const response = await fetch(
-            `http://localhost:8000/api/attachments/${attachment.id}/`,
+            `/api/attachments/${attachment.id}/`,
             {
               method: 'DELETE',
               headers: {
@@ -751,8 +751,8 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
 
     try {
       const url = gameForm.id
-        ? `http://localhost:8000/api/games/${gameForm.id}/`
-        : `http://localhost:8000/api/games/`;
+        ? `/api/games/${gameForm.id}/`
+        : `/api/games/`;
       
       const method = gameForm.id ? 'PATCH' : 'POST';
       
@@ -815,7 +815,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
   const handleToggleGameActive = async (game: Game) => {
     try {
       const endpoint = game.is_active ? 'deactivate' : 'activate';
-      const response = await fetch(`http://localhost:8000/api/games/${game.id}/${endpoint}/`, {
+      const response = await fetch(`/api/games/${game.id}/${endpoint}/`, {
         method: 'POST',
         headers: {
           'Authorization': `Token ${token}`,
@@ -840,7 +840,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
     if (gameIds.length === 0) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/games/bulk_activate/`, {
+      const response = await fetch(`/api/games/bulk_activate/`, {
         method: 'POST',
         headers: {
           'Authorization': `Token ${token}`,
@@ -870,7 +870,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
     if (gameIds.length === 0) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/games/bulk_deactivate/`, {
+      const response = await fetch(`/api/games/bulk_deactivate/`, {
         method: 'POST',
         headers: {
           'Authorization': `Token ${token}`,
@@ -901,7 +901,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/games/search_images/?name=${encodeURIComponent(game.name)}`,
+        `/api/games/search_images/?name=${encodeURIComponent(game.name)}`,
         {
           headers: {
             'Authorization': `Token ${token}`,
@@ -927,7 +927,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
 
     try {
       const response = await fetch(
-        `http://localhost:8000/api/games/${imageSearchGame.id}/set_image_from_url/`,
+        `/api/games/${imageSearchGame.id}/set_image_from_url/`,
         {
           method: 'POST',
           headers: {
@@ -963,7 +963,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
     setFetchingWeapons(game.id);
     try {
       const response = await fetch(
-        `http://localhost:8000/api/games/${game.id}/fetch_weapons/`,
+        `/api/games/${game.id}/fetch_weapons/`,
         {
           method: 'POST',
           headers: {
@@ -993,7 +993,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
     setFetchingSettings(game.id);
     try {
       const response = await fetch(
-        `http://localhost:8000/api/games/${game.id}/fetch_settings/`,
+        `/api/games/${game.id}/fetch_settings/`,
         {
           method: 'POST',
           headers: {
@@ -1025,8 +1025,8 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
 
     try {
       const url = categoryForm.id
-        ? `http://localhost:8000/api/categories/${categoryForm.id}/`
-        : `http://localhost:8000/api/categories/`;
+        ? `/api/categories/${categoryForm.id}/`
+        : `/api/categories/`;
       
       const method = categoryForm.id ? 'PATCH' : 'POST';
       
@@ -1083,8 +1083,8 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
       }
 
       const url = weaponForm.id
-        ? `http://localhost:8000/api/weapons/${weaponForm.id}/`
-        : `http://localhost:8000/api/weapons/`;
+        ? `/api/weapons/${weaponForm.id}/`
+        : `/api/weapons/`;
       
       const method = weaponForm.id ? 'PATCH' : 'POST';
       
@@ -1132,7 +1132,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
   const handleToggleWeaponActive = async (weapon: Weapon) => {
     try {
       const action = weapon.is_active ? 'deactivate' : 'activate';
-      const response = await fetch(`http://localhost:8000/api/weapons/${weapon.id}/${action}/`, {
+      const response = await fetch(`/api/weapons/${weapon.id}/${action}/`, {
         method: 'POST',
         headers: {
           'Authorization': `Token ${token}`,
@@ -1160,7 +1160,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
     if (weaponIds.length === 0) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/weapons/bulk_activate/`, {
+      const response = await fetch(`/api/weapons/bulk_activate/`, {
         method: 'POST',
         headers: {
           'Authorization': `Token ${token}`,
@@ -1191,7 +1191,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
     if (weaponIds.length === 0) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/weapons/bulk_deactivate/`, {
+      const response = await fetch(`/api/weapons/bulk_deactivate/`, {
         method: 'POST',
         headers: {
           'Authorization': `Token ${token}`,
@@ -1279,7 +1279,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         }
       }
       
-      const weaponResponse = await fetch('http://localhost:8000/api/weapons/', {
+      const weaponResponse = await fetch('/api/weapons/', {
         method: 'POST',
         headers: {
           'Authorization': `Token ${token}`,
@@ -1303,7 +1303,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
       const newWeapon = await weaponResponse.json();
 
       // 2. Get all attachments for the original weapon
-      const attachmentsResponse = await fetch(`http://localhost:8000/api/attachments/?weapon=${originalWeapon.id}&page_size=100`, {
+      const attachmentsResponse = await fetch(`/api/attachments/?weapon=${originalWeapon.id}&page_size=100`, {
         headers: {
           'Authorization': `Token ${token}`,
         },
@@ -1335,7 +1335,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
             }
           }
           
-          await fetch('http://localhost:8000/api/attachments/', {
+          await fetch('/api/attachments/', {
             method: 'POST',
             headers: {
               'Authorization': `Token ${token}`,
@@ -1364,8 +1364,8 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
 
     try {
       const url = attachmentForm.id
-        ? `http://localhost:8000/api/attachments/${attachmentForm.id}/`
-        : `http://localhost:8000/api/attachments/`;
+        ? `/api/attachments/${attachmentForm.id}/`
+        : `/api/attachments/`;
       
       const method = attachmentForm.id ? 'PATCH' : 'POST';
       
@@ -1441,7 +1441,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
       
       // Delete all attachments for this weapon
       for (const attachment of weaponAttachments) {
-        await fetch(`http://localhost:8000/api/attachments/${attachment.id}/`, {
+        await fetch(`/api/attachments/${attachment.id}/`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Token ${token}`,
@@ -1461,32 +1461,37 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
   const handleSaveAttachmentType = async () => {
     try {
       setError(null);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       const data = {
         name: attachmentTypeForm.name,
         display_name: attachmentTypeForm.display_name,
         order: attachmentTypeForm.order
       };
 
-      if (attachmentTypeForm.id) {
-        await axios.put(
-          `${API_BASE_URL}/api/attachment-types/${attachmentTypeForm.id}/`,
-          data,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-      } else {
-        await axios.post(
-          `${API_BASE_URL}/api/attachment-types/`,
-          data,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+      const url = attachmentTypeForm.id
+        ? `/api/attachment-types/${attachmentTypeForm.id}/`
+        : '/api/attachment-types/';
+      
+      const response = await fetch(url, {
+        method: attachmentTypeForm.id ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Token ${token}`
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || errorData.message || 'Failed to save attachment type');
       }
+
       setShowAttachmentTypeForm(false);
       setAttachmentTypeForm({ id: null, name: '', display_name: '', order: 0 });
       fetchAttachmentTypes();
     } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.detail || err.response?.data?.message || 'Failed to save attachment type');
+      if (err instanceof Error) {
+        setError(err.message);
       } else {
         setError('Failed to save attachment type');
       }
@@ -1507,14 +1512,21 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
     if (!confirm('Are you sure you want to delete this attachment type? This may affect existing attachments.')) return;
     try {
       setError(null);
-      const token = localStorage.getItem('token');
-      await axios.delete(`${API_BASE_URL}/api/attachment-types/${id}/`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`/api/attachment-types/${id}/`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Token ${token}` }
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to delete attachment type');
+      }
+      
       fetchAttachmentTypes();
     } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.detail || 'Failed to delete attachment type');
+      if (err instanceof Error) {
+        setError(err.message);
       } else {
         setError('Failed to delete attachment type');
       }
@@ -1583,8 +1595,8 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
 
     try {
       const url = profileForm.id
-        ? `http://localhost:8000/api/game-setting-profiles/${profileForm.id}/`
-        : 'http://localhost:8000/api/game-setting-profiles/';
+        ? `/api/game-setting-profiles/${profileForm.id}/`
+        : '/api/game-setting-profiles/';
       const method = profileForm.id ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -1621,7 +1633,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
 
   const handleDeleteProfile = async (profile: GameSettingProfile) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/game-setting-profiles/${profile.id}/`, {
+      const response = await fetch(`/api/game-setting-profiles/${profile.id}/`, {
         method: 'DELETE',
         headers: { 'Authorization': `Token ${token}` },
       });
@@ -1709,8 +1721,8 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
 
     try {
       const url = settingDefinitionForm.id
-        ? `http://localhost:8000/api/game-setting-definitions/${settingDefinitionForm.id}/`
-        : 'http://localhost:8000/api/game-setting-definitions/';
+        ? `/api/game-setting-definitions/${settingDefinitionForm.id}/`
+        : '/api/game-setting-definitions/';
       const method = settingDefinitionForm.id ? 'PUT' : 'POST';
 
       const payload: Record<string, unknown> = {
@@ -1760,7 +1772,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
     if (!confirm(`Are you sure you want to delete "${definition.display_name}"?`)) return;
     
     try {
-      const response = await fetch(`http://localhost:8000/api/game-setting-definitions/${definition.id}/`, {
+      const response = await fetch(`/api/game-setting-definitions/${definition.id}/`, {
         method: 'DELETE',
         headers: { 'Authorization': `Token ${token}` },
       });

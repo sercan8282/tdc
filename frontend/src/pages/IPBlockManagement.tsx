@@ -36,7 +36,7 @@ export default function IPBlockManagement() {
   const fetchBlocks = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch('http://localhost:8000/api/ip-blocks/', {
+      const res = await fetch('/api/ip-blocks/', {
         headers: {
           'Authorization': `Token ${token}`,
         },
@@ -58,7 +58,7 @@ export default function IPBlockManagement() {
 
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch(`http://localhost:8000/api/ip-blocks/${id}/unblock/`, {
+      const res = await fetch(`/api/ip-blocks/${id}/unblock/`, {
         method: 'POST',
         headers: {
           'Authorization': `Token ${token}`,
@@ -80,7 +80,7 @@ export default function IPBlockManagement() {
 
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch('http://localhost:8000/api/ip-blocks/', {
+      const res = await fetch('/api/ip-blocks/', {
         method: 'POST',
         headers: {
           'Authorization': `Token ${token}`,

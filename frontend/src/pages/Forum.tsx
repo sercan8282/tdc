@@ -65,8 +65,8 @@ export default function Forum() {
   const fetchData = async () => {
     try {
       const [catRes, statsRes] = await Promise.all([
-        fetch('http://localhost:8000/api/forum/categories/'),
-        fetch('http://localhost:8000/api/forum/stats/overview/'),
+        fetch('/api/forum/categories/'),
+        fetch('/api/forum/stats/overview/'),
       ]);
 
       if (catRes.ok) {

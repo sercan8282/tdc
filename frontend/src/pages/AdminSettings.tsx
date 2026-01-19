@@ -28,7 +28,7 @@ export default function AdminSettings() {
 
   const fetchSettings = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/site-settings/');
+      const res = await fetch('/api/site-settings/');
       const data = await res.json();
       setSettings(data);
       setSiteName(data.site_name);
@@ -86,7 +86,7 @@ export default function AdminSettings() {
         formData.append('favicon', faviconFile);
       }
 
-      const res = await fetch(`http://localhost:8000/api/site-settings/${settings?.id}/`, {
+      const res = await fetch(`/api/site-settings/${settings?.id}/`, {
         method: 'PATCH',
         headers: {
           'Authorization': `Token ${token}`,

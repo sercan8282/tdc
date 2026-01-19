@@ -55,7 +55,7 @@ export default function EventBanner() {
         const dismissedBanners = JSON.parse(sessionStorage.getItem('dismissedBanners') || '[]');
         console.log('Dismissed banners:', dismissedBanners);
         
-        const response = await fetch('http://localhost:8000/api/event-banners/active/');
+        const response = await fetch('/api/event-banners/active/');
         console.log('Response status:', response.status);
         if (response.ok) {
           const data = await response.json();

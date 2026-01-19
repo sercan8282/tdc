@@ -65,7 +65,7 @@ export default function Weapons() {
   const fetchGames = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/api/games/');
+      const response = await fetch('/api/games/');
       
       if (response.ok) {
         const data = await response.json();
@@ -135,16 +135,6 @@ export default function Weapons() {
       case 'large': return 'w-48 h-32';
       default: return 'w-36 h-24';
     }
-  };
-
-  const groupAttachmentsByType = (attachments: Attachment[]) => {
-    return attachments.reduce((acc, attachment) => {
-      if (!acc[attachment.type]) {
-        acc[attachment.type] = [];
-      }
-      acc[attachment.type].push(attachment);
-      return acc;
-    }, {} as Record<string, Attachment[]>);
   };
 
   if (loading) {

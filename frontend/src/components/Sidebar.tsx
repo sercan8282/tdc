@@ -15,7 +15,6 @@ export default function Sidebar({ onLogout, onAdminTabChange, activeAdminTab = '
   const [expandUserMenu, setExpandUserMenu] = useState(true);
 
   const isActive = (path: string) => location.pathname === path;
-  const isAdminSection = location.pathname === '/admin';
 
   const navItems = [
     { path: '/', label: 'Dashboard', icon: BarChart3 },
