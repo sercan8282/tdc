@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Users, Shield, ShieldAlert, Ban, CheckCircle, XCircle, Calendar } from 'lucide-react';
+import { Users, Shield, ShieldAlert, Ban, CheckCircle, XCircle, Calendar, UserPlus, X, Eye, EyeOff } from 'lucide-react';
 
 interface User {
   id: number;
@@ -19,6 +19,14 @@ interface BanModalData {
   nickname: string;
 }
 
+interface NewUserForm {
+  email: string;
+  nickname: string;
+  password: string;
+  is_staff: boolean;
+  is_verified: boolean;
+}
+
 export default function UserManagement() {
   const { user: currentUser, token } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
@@ -26,6 +34,16 @@ export default function UserManagement() {
   const [banModal, setBanModal] = useState<BanModalData | null>(null);
   const [banDays, setBanDays] = useState('7');
   const [message, setMessage] = useState('');
+  const [showNewUserModal, setShowNewUserModal] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [newUserForm, setNewUserForm] = useState<NewUserForm>({
+    email: '',
+    nickname: '',
+    password: '',
+    is_staff: false,
+    is_verified: true,
+  });
+  const [newUserError, setNewUserError] = useState('');
 
   useEffect(() => {
     fetchUsers();
@@ -206,6 +224,58 @@ export default function UserManagement() {
     }
   };
 
+  const handleCreateUser = async () => {
+    setNewUserError('');
+    
+    // Validation
+    if (!newUserForm.email) {
+      setNewUserError('Email is required');
+      return;
+    }
+    if (!newUserForm.nickname) {
+      setNewUserError('Nickname is required');
+      return;
+    }
+    if (!newUserForm.password) {
+      setNewUserError('Password is required');
+      return;
+    }
+    if (newUserForm.password.length < 8) {
+      setNewUserError('Password must be at least 8 characters');
+      return;
+    }
+
+    try {
+      const res = await fetch('/api/users/create_user/', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Token ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newUserForm),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        showMessage(`User "${newUserForm.nickname}" created successfully`);
+        setShowNewUserModal(false);
+        setNewUserForm({
+          email: '',
+          nickname: '',
+          password: '',
+          is_staff: false,
+          is_verified: true,
+        });
+        fetchUsers();
+      } else {
+        setNewUserError(data.error || 'Failed to create user');
+      }
+    } catch (error) {
+      setNewUserError('Failed to create user');
+    }
+  };
+
   const isBanned = (user: User) => {
     if (!user.banned_until) return false;
     return new Date(user.banned_until) > new Date();
@@ -246,12 +316,21 @@ export default function UserManagement() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-20 px-4 pb-12">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Users className="w-8 h-8 text-blue-400" />
-            <h1 className="text-3xl font-bold text-white">User Management</h1>
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <Users className="w-8 h-8 text-blue-400" />
+              <h1 className="text-3xl font-bold text-white">User Management</h1>
+            </div>
+            <p className="text-slate-400">Manage user roles, permissions, and bans</p>
           </div>
-          <p className="text-slate-400">Manage user roles, permissions, and bans</p>
+          <button
+            onClick={() => setShowNewUserModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition"
+          >
+            <UserPlus className="w-5 h-5" />
+            New User
+          </button>
         </div>
 
         {/* Message */}
@@ -464,6 +543,141 @@ export default function UserManagement() {
                   onClick={() => {
                     setBanModal(null);
                     setBanDays('7');
+                  }}
+                  className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* New User Modal */}
+        {showNewUserModal && (
+          <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+            <div className="bg-slate-800 rounded-lg border border-slate-700 max-w-md w-full p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <UserPlus className="w-6 h-6 text-green-400" />
+                  <h3 className="text-xl font-bold text-white">Create New User</h3>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowNewUserModal(false);
+                    setNewUserError('');
+                    setNewUserForm({
+                      email: '',
+                      nickname: '',
+                      password: '',
+                      is_staff: false,
+                      is_verified: true,
+                    });
+                  }}
+                  className="text-slate-400 hover:text-white transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {newUserError && (
+                <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-300 text-sm">
+                  {newUserError}
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Email *
+                  </label>
+                  <input
+                    type="email"
+                    value={newUserForm.email}
+                    onChange={(e) => setNewUserForm({ ...newUserForm, email: e.target.value })}
+                    className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-green-500"
+                    placeholder="user@example.com"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Nickname *
+                  </label>
+                  <input
+                    type="text"
+                    value={newUserForm.nickname}
+                    onChange={(e) => setNewUserForm({ ...newUserForm, nickname: e.target.value })}
+                    className="w-full px-4 py-2 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-green-500"
+                    placeholder="Enter nickname"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                    Password *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={newUserForm.password}
+                      onChange={(e) => setNewUserForm({ ...newUserForm, password: e.target.value })}
+                      className="w-full px-4 py-2 pr-10 bg-slate-900/50 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-green-500"
+                      placeholder="Min. 8 characters"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-white transition"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-6 pt-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={newUserForm.is_verified}
+                      onChange={(e) => setNewUserForm({ ...newUserForm, is_verified: e.target.checked })}
+                      className="w-4 h-4 rounded border-slate-600 bg-slate-900 text-green-500 focus:ring-green-500"
+                    />
+                    <span className="text-sm text-slate-300">Verified</span>
+                  </label>
+
+                  {currentUser?.is_superuser && (
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={newUserForm.is_staff}
+                        onChange={(e) => setNewUserForm({ ...newUserForm, is_staff: e.target.checked })}
+                        className="w-4 h-4 rounded border-slate-600 bg-slate-900 text-blue-500 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-slate-300">Staff</span>
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleCreateUser}
+                  className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition"
+                >
+                  Create User
+                </button>
+                <button
+                  onClick={() => {
+                    setShowNewUserModal(false);
+                    setNewUserError('');
+                    setNewUserForm({
+                      email: '',
+                      nickname: '',
+                      password: '',
+                      is_staff: false,
+                      is_verified: true,
+                    });
                   }}
                   className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition"
                 >

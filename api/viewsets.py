@@ -255,6 +255,67 @@ class UserViewSet(viewsets.ModelViewSet):
         user.unban()
         return Response({'status': 'user unbanned'})
 
+    @action(detail=False, methods=['post'])
+    def create_user(self, request):
+        """Admin can create new users without registration"""
+        if not request.user.is_staff:
+            return Response(
+                {'error': 'Only staff can create users'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        email = request.data.get('email')
+        nickname = request.data.get('nickname')
+        password = request.data.get('password')
+        is_staff = request.data.get('is_staff', False)
+        is_verified = request.data.get('is_verified', True)  # Default verified for admin-created users
+        
+        # Validation
+        if not email:
+            return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+        if not nickname:
+            return Response({'error': 'Nickname is required'}, status=status.HTTP_400_BAD_REQUEST)
+        if not password:
+            return Response({'error': 'Password is required'}, status=status.HTTP_400_BAD_REQUEST)
+        if len(password) < 8:
+            return Response({'error': 'Password must be at least 8 characters'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if email already exists
+        if User.objects.filter(email=email).exists():
+            return Response({'error': 'A user with this email already exists'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Check if nickname already exists
+        if User.objects.filter(nickname=nickname).exists():
+            return Response({'error': 'A user with this nickname already exists'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Only superusers can create staff users
+        if is_staff and not request.user.is_superuser:
+            return Response(
+                {'error': 'Only superusers can create staff users'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        try:
+            user = User.objects.create_user(
+                email=email,
+                nickname=nickname,
+                password=password,
+                is_staff=is_staff,
+                is_verified=is_verified
+            )
+            return Response({
+                'status': 'user created',
+                'user': {
+                    'id': user.id,
+                    'email': user.email,
+                    'nickname': user.nickname,
+                    'is_staff': user.is_staff,
+                    'is_verified': user.is_verified
+                }
+            }, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
 
 # Game ViewSet - Admin can edit, all can read
 class GameViewSet(viewsets.ModelViewSet):
