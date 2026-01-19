@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
 import NotificationBell from './components/NotificationBell';
@@ -17,13 +17,15 @@ import AdminSettings from './pages/AdminSettings';
 import UserManagement from './pages/UserManagement';
 import SecurityDashboard from './pages/SecurityDashboard';
 import IPBlockManagement from './pages/IPBlockManagement';
+import Messages from './pages/Messages';
+import UserProfile from './pages/UserProfile';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import MFASetup from './pages/MFASetup';
 import Profile from './pages/Profile';
 import './App.css';
 import { useState, useEffect } from 'react';
-import { Gamepad2, Crosshair, MessageSquare, Shield, LogIn, Settings, UserPlus, User, LogOut, ChevronDown, Users as UsersIcon, Globe } from 'lucide-react';
+import { Gamepad2, Crosshair, MessageSquare, Shield, LogIn, Settings, UserPlus, User, LogOut, ChevronDown, Users as UsersIcon, Globe, Mail } from 'lucide-react';
 
 interface SiteSettings {
   site_name: string;
@@ -31,9 +33,56 @@ interface SiteSettings {
   favicon_url: string | null;
 }
 
+// Message Icon with unread count
+function MessageIcon() {
+  const navigate = useNavigate();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    fetchUnreadCount();
+    
+    // Poll for new messages every 10 seconds
+    const interval = setInterval(fetchUnreadCount, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const token = localStorage.getItem('authToken');
+      const res = await fetch('http://localhost:8000/api/auth/messages/unread_count/', {
+        headers: {
+          'Authorization': `Token ${token}`,
+        },
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setUnreadCount(data.unread_count);
+      }
+    } catch (error) {
+      console.error('Failed to fetch unread count:', error);
+    }
+  };
+
+  return (
+    <button
+      onClick={() => navigate('/messages')}
+      className="relative p-2 text-slate-300 hover:text-white hover:bg-slate-700 rounded-lg transition"
+    >
+      <Mail className="w-5 h-5" />
+      {unreadCount > 0 && (
+        <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+          {unreadCount > 9 ? '9+' : unreadCount}
+        </span>
+      )}
+    </button>
+  );
+}
+
 // Publiek navigatie menu component
 function PublicNav() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { isAuthenticated, isAdmin, user } = useAuth();
   const [adminDropdown, setAdminDropdown] = useState(false);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({
@@ -61,25 +110,27 @@ function PublicNav() {
     try {
       const res = await fetch('http://localhost:8000/api/site-settings/');
       const data = await res.json();
+      // API returns array with single item
+      const settings = Array.isArray(data) ? data[0] : data;
       setSiteSettings({
-        site_name: data.site_name || 'TDC',
-        logo_url: data.logo_url,
-        favicon_url: data.favicon_url,
+        site_name: settings.site_name || 'TDC',
+        logo_url: settings.logo_url,
+        favicon_url: settings.favicon_url,
       });
       
       // Update favicon
-      if (data.favicon_url) {
+      if (settings.favicon_url) {
         let link = document.querySelector("link[rel~='icon']") as HTMLLinkElement;
         if (!link) {
           link = document.createElement('link');
           link.rel = 'icon';
           document.getElementsByTagName('head')[0].appendChild(link);
         }
-        link.href = data.favicon_url;
+        link.href = settings.favicon_url;
       }
       
       // Update page title
-      document.title = data.site_name || 'TDC Gaming';
+      document.title = settings.site_name || 'TDC Gaming';
     } catch (error) {
       console.error('Failed to fetch site settings:', error);
     }
@@ -138,6 +189,7 @@ function PublicNav() {
             {isAuthenticated ? (
               <>
                 <NotificationBell />
+                <MessageIcon />
                 {isAdmin && (
                   <div className="relative admin-dropdown-container">
                     <button
@@ -317,6 +369,16 @@ function AppContent() {
         } 
       />
       
+      {/* Messages - alleen voor ingelogde gebruikers */}
+      <Route 
+        path="/messages" 
+        element={
+          isAuthenticated 
+            ? <PublicLayout><Messages /></PublicLayout>
+            : <Navigate to="/login" replace />
+        } 
+      />
+      
       {/* Admin route - alleen toegankelijk voor admins */}
       <Route 
         path="/admin" 
@@ -363,6 +425,16 @@ function AppContent() {
         element={
           isAuthenticated && isAdmin 
             ? <PublicLayout><IPBlockManagement /></PublicLayout>
+            : <Navigate to="/login" replace />
+        } 
+      />
+      
+      {/* User Profile - Public profile page */}
+      <Route 
+        path="/user/:userId" 
+        element={
+          isAuthenticated 
+            ? <PublicLayout><UserProfile /></PublicLayout>
             : <Navigate to="/login" replace />
         } 
       />

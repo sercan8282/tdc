@@ -32,7 +32,10 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         help_text='List of favorite game names as tags'
     )
     is_streamer = models.BooleanField(default=False)
-    stream_url = models.URLField(max_length=500, blank=True, null=True)
+    stream_url = models.URLField(max_length=500, blank=True, null=True, help_text='Twitch stream URL')
+    youtube_url = models.URLField(max_length=500, blank=True, null=True, help_text='YouTube channel URL')
+    kick_url = models.URLField(max_length=500, blank=True, null=True, help_text='Kick channel URL')
+    discord_url = models.URLField(max_length=500, blank=True, null=True, help_text='Discord profile or server URL')
     is_blocked = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)  # Admin approval required
     mfa_secret = models.CharField(

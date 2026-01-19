@@ -190,16 +190,27 @@ class RateLimitTracker(models.Model):
         now = timezone.now()
         window_start = now - timedelta(seconds=window_seconds)
         
-        # Get or create tracker for current window
-        tracker, created = cls.objects.get_or_create(
-            ip_address=ip_address,
-            endpoint=endpoint,
-            window_start__gte=window_start,
-            defaults={'window_start': now}
-        )
-        
-        # Clean up old trackers
+        # Clean up old trackers first
         cls.objects.filter(window_start__lt=window_start).delete()
+        
+        # Get or create tracker for current window
+        # Handle race condition where duplicates may exist
+        try:
+            tracker, created = cls.objects.get_or_create(
+                ip_address=ip_address,
+                endpoint=endpoint,
+                window_start__gte=window_start,
+                defaults={'window_start': now}
+            )
+        except cls.MultipleObjectsReturned:
+            # If duplicates exist, delete all but the first one
+            trackers = cls.objects.filter(
+                ip_address=ip_address,
+                endpoint=endpoint,
+                window_start__gte=window_start
+            ).order_by('id')
+            tracker = trackers.first()
+            trackers.exclude(id=tracker.id).delete()
         
         if tracker.request_count >= max_requests:
             time_until_reset = (tracker.window_start + timedelta(seconds=window_seconds) - now).total_seconds()

@@ -123,7 +123,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'email', 'nickname', 'first_name', 'last_name', 'full_name',
-            'avatar', 'favorite_games', 'is_streamer', 'stream_url',
+            'avatar', 'favorite_games', 'is_streamer', 'stream_url', 'youtube_url', 'kick_url', 'discord_url',
             'mfa_enabled', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'email', 'mfa_enabled', 'created_at', 'updated_at']
@@ -139,7 +139,7 @@ class ProfileUpdateSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ['nickname', 'first_name', 'last_name', 'favorite_games', 'is_streamer', 'stream_url']
+        fields = ['nickname', 'first_name', 'last_name', 'favorite_games', 'is_streamer', 'stream_url', 'youtube_url', 'kick_url', 'discord_url']
     
     def validate_nickname(self, value):
         user = self.instance

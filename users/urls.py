@@ -1,8 +1,14 @@
 """
 URL patterns for user authentication endpoints.
 """
-from django.urls import path
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from . import views
+from .messaging_views import PrivateMessageViewSet
+
+# Router for messaging
+router = DefaultRouter()
+router.register(r'messages', PrivateMessageViewSet, basename='messages')
 
 urlpatterns = [
     # Auth
@@ -22,4 +28,11 @@ urlpatterns = [
     path('profile/avatar/delete/', views.delete_avatar, name='delete_avatar'),
     path('profile/password/', views.change_password, name='change_password'),
     path('profile/recent-replies/', views.recent_replies, name='recent_replies'),
+    
+    # User search and public profiles
+    path('search/', views.search_users, name='search_users'),
+    path('<int:user_id>/profile/', views.public_user_profile, name='public_user_profile'),
+    
+    # Private Messaging
+    path('', include(router.urls)),
 ]

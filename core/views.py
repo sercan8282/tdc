@@ -34,10 +34,11 @@ class SiteSettingsViewSet(viewsets.ModelViewSet):
         return SiteSettings.objects.all()
 
     def list(self, request):
-        """Return the singleton settings instance"""
+        """Return the singleton settings instance as a list"""
         settings = SiteSettings.get_settings()
         serializer = self.get_serializer(settings)
-        return Response(serializer.data)
+        # Return as a list with single item for consistency with DRF router
+        return Response([serializer.data])
 
     def update(self, request, *args, **kwargs):
         """Only superusers can update settings"""

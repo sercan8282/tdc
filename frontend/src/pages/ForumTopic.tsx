@@ -358,7 +358,7 @@ export default function ForumTopic() {
                   <User className="w-8 h-8 text-slate-400" />
                 )}
               </div>
-              <Link to={`/profile/${reply.author.nickname}`} className="text-sm font-medium text-blue-400 hover:text-blue-300 text-center mb-2">
+              <Link to={`/user/${reply.author.id}`} className="text-sm font-medium text-blue-400 hover:text-blue-300 text-center mb-2">
                 {reply.author.nickname}
               </Link>
               {reply.author.rank && (

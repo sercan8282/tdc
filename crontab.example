@@ -1,0 +1,10 @@
+# Crontab Configuration for TDC Application
+#
+# Add this to your system crontab: crontab -e
+# Or place in /etc/cron.d/tdc
+
+# Delete read messages older than 24 hours (runs every hour)
+0 * * * * cd /var/www/tdc && /var/www/tdc/venv/bin/python manage.py cleanup_old_messages >> /var/log/tdc/cleanup.log 2>&1
+
+# Alternative: run daily at 3 AM instead
+# 0 3 * * * cd /var/www/tdc && /var/www/tdc/venv/bin/python manage.py cleanup_old_messages >> /var/log/tdc/cleanup.log 2>&1

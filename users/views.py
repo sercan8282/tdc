@@ -7,6 +7,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from django.contrib.auth import get_user_model
+from django.db import models
 
 from .serializers import RegistrationSerializer, CustomUserSerializer
 from .services.captcha import captcha_service
@@ -126,7 +127,8 @@ def mfa_setup(request):
     
     return Response({
         'qr_code': qr_code,
-        'message': 'Scan this QR code with your authenticator app. If you need manual entry, it is shown in the QR code.'
+        'secret': user.mfa_secret,
+        'message': 'Scan this QR code with your authenticator app. If you need manual entry, use the secret code provided.'
     })
 
 
@@ -468,3 +470,121 @@ def recent_replies(request):
         'has_previous': page_obj.has_previous(),
         'results': replies_data
     })
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def search_users(request):
+    """
+    Search for users to send messages to.
+    Query param: q (search query)
+    """
+    query = request.query_params.get('q', '').strip()
+    
+    if not query or len(query) < 2:
+        return Response({
+            'results': []
+        })
+    
+    # Search by nickname or email, exclude current user
+    users = User.objects.filter(
+        models.Q(nickname__icontains=query) | models.Q(email__icontains=query)
+    ).exclude(
+        id=request.user.id
+    ).filter(
+        is_verified=True,
+        is_blocked=False
+    )[:10]  # Limit to 10 results
+    
+    results = [{
+        'id': user.id,
+        'nickname': user.nickname,
+        'email': user.email,
+        'avatar': request.build_absolute_uri(user.avatar.url) if user.avatar else None,
+    } for user in users]
+    
+    return Response(results)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def public_user_profile(request, user_id):
+    """
+    Get public profile information for a user.
+    Returns safe, public information only.
+    """
+    try:
+        user = User.objects.get(id=user_id)
+    except User.DoesNotExist:
+        return Response(
+            {'error': 'User not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    # Only show verified, non-blocked users
+    if not user.is_verified or user.is_blocked:
+        return Response(
+            {'error': 'User profile not available'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    from django.db.models import Q
+    
+    # Get favorite games if they exist
+    favorite_games_data = []
+    if user.favorite_games:
+        from core.models import Game
+        # Assuming favorite_games contains game IDs or names
+        try:
+            # If it's a list of game IDs
+            if user.favorite_games and isinstance(user.favorite_games, list):
+                games = Game.objects.filter(name__in=user.favorite_games, is_active=True)
+                favorite_games_data = [{
+                    'id': game.id,
+                    'name': game.name,
+                    'image': request.build_absolute_uri(game.image.url) if game.image else None,
+                } for game in games]
+        except:
+            pass
+    
+    profile_data = {
+        'id': user.id,
+        'nickname': user.nickname,
+        'name': f"{user.first_name} {user.last_name}".strip() or user.nickname,
+        'avatar': request.build_absolute_uri(user.avatar.url) if user.avatar else None,
+        'favorite_games': favorite_games_data,
+        'is_streamer': user.is_streamer,
+        'stream_url': user.stream_url if user.is_streamer else '',
+        'youtube_url': user.youtube_url or '',
+        'kick_url': user.kick_url or '',
+        'discord_url': user.discord_url or '',
+        'is_staff': user.is_staff,
+        'is_superuser': user.is_superuser,
+        'created_at': user.created_at.isoformat() if user.created_at else None,
+    }
+    
+    # Add forum statistics if forum app exists
+    try:
+        from forum.models import Post
+        
+        # Count total posts
+        post_count = Post.objects.filter(author=user).count()
+        
+        # Get recent posts
+        recent_posts = Post.objects.filter(author=user).order_by('-created_at')[:5]
+        
+        profile_data['forum_stats'] = {
+            'post_count': post_count,
+            'recent_posts': [{
+                'id': post.id,
+                'topic_id': post.topic.id,
+                'topic_title': post.topic.title,
+                'title': post.topic.title,
+                'content': post.content[:200] if len(post.content) > 200 else post.content,
+                'created_at': post.created_at.isoformat(),
+            } for post in recent_posts]
+        }
+    except:
+        profile_data['forum_stats'] = None
+    
+    return Response(profile_data)

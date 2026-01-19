@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, MessageSquare, Pin, Lock, CheckCircle,
   Loader, Plus, User
@@ -66,6 +66,7 @@ const rankColorMap: Record<string, string> = {
 export default function ForumCategory() {
   const { slug } = useParams<{ slug: string }>();
   const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [category, setCategory] = useState<Category | null>(null);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
@@ -230,9 +231,16 @@ export default function ForumCategory() {
                         {/* Author info */}
                         <div className="flex items-center gap-2 mt-1 text-sm">
                           <span className="text-slate-400">by</span>
-                          <Link to={`/profile/${topic.author.nickname}`} className="text-blue-400 hover:text-blue-300">
+                          <button 
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              navigate(`/user/${topic.author.id}`);
+                            }}
+                            className="text-blue-400 hover:text-blue-300"
+                          >
                             {topic.author.nickname}
-                          </Link>
+                          </button>
                           {topic.author.rank && (
                             <span className={`text-xs ${rankColorMap[topic.author.rank.color] || 'text-gray-400'}`}>
                               {topic.author.rank.icon} {topic.author.rank.name}

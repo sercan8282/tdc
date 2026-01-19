@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const fetchUser = async (authToken: string): Promise<User> => {
-    const userResponse = await fetch('http://localhost:8000/api/auth/users/me/', {
+    const userResponse = await fetch('http://localhost:8000/api/auth/profile/', {
       headers: {
         'Authorization': `Token ${authToken}`,
       },

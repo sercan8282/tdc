@@ -58,6 +58,9 @@ export default function Profile() {
     last_name: '',
     is_streamer: false,
     stream_url: '',
+    youtube_url: '',
+    kick_url: '',
+    discord_url: '',
   });
   
   // Password change state
@@ -119,6 +122,9 @@ export default function Profile() {
           last_name: data.last_name || '',
           is_streamer: data.is_streamer || false,
           stream_url: data.stream_url || '',
+          youtube_url: data.youtube_url || '',
+          kick_url: data.kick_url || '',
+          discord_url: data.discord_url || '',
         });
         setFavoriteGames(data.favorite_games || []);
       } else {
@@ -501,19 +507,54 @@ export default function Profile() {
             </div>
             
             {formData.is_streamer && (
-              <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">Stream URL *</label>
-                <input
-                  type="url"
-                  value={formData.stream_url}
-                  onChange={(e) => setFormData(prev => ({ ...prev, stream_url: e.target.value }))}
-                  placeholder="https://twitch.tv/yourname or https://youtube.com/@yourname"
-                  className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required={formData.is_streamer}
-                />
-                <p className="text-slate-500 text-xs mt-1">Enter your Twitch, YouTube, or other streaming platform URL</p>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Twitch URL</label>
+                  <input
+                    type="url"
+                    value={formData.stream_url}
+                    onChange={(e) => setFormData(prev => ({ ...prev, stream_url: e.target.value }))}
+                    placeholder="https://twitch.tv/yourname"
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">YouTube URL</label>
+                  <input
+                    type="url"
+                    value={formData.youtube_url || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, youtube_url: e.target.value }))}
+                    placeholder="https://youtube.com/@yourname"
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-2">Kick URL</label>
+                  <input
+                    type="url"
+                    value={formData.kick_url || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, kick_url: e.target.value }))}
+                    placeholder="https://kick.com/yourname"
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
               </div>
             )}
+          </div>
+
+          {/* Discord URL */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-slate-300 mb-2">Discord URL</label>
+            <input
+              type="url"
+              value={formData.discord_url || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, discord_url: e.target.value }))}
+              placeholder="https://discord.gg/yourserver"
+              className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <p className="text-slate-500 text-xs mt-1">Share your Discord server or profile URL</p>
           </div>
 
           {/* Favorite Games */}
