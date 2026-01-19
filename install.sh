@@ -225,6 +225,13 @@ collect_installation_info() {
         print_error "Domain name is required!"
         prompt_input "Enter your domain name" "" DOMAIN_NAME
     done
+    
+    # WWW subdomain
+    if prompt_yes_no "Do you also want to use www.${DOMAIN_NAME}? (requires DNS record)" "n"; then
+        USE_WWW=true
+    else
+        USE_WWW=false
+    fi
     echo ""
     
     # SSL Certificate
@@ -253,6 +260,7 @@ collect_installation_info() {
     echo -e "${FOLDER} Application Name:  ${GREEN}${APP_NAME}${NC}"
     echo -e "${FOLDER} Install Path:      ${GREEN}${INSTALL_PATH}${NC}"
     echo -e "${GLOBE} Domain:            ${GREEN}${DOMAIN_NAME}${NC}"
+    echo -e "${GLOBE} WWW Subdomain:     ${GREEN}$([ "$USE_WWW" = true ] && echo "Yes" || echo "No")${NC}"
     echo -e "${LOCK} SSL Certificate:   ${GREEN}$([ "$INSTALL_SSL" = true ] && echo "Yes (Certbot)" || echo "No")${NC}"
     echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
@@ -423,6 +431,13 @@ configure_nginx() {
     
     NGINX_CONF="/etc/nginx/sites-available/${APP_NAME}"
     
+    # Build server_name based on www preference
+    if [ "$USE_WWW" = true ]; then
+        SERVER_NAMES="${DOMAIN_NAME} www.${DOMAIN_NAME}"
+    else
+        SERVER_NAMES="${DOMAIN_NAME}"
+    fi
+    
     print_step "Creating Nginx configuration..."
     
     # Create nginx config (HTTP only first, certbot will add HTTPS)
@@ -434,7 +449,7 @@ upstream django_${APP_NAME} {
 server {
     listen 80;
     listen [::]:80;
-    server_name ${DOMAIN_NAME} www.${DOMAIN_NAME};
+    server_name ${SERVER_NAMES};
     
     client_max_body_size 100M;
     
@@ -540,8 +555,14 @@ setup_ssl() {
         print_info "This requires your domain to be pointing to this server!"
         echo ""
         
+        # Build certbot command based on www preference
+        CERTBOT_DOMAINS="-d $DOMAIN_NAME"
+        if [ "$USE_WWW" = true ]; then
+            CERTBOT_DOMAINS="$CERTBOT_DOMAINS -d www.$DOMAIN_NAME"
+        fi
+        
         # Try to obtain certificate
-        if certbot --nginx -d "$DOMAIN_NAME" -d "www.${DOMAIN_NAME}" \
+        if certbot --nginx $CERTBOT_DOMAINS \
             --non-interactive --agree-tos --email "$SSL_EMAIL" \
             --redirect 2>/dev/null; then
             print_success "SSL certificate obtained and installed!"
@@ -556,7 +577,11 @@ setup_ssl() {
         else
             print_warning "Could not obtain SSL certificate automatically"
             print_info "Make sure your domain DNS is pointing to this server"
-            print_info "You can manually run later: certbot --nginx -d $DOMAIN_NAME -d www.$DOMAIN_NAME"
+            if [ "$USE_WWW" = true ]; then
+                print_info "You can manually run later: certbot --nginx -d $DOMAIN_NAME -d www.$DOMAIN_NAME"
+            else
+                print_info "You can manually run later: certbot --nginx -d $DOMAIN_NAME"
+            fi
         fi
     fi
 }
