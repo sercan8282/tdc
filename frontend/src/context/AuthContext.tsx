@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getApiUrl } from '../config/api';
 
 interface User {
   id: number;
@@ -43,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const fetchUser = async (authToken: string): Promise<User> => {
-    const userResponse = await fetch('http://localhost:8000/api/auth/profile/', {
+    const userResponse = await fetch(getApiUrl('/api/auth/profile/'), {
       headers: {
         'Authorization': `Token ${authToken}`,
       },
@@ -73,7 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.log('Attempting login for:', email);
       
       // Use our custom login endpoint that supports MFA
-      const response = await fetch('http://localhost:8000/api/auth/login/', {
+      const response = await fetch(getApiUrl('/api/auth/login/'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

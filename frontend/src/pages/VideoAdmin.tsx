@@ -152,7 +152,7 @@ export default function VideoAdmin() {
       if (videoSearch) params.set('search', videoSearch);
       
       const response = await axios.get(
-        `http://localhost:8000/api/videos/admin/?${params.toString()}`,
+        `/api/videos/admin/?${params.toString()}`,
         { headers: { Authorization: `Token ${token}` } }
       );
       
@@ -170,7 +170,7 @@ export default function VideoAdmin() {
     setTagsLoading(true);
     try {
       const response = await axios.get(
-        'http://localhost:8000/api/videos/tags/',
+        '/api/videos/tags/',
         { headers: { Authorization: `Token ${token}` } }
       );
       setTags(response.data);
@@ -186,7 +186,7 @@ export default function VideoAdmin() {
     setProfilesLoading(true);
     try {
       const response = await axios.get(
-        'http://localhost:8000/api/videos/profiles/',
+        '/api/videos/profiles/',
         { headers: { Authorization: `Token ${token}` } }
       );
       setProfiles(response.data);
@@ -245,7 +245,7 @@ export default function VideoAdmin() {
       uploadForm.tag_ids.forEach(id => formData.append('tag_ids', id.toString()));
 
       await axios.post(
-        'http://localhost:8000/api/videos/upload/',
+        '/api/videos/upload/',
         formData,
         {
           headers: {
@@ -290,13 +290,13 @@ export default function VideoAdmin() {
     try {
       if (editingTag) {
         await axios.put(
-          `http://localhost:8000/api/videos/tags/${editingTag.id}/`,
+          `/api/videos/tags/${editingTag.id}/`,
           tagForm,
           { headers: { Authorization: `Token ${token}` } }
         );
       } else {
         await axios.post(
-          'http://localhost:8000/api/videos/tags/',
+          '/api/videos/tags/',
           tagForm,
           { headers: { Authorization: `Token ${token}` } }
         );
@@ -319,7 +319,7 @@ export default function VideoAdmin() {
 
     try {
       await axios.delete(
-        `http://localhost:8000/api/videos/tags/${tagId}/`,
+        `/api/videos/tags/${tagId}/`,
         { headers: { Authorization: `Token ${token}` } }
       );
       fetchTags();
@@ -334,7 +334,7 @@ export default function VideoAdmin() {
 
     try {
       await axios.delete(
-        `http://localhost:8000/api/videos/${videoId}/delete/`,
+        `/api/videos/${videoId}/delete/`,
         { headers: { Authorization: `Token ${token}` } }
       );
       fetchVideos();
@@ -352,13 +352,13 @@ export default function VideoAdmin() {
     try {
       if (editingProfile) {
         await axios.put(
-          `http://localhost:8000/api/videos/profiles/${editingProfile.id}/`,
+          `/api/videos/profiles/${editingProfile.id}/`,
           profileForm,
           { headers: { Authorization: `Token ${token}` } }
         );
       } else {
         await axios.post(
-          'http://localhost:8000/api/videos/profiles/',
+          '/api/videos/profiles/',
           profileForm,
           { headers: { Authorization: `Token ${token}` } }
         );
@@ -381,7 +381,7 @@ export default function VideoAdmin() {
 
     try {
       await axios.delete(
-        `http://localhost:8000/api/videos/profiles/${profileId}/`,
+        `/api/videos/profiles/${profileId}/`,
         { headers: { Authorization: `Token ${token}` } }
       );
       fetchProfiles();
@@ -396,7 +396,7 @@ export default function VideoAdmin() {
     
     try {
       await axios.post(
-        `http://localhost:8000/api/videos/${applyingToVideo.id}/apply-profile/${profileId}/`,
+        `/api/videos/${applyingToVideo.id}/apply-profile/${profileId}/`,
         { mode: applyMode },
         { headers: { Authorization: `Token ${token}` } }
       );
@@ -431,7 +431,7 @@ export default function VideoAdmin() {
     
     try {
       await axios.put(
-        `http://localhost:8000/api/videos/${editingVideo.id}/update/`,
+        `/api/videos/${editingVideo.id}/update/`,
         editForm,
         { headers: { Authorization: `Token ${token}` } }
       );
@@ -454,7 +454,7 @@ export default function VideoAdmin() {
     
     try {
       const response = await axios.get(
-        `http://localhost:8000/api/videos/${video.id}/`,
+        `/api/videos/${video.id}/`,
         { headers: { Authorization: `Token ${token}` } }
       );
       setViewingVideo(response.data);
@@ -477,7 +477,7 @@ export default function VideoAdmin() {
     
     try {
       await axios.put(
-        `http://localhost:8000/api/videos/${video.id}/update/`,
+        `/api/videos/${video.id}/update/`,
         { is_active: newStatus },
         { headers: { Authorization: `Token ${token}` } }
       );
@@ -497,13 +497,13 @@ export default function VideoAdmin() {
     
     try {
       await axios.delete(
-        `http://localhost:8000/api/videos/comments/${commentId}/`,
+        `/api/videos/comments/${commentId}/`,
         { headers: { Authorization: `Token ${token}` } }
       );
       // Refresh comments
       if (viewingVideo) {
         const response = await axios.get(
-          `http://localhost:8000/api/videos/${viewingVideo.id}/`,
+          `/api/videos/${viewingVideo.id}/`,
           { headers: { Authorization: `Token ${token}` } }
         );
         setViewingVideo(response.data);

@@ -403,7 +403,8 @@ setup_frontend() {
     # Create production environment file
     print_step "Creating frontend configuration..."
     cat > .env.production << EOF
-VITE_API_URL=https://${DOMAIN_NAME}/api
+# API Base URL - leave empty for same-origin (recommended with nginx proxy)
+VITE_API_URL=
 EOF
     print_success "Frontend configuration created"
     

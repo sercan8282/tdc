@@ -76,8 +76,8 @@ export default function Leaderboard() {
   const fetchData = async () => {
     try {
       const [leaderRes, ranksRes] = await Promise.all([
-        fetch('http://localhost:8000/api/forum/stats/leaderboard/?limit=20'),
-        fetch('http://localhost:8000/api/forum/ranks/'),
+        fetch('/api/forum/stats/leaderboard/?limit=20'),
+        fetch('/api/forum/ranks/'),
       ]);
 
       if (leaderRes.ok) {

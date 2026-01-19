@@ -52,7 +52,7 @@ function MessageIcon() {
   const fetchUnreadCount = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch('http://localhost:8000/api/auth/messages/unread_count/', {
+      const res = await fetch('/api/auth/messages/unread_count/', {
         headers: {
           'Authorization': `Token ${token}`,
         },
@@ -110,7 +110,7 @@ function PublicNav() {
 
   const fetchSiteSettings = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/site-settings/');
+      const res = await fetch('/api/site-settings/');
       const data = await res.json();
       // API returns array with single item
       const settings = Array.isArray(data) ? data[0] : data;

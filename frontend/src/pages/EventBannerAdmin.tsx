@@ -73,7 +73,7 @@ export default function EventBannerAdmin() {
   useEffect(() => {
     const loadBanners = async () => {
       try {
-        const res = await fetch('http://localhost:8000/api/event-banners/', {
+        const res = await fetch('/api/event-banners/', {
           headers: {
             'Authorization': `Token ${token}`,
           },
@@ -94,7 +94,7 @@ export default function EventBannerAdmin() {
 
   const fetchBanners = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/event-banners/', {
+      const res = await fetch('/api/event-banners/', {
         headers: {
           'Authorization': `Token ${token}`,
         },
@@ -187,8 +187,8 @@ export default function EventBannerAdmin() {
       }
 
       const url = isCreating 
-        ? 'http://localhost:8000/api/event-banners/'
-        : `http://localhost:8000/api/event-banners/${editingBanner.id}/`;
+        ? '/api/event-banners/'
+        : `/api/event-banners/${editingBanner.id}/`;
       
       const res = await fetch(url, {
         method: isCreating ? 'POST' : 'PATCH',
@@ -216,7 +216,7 @@ export default function EventBannerAdmin() {
 
   const handleDelete = async (id: number) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/event-banners/${id}/`, {
+      const res = await fetch(`/api/event-banners/${id}/`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Token ${token}`,
@@ -238,7 +238,7 @@ export default function EventBannerAdmin() {
 
   const handleToggleActive = async (banner: EventBanner) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/event-banners/${banner.id}/toggle_active/`, {
+      const res = await fetch(`/api/event-banners/${banner.id}/toggle_active/`, {
         method: 'POST',
         headers: {
           'Authorization': `Token ${token}`,

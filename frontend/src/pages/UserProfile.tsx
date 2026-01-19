@@ -60,7 +60,7 @@ const UserProfile: React.FC = () => {
     try {
       setLoading(true);
       setError('');
-      const response = await axios.get(`http://localhost:8000/api/auth/${userId}/profile/`, {
+      const response = await axios.get(`/api/auth/${userId}/profile/`, {
         headers: {
           Authorization: `Token ${localStorage.getItem('authToken')}`
         }

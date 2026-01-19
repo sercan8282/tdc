@@ -33,7 +33,7 @@ export default function RichTextEditor({ value, onChange, placeholder, token }: 
       const searchUsers = async () => {
         try {
           const response = await fetch(
-            `http://localhost:8000/api/forum/users/?q=${encodeURIComponent(mentionQuery)}`,
+            `/api/forum/users/?q=${encodeURIComponent(mentionQuery)}`,
             {
               headers: { 'Authorization': `Token ${token}` },
             }
@@ -154,7 +154,7 @@ export default function RichTextEditor({ value, onChange, placeholder, token }: 
       const formData = new FormData();
       formData.append('image', file);
 
-      const response = await fetch('http://localhost:8000/api/forum/images/upload/', {
+      const response = await fetch('/api/forum/images/upload/', {
         method: 'POST',
         headers: {
           'Authorization': `Token ${token}`,

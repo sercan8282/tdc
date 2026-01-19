@@ -29,7 +29,7 @@ export default function Register() {
   const fetchCaptcha = async () => {
     setCaptchaLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/api/auth/captcha/');
+      const response = await fetch('/api/auth/captcha/');
       if (response.ok) {
         const data = await response.json();
         setCaptcha(data);
@@ -58,7 +58,7 @@ export default function Register() {
     setFieldErrors({});
 
     try {
-      const response = await fetch('http://localhost:8000/api/auth/register/', {
+      const response = await fetch('/api/auth/register/', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -65,7 +65,7 @@ export default function Weapons() {
   const fetchGames = async () => {
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:8000/api/games/');
+      const response = await fetch('/api/games/');
       
       if (response.ok) {
         const data = await response.json();

@@ -36,8 +36,8 @@ export default function Games() {
       // Als admin, haal alle games op (inclusief inactieve)
       const isAdmin = user?.is_staff;
       const url = isAdmin 
-        ? 'http://localhost:8000/api/games/?all=true'
-        : 'http://localhost:8000/api/games/';
+        ? '/api/games/?all=true'
+        : '/api/games/';
       
       const headers: HeadersInit = {};
       if (token) {

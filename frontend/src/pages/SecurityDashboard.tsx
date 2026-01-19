@@ -42,7 +42,7 @@ export default function SecurityDashboard() {
   const fetchDashboard = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch('http://localhost:8000/api/security-events/dashboard/', {
+      const res = await fetch('/api/security-events/dashboard/', {
         headers: {
           'Authorization': `Token ${token}`,
         },
@@ -64,7 +64,7 @@ export default function SecurityDashboard() {
       if (filterSeverity) params.append('severity', filterSeverity);
       if (filterType) params.append('event_type', filterType);
       
-      const res = await fetch(`http://localhost:8000/api/security-events/?${params}`, {
+      const res = await fetch(`/api/security-events/?${params}`, {
         headers: {
           'Authorization': `Token ${token}`,
         },

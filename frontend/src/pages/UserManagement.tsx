@@ -33,7 +33,7 @@ export default function UserManagement() {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch('http://localhost:8000/api/users/?page_size=100', {
+      const res = await fetch('/api/users/?page_size=100', {
         headers: { 'Authorization': `Token ${token}` },
       });
       const data = await res.json();
@@ -52,7 +52,7 @@ export default function UserManagement() {
 
   const handlePromoteToSuperuser = async (userId: number) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/users/${userId}/promote_to_superuser/`, {
+      const res = await fetch(`/api/users/${userId}/promote_to_superuser/`, {
         method: 'POST',
         headers: { 'Authorization': `Token ${token}` },
       });
@@ -71,7 +71,7 @@ export default function UserManagement() {
 
   const handleDemoteFromSuperuser = async (userId: number) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/users/${userId}/demote_from_superuser/`, {
+      const res = await fetch(`/api/users/${userId}/demote_from_superuser/`, {
         method: 'POST',
         headers: { 'Authorization': `Token ${token}` },
       });
@@ -92,7 +92,7 @@ export default function UserManagement() {
     if (!banModal) return;
 
     try {
-      const res = await fetch(`http://localhost:8000/api/users/${banModal.userId}/ban_user/`, {
+      const res = await fetch(`/api/users/${banModal.userId}/ban_user/`, {
         method: 'POST',
         headers: {
           'Authorization': `Token ${token}`,
@@ -117,7 +117,7 @@ export default function UserManagement() {
 
   const handleUnbanUser = async (userId: number) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/users/${userId}/unban_user/`, {
+      const res = await fetch(`/api/users/${userId}/unban_user/`, {
         method: 'POST',
         headers: { 'Authorization': `Token ${token}` },
       });
@@ -136,7 +136,7 @@ export default function UserManagement() {
 
   const handleDeactivate = async (userId: number) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/users/${userId}/deactivate_user/`, {
+      const res = await fetch(`/api/users/${userId}/deactivate_user/`, {
         method: 'POST',
         headers: { 'Authorization': `Token ${token}` },
       });
@@ -154,7 +154,7 @@ export default function UserManagement() {
 
   const handleActivate = async (userId: number) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/users/${userId}/activate_user/`, {
+      const res = await fetch(`/api/users/${userId}/activate_user/`, {
         method: 'POST',
         headers: { 'Authorization': `Token ${token}` },
       });
@@ -172,7 +172,7 @@ export default function UserManagement() {
 
   const handleMakeStaff = async (userId: number) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/users/${userId}/make_staff/`, {
+      const res = await fetch(`/api/users/${userId}/make_staff/`, {
         method: 'POST',
         headers: { 'Authorization': `Token ${token}` },
       });
@@ -190,7 +190,7 @@ export default function UserManagement() {
 
   const handleRemoveStaff = async (userId: number) => {
     try {
-      const res = await fetch(`http://localhost:8000/api/users/${userId}/remove_staff/`, {
+      const res = await fetch(`/api/users/${userId}/remove_staff/`, {
         method: 'POST',
         headers: { 'Authorization': `Token ${token}` },
       });

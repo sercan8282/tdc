@@ -172,7 +172,7 @@ export default function Messages() {
   const fetchCurrentUser = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch('http://localhost:8000/api/auth/profile/', {
+      const res = await fetch('/api/auth/profile/', {
         headers: {
           'Authorization': `Token ${token}`,
         },
@@ -190,7 +190,7 @@ export default function Messages() {
   const fetchConversations = async () => {
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch('http://localhost:8000/api/auth/messages/conversations/', {
+      const res = await fetch('/api/auth/messages/conversations/', {
         headers: {
           'Authorization': `Token ${token}`,
         },
@@ -212,7 +212,7 @@ export default function Messages() {
     
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch(`http://localhost:8000/api/auth/messages/with_user/?user_id=${user.id}`, {
+      const res = await fetch(`/api/auth/messages/with_user/?user_id=${user.id}`, {
         headers: {
           'Authorization': `Token ${token}`,
         },
@@ -236,7 +236,7 @@ export default function Messages() {
 
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch('http://localhost:8000/api/auth/messages/', {
+      const res = await fetch('/api/auth/messages/', {
         method: 'POST',
         headers: {
           'Authorization': `Token ${token}`,
@@ -272,7 +272,7 @@ export default function Messages() {
     setSearching(true);
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch(`http://localhost:8000/api/auth/search/?q=${encodeURIComponent(query)}`, {
+      const res = await fetch(`/api/auth/search/?q=${encodeURIComponent(query)}`, {
         headers: {
           'Authorization': `Token ${token}`,
         },
@@ -292,7 +292,7 @@ export default function Messages() {
   const startNewConversationWithUser = async (userId: number) => {
     try {
       const token = localStorage.getItem('authToken');
-      const res = await fetch(`http://localhost:8000/api/users/${userId}/profile/`, {
+      const res = await fetch(`/api/users/${userId}/profile/`, {
         headers: {
           'Authorization': `Token ${token}`,
         },
@@ -379,7 +379,7 @@ export default function Messages() {
                   >
                     {conv.user.avatar ? (
                       <img
-                        src={`http://localhost:8000${conv.user.avatar}`}
+                        src={`${conv.user.avatar}`}
                         alt={conv.user.nickname}
                         className="w-12 h-12 rounded-full object-cover"
                       />
@@ -437,7 +437,7 @@ export default function Messages() {
                 >
                   {selectedConversation.avatar ? (
                     <img
-                      src={`http://localhost:8000${selectedConversation.avatar}`}
+                      src={`${selectedConversation.avatar}`}
                       alt={selectedConversation.nickname}
                       className="w-10 h-10 rounded-full object-cover"
                     />

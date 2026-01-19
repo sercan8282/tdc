@@ -79,7 +79,7 @@ export default function GameSettings() {
     setLoading(true);
     try {
       // Fetch all games (no pagination limit)
-      const response = await fetch('http://localhost:8000/api/games/?page_size=1000');
+      const response = await fetch('/api/games/?page_size=1000');
       if (response.ok) {
         const data = await response.json();
         const gamesData = data.results || data;
@@ -108,7 +108,7 @@ export default function GameSettings() {
 
   const fetchProfiles = async (gameId: number) => {
     try {
-      const response = await fetch(`http://localhost:8000/api/game-setting-profiles/?game=${gameId}`);
+      const response = await fetch(`/api/game-setting-profiles/?game=${gameId}`);
       if (response.ok) {
         const data = await response.json();
         setProfiles(data.results || data);
@@ -121,7 +121,7 @@ export default function GameSettings() {
   const fetchSettingDefinitions = async (gameId: number) => {
     try {
       // Fetch all settings (no pagination limit)
-      const response = await fetch(`http://localhost:8000/api/game-setting-definitions/?game=${gameId}&page_size=1000`);
+      const response = await fetch(`/api/game-setting-definitions/?game=${gameId}&page_size=1000`);
       if (response.ok) {
         const data = await response.json();
         setSettingDefinitions(data.results || data);
