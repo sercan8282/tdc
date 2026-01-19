@@ -3,7 +3,6 @@ import { useAuth } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
 import NotificationBell from './components/NotificationBell';
 import EventBanner from './components/EventBanner';
-import Dashboard from './pages/Dashboard';
 import Games from './pages/Games';
 import Weapons from './pages/Weapons';
 import GameSettings from './pages/GameSettings';
@@ -86,7 +85,6 @@ function MessageIcon() {
 // Publiek navigatie menu component
 function PublicNav() {
   const location = useLocation();
-  const navigate = useNavigate();
   const { isAuthenticated, isAdmin, user } = useAuth();
   const [adminDropdown, setAdminDropdown] = useState(false);
   const [siteSettings, setSiteSettings] = useState<SiteSettings>({

@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import SearchBar from '../components/SearchBar';
 import Pagination from '../components/Pagination';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { Shield, Check, Ban, Trash2, Loader, Plus, Edit, Trash, ChevronDown, ChevronRight, Copy, Search, X, GripVertical } from 'lucide-react';
+import { Shield, Check, Ban, Trash2, Loader, Plus, Edit, Trash, ChevronDown, ChevronRight, Copy, Search, X } from 'lucide-react';
 
 interface User {
   id: number;
@@ -1461,32 +1461,37 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
   const handleSaveAttachmentType = async () => {
     try {
       setError(null);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       const data = {
         name: attachmentTypeForm.name,
         display_name: attachmentTypeForm.display_name,
         order: attachmentTypeForm.order
       };
 
-      if (attachmentTypeForm.id) {
-        await axios.put(
-          `${API_BASE_URL}/api/attachment-types/${attachmentTypeForm.id}/`,
-          data,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-      } else {
-        await axios.post(
-          `${API_BASE_URL}/api/attachment-types/`,
-          data,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
+      const url = attachmentTypeForm.id
+        ? `http://localhost:8000/api/attachment-types/${attachmentTypeForm.id}/`
+        : 'http://localhost:8000/api/attachment-types/';
+      
+      const response = await fetch(url, {
+        method: attachmentTypeForm.id ? 'PUT' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Token ${token}`
+        },
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || errorData.message || 'Failed to save attachment type');
       }
+
       setShowAttachmentTypeForm(false);
       setAttachmentTypeForm({ id: null, name: '', display_name: '', order: 0 });
       fetchAttachmentTypes();
     } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.detail || err.response?.data?.message || 'Failed to save attachment type');
+      if (err instanceof Error) {
+        setError(err.message);
       } else {
         setError('Failed to save attachment type');
       }
@@ -1507,14 +1512,21 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
     if (!confirm('Are you sure you want to delete this attachment type? This may affect existing attachments.')) return;
     try {
       setError(null);
-      const token = localStorage.getItem('token');
-      await axios.delete(`${API_BASE_URL}/api/attachment-types/${id}/`, {
-        headers: { Authorization: `Bearer ${token}` }
+      const token = localStorage.getItem('authToken');
+      const response = await fetch(`http://localhost:8000/api/attachment-types/${id}/`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Token ${token}` }
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to delete attachment type');
+      }
+      
       fetchAttachmentTypes();
     } catch (err: unknown) {
-      if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.detail || 'Failed to delete attachment type');
+      if (err instanceof Error) {
+        setError(err.message);
       } else {
         setError('Failed to delete attachment type');
       }

@@ -45,7 +45,7 @@ interface UserProfileData {
 }
 
 // Helper function to detect platform from URL
-const getPlatformFromUrl = (url: string): 'twitch' | 'youtube' | 'kick' | 'discord' | 'unknown' => {
+const _getPlatformFromUrl = (url: string): 'twitch' | 'youtube' | 'kick' | 'discord' | 'unknown' => {
   if (!url) return 'unknown';
   const lowerUrl = url.toLowerCase();
   if (lowerUrl.includes('twitch.tv')) return 'twitch';

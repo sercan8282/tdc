@@ -137,7 +137,7 @@ export default function Weapons() {
     }
   };
 
-  const groupAttachmentsByType = (attachments: Attachment[]) => {
+  const _groupAttachmentsByType = (attachments: Attachment[]) => {
     return attachments.reduce((acc, attachment) => {
       if (!acc[attachment.type]) {
         acc[attachment.type] = [];

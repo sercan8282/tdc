@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { 
   MessageSquare, Eye, Pin, Lock, CheckCircle,
-  Loader, ThumbsUp, Reply, User, Send, AtSign,
+  Loader, ThumbsUp, Reply, User, Send,
   Edit, Trash2, X, Quote
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -288,7 +288,7 @@ export default function ForumTopic() {
     return '▸'.repeat(count);
   };
 
-  const renderContent = (content: string) => {
+  const _renderContent = (content: string) => {
     return content.split(/(@\w+)/g).map((part, i) => {
       if (part.match(/^@\w+$/)) {
         return (
@@ -312,7 +312,7 @@ export default function ForumTopic() {
     return reply.is_own || user.is_staff;
   };
 
-  const canDelete = (reply: ReplyData) => {
+  const canDelete = (_reply: ReplyData) => {
     if (!user) return false;
     return user.is_staff; // Only admins can delete
   };

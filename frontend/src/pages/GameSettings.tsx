@@ -543,15 +543,8 @@ export default function GameSettings() {
                                       </div>
                                     )}
 
-                                    {/* Text field visualization */}
-                                    {def.field_type === 'text' && (
-                                      <span className="text-white font-medium">
-                                        {String(value)}
-                                      </span>
-                                    )}
-
                                     {/* Fallback for unknown types */}
-                                    {!['number', 'toggle', 'select', 'text'].includes(def.field_type) && (
+                                    {!['number', 'toggle', 'select', 'slider'].includes(def.field_type) && (
                                       <span className="text-white font-medium">
                                         {formatValue(value)}
                                       </span>
