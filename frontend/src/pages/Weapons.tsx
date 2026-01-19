@@ -137,16 +137,6 @@ export default function Weapons() {
     }
   };
 
-  const _groupAttachmentsByType = (attachments: Attachment[]) => {
-    return attachments.reduce((acc, attachment) => {
-      if (!acc[attachment.type]) {
-        acc[attachment.type] = [];
-      }
-      acc[attachment.type].push(attachment);
-      return acc;
-    }, {} as Record<string, Attachment[]>);
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">

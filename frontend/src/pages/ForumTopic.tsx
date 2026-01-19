@@ -288,19 +288,6 @@ export default function ForumTopic() {
     return '▸'.repeat(count);
   };
 
-  const _renderContent = (content: string) => {
-    return content.split(/(@\w+)/g).map((part, i) => {
-      if (part.match(/^@\w+$/)) {
-        return (
-          <span key={i} className="text-blue-400 bg-blue-500/10 px-1 rounded">
-            {part}
-          </span>
-        );
-      }
-      return part;
-    });
-  };
-
   const canEdit = (reply: ReplyData) => {
     if (!user) return false;
     console.log('canEdit check:', { 

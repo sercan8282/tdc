@@ -44,17 +44,6 @@ interface UserProfileData {
   };
 }
 
-// Helper function to detect platform from URL
-const _getPlatformFromUrl = (url: string): 'twitch' | 'youtube' | 'kick' | 'discord' | 'unknown' => {
-  if (!url) return 'unknown';
-  const lowerUrl = url.toLowerCase();
-  if (lowerUrl.includes('twitch.tv')) return 'twitch';
-  if (lowerUrl.includes('youtube.com') || lowerUrl.includes('youtu.be')) return 'youtube';
-  if (lowerUrl.includes('kick.com')) return 'kick';
-  if (lowerUrl.includes('discord.gg') || lowerUrl.includes('discord.com')) return 'discord';
-  return 'unknown';
-};
-
 const UserProfile: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   const navigate = useNavigate();
