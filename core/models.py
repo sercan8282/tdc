@@ -4,6 +4,9 @@ from django.utils.text import slugify
 # Import security models
 from .security_models import SecurityEvent, IPBlock, RateLimitTracker
 
+# Import theme models
+from .theme_models import ThemeSettings
+
 
 class Game(models.Model):
     GAME_TYPE_CHOICES = [

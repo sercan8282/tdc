@@ -6,7 +6,7 @@ from .viewsets import (
     GameSettingDefinitionViewSet, GameSettingProfileViewSet,
     ThreadViewSet, PostViewSet, NotificationViewSet
 )
-from core.views import SiteSettingsViewSet, EventBannerViewSet
+from core.views import SiteSettingsViewSet, EventBannerViewSet, ThemeSettingsViewSet
 from core.security_views import SecurityEventViewSet, IPBlockViewSet
 
 router = DefaultRouter()
@@ -23,6 +23,7 @@ router.register(r'posts', PostViewSet, basename='post')
 router.register(r'notifications', NotificationViewSet, basename='notification')
 router.register(r'site-settings', SiteSettingsViewSet, basename='site-settings')
 router.register(r'event-banners', EventBannerViewSet, basename='event-banner')
+router.register(r'theme-settings', ThemeSettingsViewSet, basename='theme-settings')
 router.register(r'security-events', SecurityEventViewSet, basename='security-event')
 router.register(r'ip-blocks', IPBlockViewSet, basename='ip-block')
 

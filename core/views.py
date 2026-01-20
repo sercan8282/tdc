@@ -3,7 +3,8 @@ from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from .models import SiteSettings, EventBanner
-from .serializers import SiteSettingsSerializer, EventBannerSerializer
+from .theme_models import ThemeSettings
+from .serializers import SiteSettingsSerializer, EventBannerSerializer, ThemeSettingsSerializer
 
 
 class SiteSettingsViewSet(viewsets.ModelViewSet):
@@ -100,4 +101,46 @@ class EventBannerViewSet(viewsets.ModelViewSet):
         banner.is_active = not banner.is_active
         banner.save()
         serializer = self.get_serializer(banner)
+        return Response(serializer.data)
+
+
+class ThemeSettingsViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for theme customization.
+    Admin can customize, anyone can view active theme.
+    """
+    from .serializers import ThemeSettingsSerializer
+    from .models import ThemeSettings
+    
+    queryset = ThemeSettings.objects.all()
+    serializer_class = ThemeSettingsSerializer
+
+    def get_permissions(self):
+        """Admin can manage theme, anyone can read active theme"""
+        if self.action in ['create', 'update', 'partial_update', 'destroy', 'set_active']:
+            return [IsAdminUser()]
+        return [AllowAny()]
+
+    @action(detail=False, methods=['get'])
+    def active(self, request):
+        """Get the currently active theme"""
+        theme = ThemeSettings.get_active_theme()
+        serializer = self.get_serializer(theme)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def css(self, request):
+        """Get the CSS for the active theme"""
+        from django.http import HttpResponse
+        theme = ThemeSettings.get_active_theme()
+        css = theme.generate_css()
+        return HttpResponse(css, content_type='text/css')
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
+    def set_active(self, request, pk=None):
+        """Set this theme as active"""
+        theme = self.get_object()
+        theme.is_active = True
+        theme.save()
+        serializer = self.get_serializer(theme)
         return Response(serializer.data)
