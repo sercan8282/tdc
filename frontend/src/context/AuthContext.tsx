@@ -136,7 +136,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       console.log('Login response status:', response.status);
       
-      const data = await response.json();
+      // Check if response has content before parsing JSON
+      const text = await response.text();
+      if (!text) {
+        throw new Error('Empty response from server');
+      }
+      
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        console.error('Failed to parse login response:', text);
+        throw new Error('Invalid response from server');
+      }
       
       if (!response.ok) {
         // Check for specific error messages
