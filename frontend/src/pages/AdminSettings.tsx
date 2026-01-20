@@ -118,7 +118,7 @@ export default function AdminSettings() {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-20 px-4">
         <div className="max-w-4xl mx-auto">
           <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-8 text-center">
-            <h2 className="text-2xl font-bold text-red-400 mb-2">Access Denied</h2>
+            <h2 className="text-lg md:text-2xl font-bold text-red-400 mb-2">Access Denied</h2>
             <p className="text-slate-300">Only superusers can access site settings.</p>
           </div>
         </div>
@@ -140,10 +140,10 @@ export default function AdminSettings() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-20 px-4 pb-12">
       <div className="max-w-4xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-4 md:mb-8">
           <div className="flex items-center gap-3 mb-2">
             <Globe className="w-8 h-8 text-blue-400" />
-            <h1 className="text-3xl font-bold text-white">Site Settings</h1>
+            <h1 className="text-xl md:text-3xl font-bold text-white">Site Settings</h1>
           </div>
           <p className="text-slate-400">Manage your website configuration</p>
         </div>
@@ -163,7 +163,7 @@ export default function AdminSettings() {
         <div className="bg-slate-800/50 rounded-lg border border-slate-700 p-8 space-y-8">
           {/* Site Name */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-xs md:text-sm font-medium text-slate-300 mb-2">
               Site Name
             </label>
             <input
@@ -177,7 +177,7 @@ export default function AdminSettings() {
 
           {/* Logo Upload */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-xs md:text-sm font-medium text-slate-300 mb-2">
               Logo (max 200x60px)
             </label>
             <div className="flex items-start gap-4">
@@ -210,7 +210,7 @@ export default function AdminSettings() {
 
           {/* Favicon Upload */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-xs md:text-sm font-medium text-slate-300 mb-2">
               Favicon (32x32px)
             </label>
             <div className="flex items-start gap-4">

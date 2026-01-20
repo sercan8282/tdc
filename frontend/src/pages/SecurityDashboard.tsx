@@ -98,7 +98,7 @@ export default function SecurityDashboard() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-white">Security Dashboard</h1>
+        <h1 className="text-xl md:text-3xl font-bold text-white">Security Dashboard</h1>
         <button
           onClick={() => navigate('/admin/security/ip-blocks')}
           className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
@@ -112,19 +112,19 @@ export default function SecurityDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="bg-gray-800 border border-gray-700 p-6 rounded-lg shadow">
             <h3 className="text-sm text-gray-400 mb-2">Events Today</h3>
-            <p className="text-3xl font-bold text-blue-400">{stats.total_events_today}</p>
+            <p className="text-xl md:text-3xl font-bold text-blue-400">{stats.total_events_today}</p>
           </div>
           <div className="bg-gray-800 border border-gray-700 p-6 rounded-lg shadow">
             <h3 className="text-sm text-gray-400 mb-2">Failed Logins</h3>
-            <p className="text-3xl font-bold text-orange-400">{stats.failed_logins_today}</p>
+            <p className="text-xl md:text-3xl font-bold text-orange-400">{stats.failed_logins_today}</p>
           </div>
           <div className="bg-gray-800 border border-gray-700 p-6 rounded-lg shadow">
             <h3 className="text-sm text-gray-400 mb-2">Blocked IPs</h3>
-            <p className="text-3xl font-bold text-red-400">{stats.blocked_ips_count}</p>
+            <p className="text-xl md:text-3xl font-bold text-red-400">{stats.blocked_ips_count}</p>
           </div>
           <div className="bg-gray-800 border border-gray-700 p-6 rounded-lg shadow">
             <h3 className="text-sm text-gray-400 mb-2">Critical Events</h3>
-            <p className="text-3xl font-bold text-red-500">{stats.critical_events_today}</p>
+            <p className="text-xl md:text-3xl font-bold text-red-500">{stats.critical_events_today}</p>
           </div>
         </div>
       )}
@@ -150,7 +150,7 @@ export default function SecurityDashboard() {
         <h3 className="text-lg font-semibold text-white mb-4">Filters</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Severity</label>
+            <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">Severity</label>
             <select
               value={filterSeverity}
               onChange={(e) => setFilterSeverity(e.target.value)}
@@ -164,7 +164,7 @@ export default function SecurityDashboard() {
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Event Type</label>
+            <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">Event Type</label>
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
@@ -183,7 +183,7 @@ export default function SecurityDashboard() {
 
       {/* Recent Events Table */}
       <div className="bg-gray-800 border border-gray-700 rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-700">
+        <div className="px-2 py-2 md:px-6 md:py-4 border-b border-gray-700">
           <h3 className="text-lg font-semibold text-white">Recent Security Events</h3>
         </div>
         <div className="overflow-x-auto">
@@ -201,24 +201,24 @@ export default function SecurityDashboard() {
             <tbody className="divide-y divide-gray-700">
               {recentEvents.map((event) => (
                 <tr key={event.id} className="hover:bg-gray-700/50 transition-colors">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                  <td className="px-2 py-2 md:px-6 md:py-4 whitespace-nowrap text-xs md:text-sm text-gray-300">
                     {new Date(event.timestamp).toLocaleString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-2 py-2 md:px-6 md:py-4 whitespace-nowrap">
                     <span className={`px-2 py-1 text-xs font-semibold rounded ${getSeverityColor(event.severity)}`}>
                       {event.severity_display}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                  <td className="px-2 py-2 md:px-6 md:py-4 whitespace-nowrap text-xs md:text-sm text-gray-300">
                     {event.event_type_display}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-300">
+                  <td className="px-2 py-2 md:px-6 md:py-4 whitespace-nowrap text-sm font-mono text-gray-300">
                     {event.ip_address}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-300">
+                  <td className="px-2 py-2 md:px-6 md:py-4 text-xs md:text-sm text-gray-300">
                     {event.endpoint || '-'}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-300">
+                  <td className="px-2 py-2 md:px-6 md:py-4 text-xs md:text-sm text-gray-300">
                     {event.user_email && <div>User: {event.user_email}</div>}
                     {event.details && Object.keys(event.details).length > 0 && (
                       <div className="text-xs text-gray-400">

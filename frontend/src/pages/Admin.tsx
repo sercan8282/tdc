@@ -1854,9 +1854,9 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
     <>
       <div className="flex-1 overflow-auto">
         {activeTab === 'users' && (
-          <div className="p-8">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-white mb-2">User Management</h1>
+          <div className="p-3 md:p-8">
+            <div className="mb-4 md:mb-8">
+              <h1 className="text-xl md:text-3xl font-bold text-white mb-2">User Management</h1>
               <p className="text-slate-400">Manage all users and permissions</p>
             </div>
 
@@ -1878,18 +1878,18 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-slate-700 bg-slate-900">
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Email</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Nickname</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Status</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Actions</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Email</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Nickname</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Status</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {users.map((user) => (
                         <tr key={user.id} className="border-b border-slate-700 hover:bg-slate-700/50">
-                          <td className="px-6 py-4 text-sm text-white">{user.email}</td>
-                          <td className="px-6 py-4 text-sm text-slate-300">{user.nickname}</td>
-                          <td className="px-6 py-4 text-sm">
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-xs md:text-sm text-white">{user.email}</td>
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-xs md:text-sm text-slate-300">{user.nickname}</td>
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-sm">
                             <div className="flex gap-2">
                               {user.is_verified && (
                                 <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-900/30 text-green-400 rounded text-xs">
@@ -1913,7 +1913,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                               )}
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-sm">
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-sm">
                             <div className="flex gap-2 flex-wrap">
                               {!user.is_verified && (
                                 <button
@@ -2000,9 +2000,9 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         )}
 
         {activeTab === 'pending-users' && (
-          <div className="p-8">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-white mb-2">Pending User Registrations</h1>
+          <div className="p-3 md:p-8">
+            <div className="mb-4 md:mb-8">
+              <h1 className="text-xl md:text-3xl font-bold text-white mb-2">Pending User Registrations</h1>
               <p className="text-slate-400">Review and approve new user registrations</p>
             </div>
 
@@ -2027,18 +2027,18 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-slate-700 bg-slate-900">
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Email</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Nickname</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Registered</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Actions</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Email</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Nickname</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Registered</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {pendingUsers.map((user) => (
                         <tr key={user.id} className="border-b border-slate-700 hover:bg-slate-700/50">
-                          <td className="px-6 py-4 text-sm text-white">{user.email}</td>
-                          <td className="px-6 py-4 text-sm text-slate-300">{user.nickname}</td>
-                          <td className="px-6 py-4 text-sm text-slate-400">
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-xs md:text-sm text-white">{user.email}</td>
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-xs md:text-sm text-slate-300">{user.nickname}</td>
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-xs md:text-sm text-slate-400">
                             {new Date(user.created_at).toLocaleDateString('nl-NL', {
                               day: '2-digit',
                               month: '2-digit',
@@ -2047,7 +2047,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                               minute: '2-digit',
                             })}
                           </td>
-                          <td className="px-6 py-4 text-sm">
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-sm">
                             <div className="flex gap-2">
                               <button
                                 onClick={() => handleActionClick('user_verify_user', user)}
@@ -2094,30 +2094,30 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         )}
 
         {activeTab === 'games' && (
-          <div className="p-8">
+          <div className="p-3 md:p-8">
             <div className="mb-8 flex justify-between items-start">
               <div>
-                <h1 className="text-3xl font-bold text-white mb-2">Games Management</h1>
+                <h1 className="text-xl md:text-3xl font-bold text-white mb-2">Games Management</h1>
                 <p className="text-slate-400">Manage all games in the system - Games are inactive by default</p>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={handleBulkActivateGames}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                  className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-green-600 text-white rounded hover:bg-green-700 transition"
                   title={selectedGames.size > 0 ? `Activate ${selectedGames.size} selected games` : "Activate all games on current page"}
                 >
                   <Check className="w-4 h-4" /> {selectedGames.size > 0 ? `Activate (${selectedGames.size})` : 'Activate All'}
                 </button>
                 <button
                   onClick={handleBulkDeactivateGames}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                  className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-red-600 text-white rounded hover:bg-red-700 transition"
                   title={selectedGames.size > 0 ? `Deactivate ${selectedGames.size} selected games` : "Deactivate all games on current page"}
                 >
                   <Ban className="w-4 h-4" /> {selectedGames.size > 0 ? `Deactivate (${selectedGames.size})` : 'Deactivate All'}
                 </button>
                 <button
                   onClick={() => setShowGameForm(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                  className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition"
                 >
                   <Plus className="w-4 h-4" /> Add Game
                 </button>
@@ -2133,7 +2133,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm text-slate-400">Image:</label>
+                <label className="text-xs md:text-sm text-slate-400">Image:</label>
                 <select
                   value={gameImageFilter}
                   onChange={(e) => setGameImageFilter(e.target.value as 'all' | 'with' | 'without')}
@@ -2170,13 +2170,13 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                             className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-800"
                           />
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Image</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Name</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Type</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Slug</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Active</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Created</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Actions</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Image</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Name</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Type</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Slug</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Active</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Created</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2198,7 +2198,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                               className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-800"
                             />
                           </td>
-                          <td className="px-6 py-4 text-sm">
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-sm">
                             {game.image ? (
                               <img src={game.image} alt={game.name} className="w-12 h-12 rounded object-cover" />
                             ) : (
@@ -2207,8 +2207,8 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                               </div>
                             )}
                           </td>
-                          <td className="px-6 py-4 text-sm text-white">{game.name}</td>
-                          <td className="px-6 py-4 text-sm">
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-xs md:text-sm text-white">{game.name}</td>
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-sm">
                             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
                               game.game_type === 'shooter' ? 'bg-orange-900/30 text-orange-400' :
                               game.game_type === 'racing' ? 'bg-blue-900/30 text-blue-400' :
@@ -2219,8 +2219,8 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                               {game.game_type || 'other'}
                             </span>
                           </td>
-                          <td className="px-6 py-4 text-sm text-slate-300">{game.slug}</td>
-                          <td className="px-6 py-4 text-sm">
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-xs md:text-sm text-slate-300">{game.slug}</td>
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-sm">
                             <button
                               onClick={() => handleToggleGameActive(game)}
                               className={`px-3 py-1 rounded-full text-xs font-medium transition ${
@@ -2232,10 +2232,10 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                               {game.is_active ? 'Active' : 'Inactive'}
                             </button>
                           </td>
-                          <td className="px-6 py-4 text-sm text-slate-400">
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-xs md:text-sm text-slate-400">
                             {new Date(game.created_at).toLocaleDateString()}
                           </td>
-                          <td className="px-6 py-4 text-sm">
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-sm">
                             <div className="flex gap-2">
                               <button
                                 onClick={() => handleSearchImages(game)}
@@ -2366,7 +2366,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                         onChange={(e) => setGameForm({ ...gameForm, is_active: e.target.checked })}
                         className="w-4 h-4 rounded"
                       />
-                      <label htmlFor="isActive" className="ml-2 text-sm text-slate-300">
+                      <label htmlFor="isActive" className="ml-2 text-xs md:text-sm text-slate-300">
                         Active
                       </label>
                     </div>
@@ -2416,7 +2416,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                               setGameImagePreview(URL.createObjectURL(file));
                             }
                           }}
-                          className="flex-1 text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-slate-700 file:text-white hover:file:bg-slate-600"
+                          className="flex-1 text-xs md:text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-slate-700 file:text-white hover:file:bg-slate-600"
                         />
                       </div>
                     </div>
@@ -2425,7 +2425,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                   <div className="flex gap-2 mt-6">
                     <button
                       onClick={handleSaveGame}
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                      className="flex-1 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition"
                     >
                       {gameForm.id ? 'Update' : 'Create'}
                     </button>
@@ -2505,15 +2505,15 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         )}
 
         {activeTab === 'categories' && (
-          <div className="p-8">
+          <div className="p-3 md:p-8">
             <div className="mb-8 flex justify-between items-start">
               <div>
-                <h1 className="text-3xl font-bold text-white mb-2">Categories Management</h1>
+                <h1 className="text-xl md:text-3xl font-bold text-white mb-2">Categories Management</h1>
                 <p className="text-slate-400">Manage game categories</p>
               </div>
               <button
                 onClick={() => setShowCategoryForm(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition"
               >
                 <Plus className="w-4 h-4" /> Add Category
               </button>
@@ -2537,21 +2537,21 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                   <table className="w-full">
                     <thead>
                       <tr className="border-b border-slate-700 bg-slate-900">
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Name</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Game</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Created</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Actions</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Name</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Game</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Created</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {categories.map((category) => (
                         <tr key={category.id} className="border-b border-slate-700 hover:bg-slate-700/50">
-                          <td className="px-6 py-4 text-sm text-white">{category.name}</td>
-                          <td className="px-6 py-4 text-sm text-slate-300">{getGameName(category.game)}</td>
-                          <td className="px-6 py-4 text-sm text-slate-400">
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-xs md:text-sm text-white">{category.name}</td>
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-xs md:text-sm text-slate-300">{getGameName(category.game)}</td>
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-xs md:text-sm text-slate-400">
                             {new Date(category.created_at).toLocaleDateString()}
                           </td>
-                          <td className="px-6 py-4 text-sm">
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-sm">
                             <div className="flex gap-2">
                               <button
                                 onClick={() => handleEditCategory(category)}
@@ -2636,7 +2636,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                   <div className="flex gap-2 mt-6">
                     <button
                       onClick={handleSaveCategory}
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                      className="flex-1 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition"
                     >
                       {categoryForm.id ? 'Update' : 'Create'}
                     </button>
@@ -2654,30 +2654,30 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         )}
 
         {activeTab === 'weapons' && (
-          <div className="p-8">
+          <div className="p-3 md:p-8">
             <div className="mb-8 flex justify-between items-start">
               <div>
-                <h1 className="text-3xl font-bold text-white mb-2">Weapons Management</h1>
+                <h1 className="text-xl md:text-3xl font-bold text-white mb-2">Weapons Management</h1>
                 <p className="text-slate-400">Manage weapon loadouts - Only shows shooter games - Weapons inactive by default</p>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={handleBulkActivateWeapons}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                  className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-green-600 text-white rounded hover:bg-green-700 transition"
                   title={selectedWeapons.size > 0 ? `Activate ${selectedWeapons.size} selected weapons` : "Activate all weapons on current page"}
                 >
                   <Check className="w-4 h-4" /> {selectedWeapons.size > 0 ? `Activate (${selectedWeapons.size})` : 'Activate All'}
                 </button>
                 <button
                   onClick={handleBulkDeactivateWeapons}
-                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+                  className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-red-600 text-white rounded hover:bg-red-700 transition"
                   title={selectedWeapons.size > 0 ? `Deactivate ${selectedWeapons.size} selected weapons` : "Deactivate all weapons on current page"}
                 >
                   <Ban className="w-4 h-4" /> {selectedWeapons.size > 0 ? `Deactivate (${selectedWeapons.size})` : 'Deactivate All'}
                 </button>
                 <button
                   onClick={() => setShowWeaponForm(true)}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                  className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition"
                 >
                   <Plus className="w-4 h-4" /> Add Weapon
                 </button>
@@ -2693,7 +2693,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                 />
               </div>
               <div className="flex items-center gap-2">
-                <label className="text-sm text-slate-400">Image:</label>
+                <label className="text-xs md:text-sm text-slate-400">Image:</label>
                 <select
                   value={weaponImageFilter}
                   onChange={(e) => setWeaponImageFilter(e.target.value as 'all' | 'with' | 'without')}
@@ -2730,14 +2730,14 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                             className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-800"
                           />
                         </th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Name</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Category</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Image</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Size</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Color</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Active</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Created</th>
-                        <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Actions</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Name</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Category</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Image</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Size</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Color</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Active</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Created</th>
+                        <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -2759,15 +2759,15 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                               className="w-4 h-4 rounded border-slate-600 bg-slate-700 text-blue-600 focus:ring-blue-500 focus:ring-offset-slate-800"
                             />
                           </td>
-                          <td className="px-6 py-4 text-sm text-white">{weapon.name}</td>
-                          <td className="px-6 py-4 text-sm text-slate-300">{getCategoryName(weapon.category)}</td>
-                          <td className="px-6 py-4 text-sm">
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-xs md:text-sm text-white">{weapon.name}</td>
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-xs md:text-sm text-slate-300">{getCategoryName(weapon.category)}</td>
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-sm">
                             {weapon.image && (
                               <img src={weapon.image} alt={weapon.name} className="w-10 h-10 rounded object-cover" />
                             )}
                           </td>
-                          <td className="px-6 py-4 text-sm text-slate-300 capitalize">{weapon.image_size}</td>
-                          <td className="px-6 py-4 text-sm">
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-xs md:text-sm text-slate-300 capitalize">{weapon.image_size}</td>
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-sm">
                             <div className="flex items-center gap-2">
                               <div 
                                 className="w-4 h-4 rounded border border-slate-600"
@@ -2776,7 +2776,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                               <span className="text-slate-400">{weapon.text_color}</span>
                             </div>
                           </td>
-                          <td className="px-6 py-4 text-sm">
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-sm">
                             <button
                               onClick={() => handleToggleWeaponActive(weapon)}
                               className={`px-3 py-1 rounded-full text-xs font-medium transition ${
@@ -2788,10 +2788,10 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                               {weapon.is_active ? 'Active' : 'Inactive'}
                             </button>
                           </td>
-                          <td className="px-6 py-4 text-sm text-slate-400">
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-xs md:text-sm text-slate-400">
                             {new Date(weapon.created_at).toLocaleDateString()}
                           </td>
-                          <td className="px-6 py-4 text-sm">
+                          <td className="px-2 py-2 md:px-6 md:py-4 text-sm">
                             <div className="flex gap-2">
                               <button
                                 onClick={() => handleEditWeapon(weapon)}
@@ -2954,7 +2954,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                   <div className="flex gap-2 mt-6">
                     <button
                       onClick={handleSaveWeapon}
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                      className="flex-1 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition"
                     >
                       {weaponForm.id ? 'Update' : 'Create'}
                     </button>
@@ -2996,7 +2996,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                     <button
                       onClick={handleCopyWeapon}
                       disabled={!copyWeaponData.newName.trim()}
-                      className="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-green-600 text-white rounded hover:bg-green-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Copy Weapon
                     </button>
@@ -3017,15 +3017,15 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         )}
 
         {activeTab === 'attachments' && (
-          <div className="p-8">
+          <div className="p-3 md:p-8">
             <div className="mb-8 flex justify-between items-start">
               <div>
-                <h1 className="text-3xl font-bold text-white mb-2">Attachments Management</h1>
+                <h1 className="text-xl md:text-3xl font-bold text-white mb-2">Attachments Management</h1>
                 <p className="text-slate-400">Manage all weapon attachments in the system</p>
               </div>
               <button
                 onClick={() => setShowAttachmentForm(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition"
               >
                 <Plus className="w-4 h-4" /> Add Attachment
               </button>
@@ -3099,7 +3099,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                                 <ChevronRight className="w-5 h-5 text-slate-400" />
                               )}
                               <h3 className="text-lg font-medium text-white">{weaponName}</h3>
-                              <span className="text-sm text-slate-400">
+                              <span className="text-xs md:text-sm text-slate-400">
                                 ({weaponAttachments.length} attachment{weaponAttachments.length !== 1 ? 's' : ''})
                               </span>
                             </button>
@@ -3130,13 +3130,13 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                                 <tbody>
                                   {weaponAttachments.map((attachment) => (
                                     <tr key={attachment.id} className="border-t border-slate-700/50 hover:bg-slate-700/30">
-                                      <td className="px-6 py-3 text-sm text-white">{attachment.name}</td>
+                                      <td className="px-6 py-3 text-xs md:text-sm text-white">{attachment.name}</td>
                                       <td className="px-6 py-3 text-sm">
                                         <span className="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-400/10 text-blue-400">
                                           {attachment.attachment_type_name || attachment.type || 'Unknown'}
                                         </span>
                                       </td>
-                                      <td className="px-6 py-3 text-sm text-slate-400">
+                                      <td className="px-6 py-3 text-xs md:text-sm text-slate-400">
                                         {new Date(attachment.created_at).toLocaleDateString()}
                                       </td>
                                       <td className="px-6 py-3 text-sm">
@@ -3318,7 +3318,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                               setAttachmentImagePreview(URL.createObjectURL(file));
                             }
                           }}
-                          className="flex-1 text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-slate-700 file:text-white hover:file:bg-slate-600"
+                          className="flex-1 text-xs md:text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-medium file:bg-slate-700 file:text-white hover:file:bg-slate-600"
                         />
                       </div>
                     </div>
@@ -3327,7 +3327,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                   <div className="flex gap-2 mt-6">
                     <button
                       onClick={handleSaveAttachment}
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                      className="flex-1 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition"
                     >
                       {attachmentForm.id ? 'Update' : 'Create'}
                     </button>
@@ -3345,15 +3345,15 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         )}
 
         {activeTab === 'attachment-types' && (
-          <div className="p-8">
+          <div className="p-3 md:p-8">
             <div className="mb-8 flex justify-between items-start">
               <div>
-                <h1 className="text-3xl font-bold text-white mb-2">Attachment Types</h1>
+                <h1 className="text-xl md:text-3xl font-bold text-white mb-2">Attachment Types</h1>
                 <p className="text-slate-400">Manage attachment type categories and their display names</p>
               </div>
               <button
                 onClick={() => setShowAttachmentTypeForm(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition flex items-center gap-2"
+                className="px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition flex items-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 Add Attachment Type
@@ -3375,19 +3375,19 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-slate-700 bg-slate-900">
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Order</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Internal Name</th>
-                      <th className="px-6 py-4 text-left text-sm font-semibold text-slate-300">Display Name</th>
-                      <th className="px-6 py-4 text-right text-sm font-semibold text-slate-300">Actions</th>
+                      <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Order</th>
+                      <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Internal Name</th>
+                      <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-semibold text-slate-300">Display Name</th>
+                      <th className="px-2 py-2 md:px-6 md:py-4 text-right text-xs md:text-sm font-semibold text-slate-300">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {attachmentTypes.map((type) => (
                       <tr key={type.id} className="border-b border-slate-700 hover:bg-slate-700/50">
-                        <td className="px-6 py-4 text-slate-300">{type.order}</td>
-                        <td className="px-6 py-4 text-slate-300 font-mono text-sm">{type.name}</td>
-                        <td className="px-6 py-4 text-white font-medium">{type.display_name}</td>
-                        <td className="px-6 py-4 text-right">
+                        <td className="px-2 py-2 md:px-6 md:py-4 text-slate-300">{type.order}</td>
+                        <td className="px-2 py-2 md:px-6 md:py-4 text-slate-300 font-mono text-sm">{type.name}</td>
+                        <td className="px-2 py-2 md:px-6 md:py-4 text-white font-medium">{type.display_name}</td>
+                        <td className="px-2 py-2 md:px-6 md:py-4 text-right">
                           <div className="flex justify-end gap-2">
                             <button
                               onClick={() => handleEditAttachmentType(type)}
@@ -3479,7 +3479,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                   <div className="flex gap-2 mt-6">
                     <button
                       onClick={handleSaveAttachmentType}
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                      className="flex-1 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition"
                     >
                       {attachmentTypeForm.id ? 'Update' : 'Create'}
                     </button>
@@ -3497,10 +3497,10 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
         )}
 
         {activeTab === 'game-settings' && (
-          <div className="p-8">
+          <div className="p-3 md:p-8">
             <div className="mb-8 flex justify-between items-start">
               <div>
-                <h1 className="text-3xl font-bold text-white mb-2">Game Settings</h1>
+                <h1 className="text-xl md:text-3xl font-bold text-white mb-2">Game Settings</h1>
                 <p className="text-slate-400">Create and manage graphics settings definitions and profiles for each game</p>
               </div>
             </div>
@@ -3545,7 +3545,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                     </div>
                     <button
                       onClick={handleStartNewSettingDefinition}
-                      className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                      className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-green-600 text-white rounded hover:bg-green-700 transition"
                     >
                       <Plus className="w-4 h-4" /> New Setting
                     </button>
@@ -3582,7 +3582,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                           {categorySettings.map(setting => (
                             <div
                               key={setting.id}
-                              className="group relative px-3 py-2 bg-slate-700 rounded text-sm text-slate-300 hover:bg-slate-600 cursor-pointer flex items-center gap-2"
+                              className="group relative px-3 py-2 bg-slate-700 rounded text-xs md:text-sm text-slate-300 hover:bg-slate-600 cursor-pointer flex items-center gap-2"
                               onClick={() => handleEditSettingDefinition(setting)}
                             >
                               <span>{setting.display_name}</span>
@@ -3614,7 +3614,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                   <h2 className="text-lg font-semibold text-white">Settings Profiles</h2>
                   <button
                     onClick={handleStartNewProfile}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                    className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition"
                   >
                     <Plus className="w-4 h-4" /> New Profile
                   </button>
@@ -3639,7 +3639,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                           <div>
                             <h3 className="text-lg font-semibold text-white">{profile.name}</h3>
                             {profile.description && (
-                              <p className="text-sm text-slate-400 mt-1">{profile.description}</p>
+                              <p className="text-xs md:text-sm text-slate-400 mt-1">{profile.description}</p>
                             )}
                           </div>
                           <div className="flex gap-2">
@@ -3667,7 +3667,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                             return (
                               <div key={key} className="bg-slate-700/50 rounded px-2 py-1">
                                 <span className="text-xs text-slate-400 block">{def?.display_name || key}</span>
-                                <span className="text-sm text-white">
+                                <span className="text-xs md:text-sm text-white">
                                   {typeof value === 'boolean' ? (value ? 'On' : 'Off') : value}
                                 </span>
                               </div>
@@ -3788,7 +3788,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                               />
                               <button
                                 onClick={addOption}
-                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                                className="px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition"
                               >
                                 Add
                               </button>
@@ -3800,7 +3800,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                                 settingDefinitionForm.options.map((option, index) => (
                                   <span
                                     key={index}
-                                    className="flex items-center gap-1 px-2 py-1 bg-slate-700 rounded text-sm text-white"
+                                    className="flex items-center gap-1 px-2 py-1 bg-slate-700 rounded text-xs md:text-sm text-white"
                                   >
                                     {option}
                                     <button
@@ -3948,7 +3948,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                       <div className="flex gap-2 mt-6">
                         <button
                           onClick={handleSaveSettingDefinition}
-                          className="flex-1 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                          className="flex-1 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-green-600 text-white rounded hover:bg-green-700 transition"
                         >
                           {settingDefinitionForm.id ? 'Update Setting' : 'Create Setting'}
                         </button>
@@ -4193,7 +4193,7 @@ export default function Admin({ initialTab = 'users' }: { initialTab?: string | 
                       <div className="flex gap-2 mt-6 sticky bottom-0 bg-slate-800 pt-4 border-t border-slate-700">
                         <button
                           onClick={handleSaveProfile}
-                          className="flex-1 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition"
+                          className="flex-1 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition"
                         >
                           {profileForm.id ? 'Update Profile' : 'Create Profile'} ({profileForm.enabledSettings.size} settings)
                         </button>

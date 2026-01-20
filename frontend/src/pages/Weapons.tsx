@@ -146,24 +146,24 @@ export default function Weapons() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
-            <Crosshair className="w-10 h-10 text-blue-500" />
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-4xl font-bold text-white mb-2 flex items-center gap-2 md:gap-3">
+            <Crosshair className="w-7 h-7 md:w-10 md:h-10 text-blue-500" />
             Weapons Database
           </h1>
-          <p className="text-slate-400">Browse all weapons and their attachments</p>
+          <p className="text-sm md:text-base text-slate-400">Browse all weapons and their attachments</p>
         </div>
 
         {/* Game Tabs */}
-        <div className="flex gap-2 mb-6 flex-wrap">
+        <div className="flex gap-2 mb-4 md:mb-6 flex-wrap overflow-x-auto pb-2">
           {games.map(game => (
             <button
               key={game.id}
               onClick={() => handleGameChange(game.slug)}
-              className={`px-4 py-2 rounded-lg font-medium transition ${
+              className={`px-3 md:px-4 py-2 rounded-lg font-medium transition text-sm md:text-base whitespace-nowrap ${
                 selectedGame === game.slug
                   ? 'bg-blue-600 text-white'
                   : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
@@ -175,7 +175,7 @@ export default function Weapons() {
         </div>
 
         {/* Filters Row */}
-        <div className="flex flex-wrap gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mb-4 md:mb-6">
           {/* Category Filter */}
           <div className="flex items-center gap-2">
             <Filter className="w-5 h-5 text-slate-400" />

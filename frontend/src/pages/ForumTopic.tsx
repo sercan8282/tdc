@@ -345,7 +345,7 @@ export default function ForumTopic() {
                   <User className="w-8 h-8 text-slate-400" />
                 )}
               </div>
-              <Link to={`/user/${reply.author.id}`} className="text-sm font-medium text-blue-400 hover:text-blue-300 text-center mb-2">
+              <Link to={`/user/${reply.author.id}`} className="text-xs md:text-sm font-medium text-blue-400 hover:text-blue-300 text-center mb-2">
                 {reply.author.nickname}
               </Link>
               {reply.author.rank && (
@@ -392,7 +392,7 @@ export default function ForumTopic() {
                 )}
               </div>
               <div>
-                <Link to={`/profile/${reply.author.nickname}`} className="text-blue-400 hover:text-blue-300 text-sm font-medium">
+                <Link to={`/profile/${reply.author.nickname}`} className="text-blue-400 hover:text-blue-300 text-xs md:text-sm font-medium">
                   {reply.author.nickname}
                 </Link>
                 {reply.author.rank && (
@@ -551,7 +551,7 @@ export default function ForumTopic() {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-white mb-2">Topic not found</h2>
+          <h2 className="text-lg md:text-2xl font-bold text-white mb-2">Topic not found</h2>
           <Link to="/forum" className="text-blue-400 hover:text-blue-300">
             Back to Forum
           </Link>
@@ -602,7 +602,7 @@ export default function ForumTopic() {
                 type="text"
                 value={editTopicTitle}
                 onChange={(e) => setEditTopicTitle(e.target.value)}
-                className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Topic title"
               />
               <textarea
@@ -616,13 +616,13 @@ export default function ForumTopic() {
                 <button
                   onClick={handleEditTopic}
                   disabled={submitting || !editTopicTitle.trim() || !editTopicContent.trim()}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 text-white rounded-lg transition"
+                  className="px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 text-white rounded-lg transition"
                 >
                   {submitting ? 'Saving...' : 'Save Changes'}
                 </button>
                 <button
                   onClick={() => setEditingTopic(false)}
-                  className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
+                  className="px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
                 >
                   Cancel
                 </button>
@@ -630,7 +630,7 @@ export default function ForumTopic() {
             </div>
           ) : (
             <>
-              <h1 className="text-2xl font-bold text-white mb-4">{topic.title}</h1>
+              <h1 className="text-lg md:text-2xl font-bold text-white mb-4">{topic.title}</h1>
 
               <div className="flex items-center gap-4 mb-6">
             <div className="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center overflow-hidden">
@@ -670,13 +670,13 @@ export default function ForumTopic() {
               <div className="flex gap-2">
                 <button
                   onClick={handleDeleteTopic}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition"
+                  className="px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-red-600 hover:bg-red-700 text-white rounded-lg transition"
                 >
                   Delete Topic
                 </button>
                 <button
                   onClick={() => setDeleteTopicConfirm(false)}
-                  className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
+                  className="px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
                 >
                   Cancel
                 </button>
@@ -777,7 +777,7 @@ export default function ForumTopic() {
                   <button
                     type="submit"
                     disabled={!replyContent.trim() || submitting}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white rounded-lg transition"
+                    className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 hover:bg-blue-700 disabled:bg-slate-600 disabled:cursor-not-allowed text-white rounded-lg transition"
                   >
                     {submitting ? (
                       <Loader className="w-4 h-4 animate-spin" />
@@ -799,7 +799,7 @@ export default function ForumTopic() {
               <p className="text-slate-400 mb-4">Log in to join the discussion</p>
               <Link
                 to="/login"
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                className="inline-flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
               >
                 Log In
               </Link>

@@ -124,7 +124,7 @@ export default function Leaderboard() {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">🏆 Leaderboard</h1>
+          <h1 className="text-xl md:text-3xl font-bold text-white mb-2">🏆 Leaderboard</h1>
           <p className="text-slate-400">Top contributors in our community</p>
         </div>
 
@@ -160,7 +160,7 @@ export default function Leaderboard() {
                 {/* 2nd Place */}
                 <div className={`bg-gradient-to-b ${podiumColors[1]} rounded-xl border p-4 text-center mt-8`}>
                   <div className="flex justify-center mb-2">{podiumIcons[1]}</div>
-                  <div className="text-2xl font-bold text-slate-300 mb-2">2</div>
+                  <div className="text-lg md:text-2xl font-bold text-slate-300 mb-2">2</div>
                   <div className="w-16 h-16 rounded-full bg-slate-700 mx-auto mb-2 overflow-hidden">
                     {leaderboard[1]?.user.avatar_url ? (
                       <img src={leaderboard[1].user.avatar_url} alt="" className="w-full h-full object-cover" />
@@ -177,7 +177,7 @@ export default function Leaderboard() {
                 {/* 1st Place */}
                 <div className={`bg-gradient-to-b ${podiumColors[0]} rounded-xl border p-4 text-center`}>
                   <div className="flex justify-center mb-2">{podiumIcons[0]}</div>
-                  <div className="text-2xl font-bold text-yellow-400 mb-2">1</div>
+                  <div className="text-lg md:text-2xl font-bold text-yellow-400 mb-2">1</div>
                   <div className="w-20 h-20 rounded-full bg-slate-700 mx-auto mb-2 overflow-hidden ring-4 ring-yellow-500/50">
                     {leaderboard[0]?.user.avatar_url ? (
                       <img src={leaderboard[0].user.avatar_url} alt="" className="w-full h-full object-cover" />
@@ -188,13 +188,13 @@ export default function Leaderboard() {
                     )}
                   </div>
                   <div className="text-white font-semibold truncate">{leaderboard[0]?.user.nickname}</div>
-                  <div className="text-yellow-400 text-sm font-medium">{leaderboard[0]?.points} pts</div>
+                  <div className="text-yellow-400 text-xs md:text-sm font-medium">{leaderboard[0]?.points} pts</div>
                 </div>
 
                 {/* 3rd Place */}
                 <div className={`bg-gradient-to-b ${podiumColors[2]} rounded-xl border p-4 text-center mt-12`}>
                   <div className="flex justify-center mb-2">{podiumIcons[2]}</div>
-                  <div className="text-2xl font-bold text-amber-600 mb-2">3</div>
+                  <div className="text-lg md:text-2xl font-bold text-amber-600 mb-2">3</div>
                   <div className="w-14 h-14 rounded-full bg-slate-700 mx-auto mb-2 overflow-hidden">
                     {leaderboard[2]?.user.avatar_url ? (
                       <img src={leaderboard[2].user.avatar_url} alt="" className="w-full h-full object-cover" />
@@ -277,7 +277,7 @@ export default function Leaderboard() {
                 <p className="text-slate-400 mb-4">Be the first to earn points by posting topics and replies!</p>
                 <Link
                   to="/forum"
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                  className="inline-flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
                 >
                   Go to Forum
                 </Link>

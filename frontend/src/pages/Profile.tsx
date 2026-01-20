@@ -372,9 +372,9 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-4 md:py-8 px-4">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold text-white mb-8">My Profile</h1>
+        <h1 className="text-2xl md:text-3xl font-bold text-white mb-6 md:mb-8">My Profile</h1>
 
         {/* Success/Error Messages */}
         {error && (
@@ -391,9 +391,9 @@ export default function Profile() {
         )}
 
         {/* Avatar Section */}
-        <div className="bg-slate-800 rounded-lg border border-slate-700 p-6 mb-6">
-          <h2 className="text-xl font-semibold text-white mb-4">Profile Picture</h2>
-          <div className="flex items-center gap-6">
+        <div className="bg-slate-800 rounded-lg border border-slate-700 p-4 md:p-6 mb-6">
+          <h2 className="text-lg md:text-xl font-semibold text-white mb-4">Profile Picture</h2>
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
             <div className="relative">
               <div className="w-24 h-24 rounded-full bg-slate-700 flex items-center justify-center overflow-hidden border-4 border-slate-600">
                 {profile?.avatar ? (

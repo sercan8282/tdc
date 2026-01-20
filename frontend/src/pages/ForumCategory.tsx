@@ -128,7 +128,7 @@ export default function ForumCategory() {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-white mb-2">Category not found</h2>
+          <h2 className="text-lg md:text-2xl font-bold text-white mb-2">Category not found</h2>
           <Link to="/forum" className="text-blue-400 hover:text-blue-300">
             Back to Forum
           </Link>
@@ -153,13 +153,13 @@ export default function ForumCategory() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">{category.name}</h1>
+            <h1 className="text-xl md:text-3xl font-bold text-white mb-2">{category.name}</h1>
             <p className="text-slate-400">{category.description}</p>
           </div>
           {isAuthenticated && (
             <Link
               to={`/forum/new?category=${category.slug}`}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+              className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
             >
               <Plus className="w-4 h-4" />
               New Topic
@@ -176,7 +176,7 @@ export default function ForumCategory() {
             {isAuthenticated && (
               <Link
                 to={`/forum/new?category=${category.slug}`}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                className="inline-flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
               >
                 <Plus className="w-4 h-4" />
                 Create Topic

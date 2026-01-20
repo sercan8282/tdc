@@ -28,7 +28,7 @@ import MFASetup from './pages/MFASetup';
 import Profile from './pages/Profile';
 import './App.css';
 import { useState, useEffect } from 'react';
-import { Gamepad2, Crosshair, MessageSquare, Shield, LogIn, Settings, UserPlus, User, LogOut, ChevronDown, Users as UsersIcon, Globe, Mail, Film } from 'lucide-react';
+import { Gamepad2, Crosshair, MessageSquare, Shield, LogIn, Settings, UserPlus, User, LogOut, ChevronDown, Users as UsersIcon, Globe, Mail, Film, Menu, X } from 'lucide-react';
 
 interface SiteSettings {
   site_name: string;
@@ -146,161 +146,301 @@ function PublicNav() {
     { path: '/videos', label: 'Videos', icon: Film },
   ];
 
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
   return (
     <>
       <EventBanner />
       <nav className="bg-slate-800 border-b border-slate-700">
-      <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link to="/" className="flex items-center gap-2">
-            {siteSettings.logo_url ? (
-              <>
-                <img src={siteSettings.logo_url} alt={siteSettings.site_name} className="h-10 object-contain" />
-                <span className="text-xl font-bold text-white">{siteSettings.site_name}</span>
-              </>
-            ) : (
-              <>
-                <Crosshair className="w-8 h-8 text-blue-500" />
-                <span className="text-xl font-bold text-white">{siteSettings.site_name}</span>
-              </>
-            )}
-          </Link>
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo */}
+            <Link to="/" className="flex items-center gap-2">
+              {siteSettings.logo_url ? (
+                <>
+                  <img src={siteSettings.logo_url} alt={siteSettings.site_name} className="h-8 md:h-10 object-contain" />
+                  <span className="text-lg md:text-xl font-bold text-white">{siteSettings.site_name}</span>
+                </>
+              ) : (
+                <>
+                  <Crosshair className="w-6 h-6 md:w-8 md:h-8 text-blue-500" />
+                  <span className="text-lg md:text-xl font-bold text-white">{siteSettings.site_name}</span>
+                </>
+              )}
+            </Link>
 
-          {/* Nav Items */}
-          <div className="flex items-center gap-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.path;
-              return (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${
-                    isActive
-                      ? 'bg-blue-600 text-white'
-                      : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  {item.label}
-                </Link>
-              );
-            })}
+            {/* Desktop Nav Items - Hidden on mobile */}
+            <div className="hidden lg:flex items-center gap-1">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.path;
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition ${
+                      isActive
+                        ? 'bg-blue-600 text-white'
+                        : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    {item.label}
+                  </Link>
+                );
+              })}
+            </div>
+
+            {/* Desktop Auth/Admin Links - Hidden on mobile */}
+            <div className="hidden lg:flex items-center gap-2">
+              {isAuthenticated ? (
+                <>
+                  <NotificationBell />
+                  <MessageIcon />
+                  {isAdmin && (
+                    <div className="relative admin-dropdown-container">
+                      <button
+                        onClick={() => setAdminDropdown(!adminDropdown)}
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
+                      >
+                        <Shield className="w-5 h-5" />
+                        Admin
+                        <ChevronDown className={`w-4 h-4 transition-transform ${adminDropdown ? 'rotate-180' : ''}`} />
+                      </button>
+                      
+                      {adminDropdown && (
+                        <div className="absolute right-0 mt-2 w-56 bg-slate-800 border border-slate-700 rounded-lg shadow-xl py-2 z-50">
+                          <Link
+                            to="/admin"
+                            onClick={() => setAdminDropdown(false)}
+                            className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                          >
+                            <Shield className="w-4 h-4" />
+                            Admin Dashboard
+                          </Link>
+                          <Link
+                            to="/admin/users"
+                            onClick={() => setAdminDropdown(false)}
+                            className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                          >
+                            <UsersIcon className="w-4 h-4" />
+                            User Management
+                          </Link>
+                          <Link
+                            to="/admin/security"
+                            onClick={() => setAdminDropdown(false)}
+                            className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                          >
+                            <Shield className="w-4 h-4" />
+                            Security Monitor
+                          </Link>
+                          {user?.is_superuser && (
+                            <Link
+                              to="/admin/settings"
+                              onClick={() => setAdminDropdown(false)}
+                              className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                            >
+                              <Globe className="w-4 h-4" />
+                              Site Settings
+                            </Link>
+                          )}
+                          <Link
+                            to="/forum/admin"
+                            onClick={() => setAdminDropdown(false)}
+                            className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                          >
+                            <MessageSquare className="w-4 h-4" />
+                            Forum Admin
+                          </Link>
+                          <Link
+                            to="/admin/videos"
+                            onClick={() => setAdminDropdown(false)}
+                            className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                          >
+                            <Film className="w-4 h-4" />
+                            Video Management
+                          </Link>
+                          <Link
+                            to="/admin/banners"
+                            onClick={() => setAdminDropdown(false)}
+                            className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                          >
+                            📢
+                            Event Banners
+                          </Link>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  <Link
+                    to="/profile"
+                    className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition"
+                  >
+                    <User className="w-5 h-5" />
+                    Profile
+                  </Link>
+                  <LogoutButton />
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/register"
+                    className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition"
+                  >
+                    <UserPlus className="w-5 h-5" />
+                    Register
+                  </Link>
+                  <Link
+                    to="/login"
+                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                  >
+                    <LogIn className="w-5 h-5" />
+                    Login
+                  </Link>
+                </>
+              )}
+            </div>
+
+            {/* Mobile menu button */}
+            <div className="flex lg:hidden items-center gap-2">
+              {isAuthenticated && (
+                <>
+                  <NotificationBell />
+                  <MessageIcon />
+                </>
+              )}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="p-2 text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition"
+              >
+                {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            </div>
           </div>
 
-          {/* Admin/Profile/Login/Register Links */}
-          <div className="flex items-center gap-2">
-            {isAuthenticated ? (
-              <>
-                <NotificationBell />
-                <MessageIcon />
-                {isAdmin && (
-                  <div className="relative admin-dropdown-container">
-                    <button
-                      onClick={() => setAdminDropdown(!adminDropdown)}
-                      className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="lg:hidden border-t border-slate-700 py-4">
+              {/* Mobile Nav Items */}
+              <div className="space-y-1 mb-4">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition ${
+                        isActive
+                          ? 'bg-blue-600 text-white'
+                          : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                      }`}
                     >
-                      <Shield className="w-5 h-5" />
-                      Admin
-                      <ChevronDown className={`w-4 h-4 transition-transform ${adminDropdown ? 'rotate-180' : ''}`} />
-                    </button>
-                    
-                    {adminDropdown && (
-                      <div className="absolute right-0 mt-2 w-56 bg-slate-800 border border-slate-700 rounded-lg shadow-xl py-2 z-50">
+                      <Icon className="w-5 h-5" />
+                      {item.label}
+                    </Link>
+                  );
+                })}
+              </div>
+
+              {/* Mobile Auth/Admin Links */}
+              <div className="border-t border-slate-700 pt-4 space-y-1">
+                {isAuthenticated ? (
+                  <>
+                    {isAdmin && (
+                      <>
+                        <div className="px-4 py-2 text-sm font-semibold text-slate-400 uppercase">Admin</div>
                         <Link
                           to="/admin"
-                          onClick={() => setAdminDropdown(false)}
-                          className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                          className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition"
                         >
-                          <Shield className="w-4 h-4" />
+                          <Shield className="w-5 h-5" />
                           Admin Dashboard
                         </Link>
                         <Link
                           to="/admin/users"
-                          onClick={() => setAdminDropdown(false)}
-                          className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                          className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition"
                         >
-                          <UsersIcon className="w-4 h-4" />
+                          <UsersIcon className="w-5 h-5" />
                           User Management
                         </Link>
                         <Link
                           to="/admin/security"
-                          onClick={() => setAdminDropdown(false)}
-                          className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                          className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition"
                         >
-                          <Shield className="w-4 h-4" />
+                          <Shield className="w-5 h-5" />
                           Security Monitor
                         </Link>
                         {user?.is_superuser && (
                           <Link
                             to="/admin/settings"
-                            onClick={() => setAdminDropdown(false)}
-                            className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                            className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition"
                           >
-                            <Globe className="w-4 h-4" />
+                            <Globe className="w-5 h-5" />
                             Site Settings
                           </Link>
                         )}
                         <Link
                           to="/forum/admin"
-                          onClick={() => setAdminDropdown(false)}
-                          className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                          className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition"
                         >
-                          <MessageSquare className="w-4 h-4" />
+                          <MessageSquare className="w-5 h-5" />
                           Forum Admin
                         </Link>
                         <Link
                           to="/admin/videos"
-                          onClick={() => setAdminDropdown(false)}
-                          className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                          className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition"
                         >
-                          <Film className="w-4 h-4" />
+                          <Film className="w-5 h-5" />
                           Video Management
                         </Link>
                         <Link
                           to="/admin/banners"
-                          onClick={() => setAdminDropdown(false)}
-                          className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                          className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition"
                         >
-                          📢
-                          Event Banners
+                          📢 Event Banners
                         </Link>
-                      </div>
+                      </>
                     )}
-                  </div>
+                    <div className="border-t border-slate-700 mt-2 pt-2">
+                      <Link
+                        to="/profile"
+                        className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition"
+                      >
+                        <User className="w-5 h-5" />
+                        Profile
+                      </Link>
+                      <MobileLogoutButton />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/register"
+                      className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition"
+                    >
+                      <UserPlus className="w-5 h-5" />
+                      Register
+                    </Link>
+                    <Link
+                      to="/login"
+                      className="flex items-center gap-3 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                    >
+                      <LogIn className="w-5 h-5" />
+                      Login
+                    </Link>
+                  </>
                 )}
-                <Link
-                  to="/profile"
-                  className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition"
-                >
-                  <User className="w-5 h-5" />
-                  Profile
-                </Link>
-                <LogoutButton />
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/register"
-                  className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition"
-                >
-                  <UserPlus className="w-5 h-5" />
-                  Register
-                </Link>
-                <Link
-                  to="/login"
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
-                >
-                  <LogIn className="w-5 h-5" />
-                  Login
-                </Link>
-              </>
-            )}
-          </div>
+              </div>
+            </div>
+          )}
         </div>
-      </div>
-    </nav>
+      </nav>
     </>
   );
 }
@@ -317,6 +457,25 @@ function LogoutButton() {
     <button
       onClick={handleLogout}
       className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-red-600/20 hover:text-red-400 rounded-lg transition"
+    >
+      <LogOut className="w-5 h-5" />
+      Logout
+    </button>
+  );
+}
+
+// Mobile Logout button component
+function MobileLogoutButton() {
+  const { logout } = useAuth();
+  
+  const handleLogout = () => {
+    logout();
+  };
+  
+  return (
+    <button
+      onClick={handleLogout}
+      className="flex items-center gap-3 px-4 py-3 w-full text-slate-300 hover:bg-red-600/20 hover:text-red-400 rounded-lg transition"
     >
       <LogOut className="w-5 h-5" />
       Logout
@@ -344,9 +503,9 @@ function AdminLayout() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-900">
+    <div className="min-h-screen bg-slate-900 lg:flex">
       <Sidebar onLogout={logout} onAdminTabChange={handleAdminTabChange} activeAdminTab={adminTab} />
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto pt-14 lg:pt-0">
         <Admin initialTab={adminTab} />
       </main>
     </div>

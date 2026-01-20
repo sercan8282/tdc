@@ -336,7 +336,7 @@ export default function ForumAdmin() {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-2">Access Denied</h1>
+          <h1 className="text-lg md:text-2xl font-bold text-white mb-2">Access Denied</h1>
           <p className="text-slate-400">You need admin privileges to access this page.</p>
         </div>
       </div>
@@ -361,7 +361,7 @@ export default function ForumAdmin() {
               <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
-              <h1 className="text-2xl font-bold text-white">Forum Administration</h1>
+              <h1 className="text-lg md:text-2xl font-bold text-white">Forum Administration</h1>
               <p className="text-slate-400 text-sm">Manage categories and user ranks</p>
             </div>
           </div>
@@ -414,7 +414,7 @@ export default function ForumAdmin() {
                   is_active: true,
                 });
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition"
+              className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg transition"
             >
               <Plus className="w-4 h-4" />
               Add Category
@@ -428,7 +428,7 @@ export default function ForumAdmin() {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Name</label>
+                    <label className="block text-xs md:text-sm font-medium text-slate-300 mb-1">Name</label>
                     <input
                       type="text"
                       value={categoryForm.name}
@@ -438,7 +438,7 @@ export default function ForumAdmin() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Description</label>
+                    <label className="block text-xs md:text-sm font-medium text-slate-300 mb-1">Description</label>
                     <input
                       type="text"
                       value={categoryForm.description}
@@ -448,7 +448,7 @@ export default function ForumAdmin() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Icon</label>
+                    <label className="block text-xs md:text-sm font-medium text-slate-300 mb-1">Icon</label>
                     <div className="flex flex-wrap gap-2">
                       {iconOptions.map((icon) => (
                         <button
@@ -467,7 +467,7 @@ export default function ForumAdmin() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Color</label>
+                    <label className="block text-xs md:text-sm font-medium text-slate-300 mb-1">Color</label>
                     <div className="flex flex-wrap gap-2">
                       {colorOptions.map((color) => (
                         <button
@@ -497,7 +497,7 @@ export default function ForumAdmin() {
                   <button
                     onClick={handleSaveCategory}
                     disabled={saving}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:opacity-50"
+                    className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:opacity-50"
                   >
                     {saving ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     Save
@@ -507,7 +507,7 @@ export default function ForumAdmin() {
                       setNewCategory(false);
                       setEditingCategory(null);
                     }}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
+                    className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
                   >
                     <X className="w-4 h-4" />
                     Cancel
@@ -592,7 +592,7 @@ export default function ForumAdmin() {
                   color: 'gray',
                 });
               }}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition"
+              className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg transition"
             >
               <Plus className="w-4 h-4" />
               Add Rank
@@ -606,7 +606,7 @@ export default function ForumAdmin() {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Name</label>
+                    <label className="block text-xs md:text-sm font-medium text-slate-300 mb-1">Name</label>
                     <input
                       type="text"
                       value={rankForm.name}
@@ -616,7 +616,7 @@ export default function ForumAdmin() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Min Points</label>
+                    <label className="block text-xs md:text-sm font-medium text-slate-300 mb-1">Min Points</label>
                     <input
                       type="number"
                       value={rankForm.min_points}
@@ -626,7 +626,7 @@ export default function ForumAdmin() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Chevrons (0-5)</label>
+                    <label className="block text-xs md:text-sm font-medium text-slate-300 mb-1">Chevrons (0-5)</label>
                     <input
                       type="number"
                       min="0"
@@ -640,7 +640,7 @@ export default function ForumAdmin() {
                   
                   {/* Custom Image Upload */}
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-300 mb-2">Custom Image (optional)</label>
+                    <label className="block text-xs md:text-sm font-medium text-slate-300 mb-2">Custom Image (optional)</label>
                     <p className="text-xs text-slate-400 mb-3">Upload a custom image for this rank. Image will be automatically resized to 64x64 pixels.</p>
                     
                     <div className="flex items-start gap-4">
@@ -688,7 +688,7 @@ export default function ForumAdmin() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Emoji Icon (fallback)</label>
+                    <label className="block text-xs md:text-sm font-medium text-slate-300 mb-1">Emoji Icon (fallback)</label>
                     <div className="flex flex-wrap gap-2">
                       {['🎖️', '⭐', '🏅', '🎗️', '👑', '💎', '🔰', '🛡️'].map((icon) => (
                         <button
@@ -708,7 +708,7 @@ export default function ForumAdmin() {
                     <p className="text-xs text-slate-400 mt-1">Used when no custom image is set</p>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">Color</label>
+                    <label className="block text-xs md:text-sm font-medium text-slate-300 mb-1">Color</label>
                     <div className="flex flex-wrap gap-2">
                       {colorOptions.map((color) => (
                         <button
@@ -728,7 +728,7 @@ export default function ForumAdmin() {
                   <button
                     onClick={handleSaveRank}
                     disabled={saving}
-                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:opacity-50"
+                    className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:opacity-50"
                   >
                     {saving ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                     Save
@@ -740,7 +740,7 @@ export default function ForumAdmin() {
                       setRankImageFile(null);
                       setRankImagePreview(null);
                     }}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
+                    className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
                   >
                     <X className="w-4 h-4" />
                     Cancel
