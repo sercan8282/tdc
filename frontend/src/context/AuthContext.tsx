@@ -136,7 +136,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       console.log('Login response status:', response.status);
       
-      const data = await response.json();
+      // Check for server errors (502, 503, etc.)
+      if (response.status >= 500) {
+        throw new Error('Server is currently unavailable. Please try again later.');
+      }
+      
+      // Check if response has content before parsing JSON
+      const text = await response.text();
+      if (!text) {
+        throw new Error('Empty response from server');
+      }
+      
+      let data;
+      try {
+        data = JSON.parse(text);
+      } catch (e) {
+        console.error('Failed to parse login response:', text);
+        if (response.status === 502) {
+          throw new Error('Backend server is not running. Please contact support.');
+        }
+        throw new Error('Server returned an invalid response. Please try again.');
+      }
       
       if (!response.ok) {
         // Check for specific error messages
