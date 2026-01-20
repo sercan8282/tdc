@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import SiteSettings, EventBanner
+from .models import SiteSettings, EventBanner, ThemeSettings
 from PIL import Image
 from io import BytesIO
 from django.core.files.base import ContentFile
@@ -144,3 +144,17 @@ class EventBannerSerializer(serializers.ModelSerializer):
             'minutes': minutes,
             'seconds': seconds
         }
+
+
+class ThemeSettingsSerializer(serializers.ModelSerializer):
+    """Serializer for theme customization."""
+    generated_css = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = ThemeSettings
+        fields = '__all__'
+        read_only_fields = ['created_at', 'updated_at']
+    
+    def get_generated_css(self, obj):
+        """Return the generated CSS for preview."""
+        return obj.generate_css()

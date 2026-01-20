@@ -22,13 +22,14 @@ import UserProfile from './pages/UserProfile';
 import Videos from './pages/Videos';
 import VideoAdmin from './pages/VideoAdmin';
 import EventBannerAdmin from './pages/EventBannerAdmin';
+import ThemeEditor from './pages/ThemeEditor';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import MFASetup from './pages/MFASetup';
 import Profile from './pages/Profile';
 import './App.css';
 import { useState, useEffect } from 'react';
-import { Gamepad2, Crosshair, MessageSquare, Shield, LogIn, Settings, UserPlus, User, LogOut, ChevronDown, Users as UsersIcon, Globe, Mail, Film, Menu, X } from 'lucide-react';
+import { Gamepad2, Crosshair, MessageSquare, Shield, LogIn, Settings, UserPlus, User, LogOut, ChevronDown, Users as UsersIcon, Globe, Mail, Film, Menu, X, Palette } from 'lucide-react';
 
 interface SiteSettings {
   site_name: string;
@@ -95,6 +96,7 @@ function PublicNav() {
 
   useEffect(() => {
     fetchSiteSettings();
+    loadThemeCSS();
     
     // Close dropdown when clicking outside
     const handleClickOutside = (event: MouseEvent) => {
@@ -107,6 +109,29 @@ function PublicNav() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [adminDropdown]);
+
+  const loadThemeCSS = async () => {
+    try {
+      const res = await fetch('/api/theme-settings/css/');
+      if (res.ok) {
+        const css = await res.text();
+        
+        // Remove old theme style if exists
+        const oldStyle = document.getElementById('theme-css');
+        if (oldStyle) {
+          oldStyle.remove();
+        }
+        
+        // Inject new theme CSS
+        const style = document.createElement('style');
+        style.id = 'theme-css';
+        style.textContent = css;
+        document.head.appendChild(style);
+      }
+    } catch (err) {
+      console.error('Failed to load theme CSS:', err);
+    }
+  };
 
   const fetchSiteSettings = async () => {
     try {
@@ -249,6 +274,16 @@ function PublicNav() {
                               Site Settings
                             </Link>
                           )}
+                          {user?.is_superuser && (
+                            <Link
+                              to="/admin/theme"
+                              onClick={() => setAdminDropdown(false)}
+                              className="flex items-center gap-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                            >
+                              <Palette className="w-4 h-4" />
+                              Theme Editor
+                            </Link>
+                          )}
                           <Link
                             to="/forum/admin"
                             onClick={() => setAdminDropdown(false)}
@@ -383,6 +418,15 @@ function PublicNav() {
                           >
                             <Globe className="w-5 h-5" />
                             Site Settings
+                          </Link>
+                        )}
+                        {user?.is_superuser && (
+                          <Link
+                            to="/admin/theme"
+                            className="flex items-center gap-3 px-4 py-3 text-slate-300 hover:bg-slate-700 hover:text-white rounded-lg transition"
+                          >
+                            <Palette className="w-5 h-5" />
+                            Theme Editor
                           </Link>
                         )}
                         <Link
@@ -632,6 +676,16 @@ function AppContent() {
         element={
           isAuthenticated && isAdmin 
             ? <PublicLayout><EventBannerAdmin /></PublicLayout>
+            : <Navigate to="/login" replace />
+        } 
+      />
+      
+      {/* Theme Editor - alleen voor admins */}
+      <Route 
+        path="/admin/theme" 
+        element={
+          isAuthenticated && isAdmin 
+            ? <PublicLayout><ThemeEditor /></PublicLayout>
             : <Navigate to="/login" replace />
         } 
       />
