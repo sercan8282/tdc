@@ -109,40 +109,40 @@ export default function Forum() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-4 md:py-8 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6 md:mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white mb-2">Community Forum</h1>
-            <p className="text-slate-400">
+            <h1 className="text-2xl md:text-3xl font-bold text-white mb-1 md:mb-2">Community Forum</h1>
+            <p className="text-sm md:text-base text-slate-400">
               Join the discussion with fellow gamers
             </p>
           </div>
           {isAuthenticated && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <Link
                 to="/leaderboard"
-                className="flex items-center gap-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition"
+                className="flex items-center gap-2 px-3 md:px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg transition text-sm md:text-base"
               >
                 <Trophy className="w-4 h-4" />
-                Leaderboard
+                <span className="hidden sm:inline">Leaderboard</span>
               </Link>
               {isAdmin && (
                 <Link
                   to="/forum/admin"
-                  className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition"
+                  className="flex items-center gap-2 px-3 md:px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition text-sm md:text-base"
                 >
                   <Shield className="w-4 h-4" />
-                  Admin
+                  <span className="hidden sm:inline">Admin</span>
                 </Link>
               )}
               <Link
                 to="/forum/new"
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+                className="flex items-center gap-2 px-3 md:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition text-sm md:text-base"
               >
                 <Plus className="w-4 h-4" />
-                New Topic
+                <span className="hidden sm:inline">New Topic</span>
               </Link>
             </div>
           )}

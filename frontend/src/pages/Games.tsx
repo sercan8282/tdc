@@ -74,19 +74,19 @@ export default function Games() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-white mb-2 flex items-center gap-3">
-            <Gamepad2 className="w-10 h-10 text-blue-500" />
+        <div className="mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-4xl font-bold text-white mb-2 flex items-center gap-2 md:gap-3">
+            <Gamepad2 className="w-7 h-7 md:w-10 md:h-10 text-blue-500" />
             Games
           </h1>
-          <p className="text-slate-400">Select a game to view weapons and loadouts</p>
+          <p className="text-sm md:text-base text-slate-400">Select a game to view weapons and loadouts</p>
         </div>
 
         {/* Games Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
           {games.map((game) => (
             <button
               key={game.id}
