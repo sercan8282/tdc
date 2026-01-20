@@ -302,14 +302,14 @@ export default function EventBannerAdmin() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+            <h1 className="text-xl md:text-3xl font-bold text-white flex items-center gap-3">
               📢 Event Banner Management
             </h1>
             <p className="text-slate-400 mt-1">Create and manage announcement banners shown above the navigation</p>
           </div>
           <button
             onClick={handleCreate}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
+            className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition"
           >
             <Plus className="w-5 h-5" />
             New Banner
@@ -343,7 +343,7 @@ export default function EventBannerAdmin() {
               <div className="space-y-4">
                 {/* Title */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">
+                  <label className="block text-xs md:text-sm font-medium text-slate-300 mb-1">
                     Title *
                   </label>
                   <input
@@ -357,7 +357,7 @@ export default function EventBannerAdmin() {
 
                 {/* Subtitle */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">
+                  <label className="block text-xs md:text-sm font-medium text-slate-300 mb-1">
                     Subtitle
                   </label>
                   <input
@@ -371,7 +371,7 @@ export default function EventBannerAdmin() {
 
                 {/* Banner Type */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">
+                  <label className="block text-xs md:text-sm font-medium text-slate-300 mb-1">
                     Banner Type
                   </label>
                   <select
@@ -389,7 +389,7 @@ export default function EventBannerAdmin() {
 
                 {/* Color Scheme */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">
+                  <label className="block text-xs md:text-sm font-medium text-slate-300 mb-1">
                     Color Scheme
                   </label>
                   <div className="grid grid-cols-4 gap-2">
@@ -410,7 +410,7 @@ export default function EventBannerAdmin() {
 
                 {/* Image Upload */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">
+                  <label className="block text-xs md:text-sm font-medium text-slate-300 mb-1">
                     <Image className="w-4 h-4 inline mr-1" />
                     Banner Image
                   </label>
@@ -432,7 +432,7 @@ export default function EventBannerAdmin() {
               <div className="space-y-4">
                 {/* Event Date */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">
+                  <label className="block text-xs md:text-sm font-medium text-slate-300 mb-1">
                     <Calendar className="w-4 h-4 inline mr-1" />
                     Event Date/Time
                   </label>
@@ -446,7 +446,7 @@ export default function EventBannerAdmin() {
 
                 {/* Link URL */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">
+                  <label className="block text-xs md:text-sm font-medium text-slate-300 mb-1">
                     <LinkIcon className="w-4 h-4 inline mr-1" />
                     Link URL
                   </label>
@@ -461,7 +461,7 @@ export default function EventBannerAdmin() {
 
                 {/* Link Text */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">
+                  <label className="block text-xs md:text-sm font-medium text-slate-300 mb-1">
                     Link Text
                   </label>
                   <input
@@ -475,7 +475,7 @@ export default function EventBannerAdmin() {
 
                 {/* Priority */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-1">
+                  <label className="block text-xs md:text-sm font-medium text-slate-300 mb-1">
                     Priority (higher = shown first)
                   </label>
                   <input
@@ -489,7 +489,7 @@ export default function EventBannerAdmin() {
                 {/* Scheduling */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">
+                    <label className="block text-xs md:text-sm font-medium text-slate-300 mb-1">
                       <Clock className="w-4 h-4 inline mr-1" />
                       Start Showing
                     </label>
@@ -501,7 +501,7 @@ export default function EventBannerAdmin() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-1">
+                    <label className="block text-xs md:text-sm font-medium text-slate-300 mb-1">
                       Stop Showing
                     </label>
                     <input
@@ -549,7 +549,7 @@ export default function EventBannerAdmin() {
             {/* Preview */}
             {editingBanner.title && (
               <div className="mt-6">
-                <label className="block text-sm font-medium text-slate-300 mb-2">Preview</label>
+                <label className="block text-xs md:text-sm font-medium text-slate-300 mb-2">Preview</label>
                 <div className={`relative bg-gradient-to-r ${
                   colorSchemes.find(s => s.value === editingBanner.color_scheme)?.class || colorSchemes[0].class
                 } text-white rounded-lg overflow-hidden`}>
@@ -588,7 +588,7 @@ export default function EventBannerAdmin() {
                         </div>
                       )}
                       {editingBanner.link_url && (
-                        <span className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm font-medium">
+                        <span className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-xs md:text-sm font-medium">
                           {editingBanner.link_text || 'Learn More →'}
                         </span>
                       )}
@@ -609,7 +609,7 @@ export default function EventBannerAdmin() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:opacity-50"
+                className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition disabled:opacity-50"
               >
                 {saving ? <Loader className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
                 {saving ? 'Saving...' : 'Save Banner'}

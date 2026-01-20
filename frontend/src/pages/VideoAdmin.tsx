@@ -540,7 +540,7 @@ export default function VideoAdmin() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
+            <h1 className="text-xl md:text-3xl font-bold text-white flex items-center gap-3">
               <Film className="w-8 h-8 text-blue-500" />
               Video Management
             </h1>
@@ -549,7 +549,7 @@ export default function VideoAdmin() {
           
           <button
             onClick={() => setShowUploadModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
           >
             <Upload className="w-5 h-5" />
             Upload Video
@@ -625,12 +625,12 @@ export default function VideoAdmin() {
                 <table className="w-full">
                   <thead className="bg-gray-700">
                     <tr>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Video</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Tags</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Stats</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Status</th>
-                      <th className="px-4 py-3 text-left text-sm font-medium text-gray-300">Date</th>
-                      <th className="px-4 py-3 text-right text-sm font-medium text-gray-300">Actions</th>
+                      <th className="px-4 py-3 text-left text-xs md:text-sm font-medium text-gray-300">Video</th>
+                      <th className="px-4 py-3 text-left text-xs md:text-sm font-medium text-gray-300">Tags</th>
+                      <th className="px-4 py-3 text-left text-xs md:text-sm font-medium text-gray-300">Stats</th>
+                      <th className="px-4 py-3 text-left text-xs md:text-sm font-medium text-gray-300">Status</th>
+                      <th className="px-4 py-3 text-left text-xs md:text-sm font-medium text-gray-300">Date</th>
+                      <th className="px-4 py-3 text-right text-xs md:text-sm font-medium text-gray-300">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-700">
@@ -811,7 +811,7 @@ export default function VideoAdmin() {
                   setTagForm({ name: '', description: '', color: '#3B82F6', is_active: true });
                   setShowTagModal(true);
                 }}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
               >
                 <Plus className="w-5 h-5" />
                 Add Tag
@@ -1003,7 +1003,7 @@ export default function VideoAdmin() {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Title *</label>
+                <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">Title *</label>
                 <input
                   type="text"
                   value={uploadForm.title}
@@ -1015,7 +1015,7 @@ export default function VideoAdmin() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">Description</label>
                 <textarea
                   value={uploadForm.description}
                   onChange={(e) => setUploadForm({ ...uploadForm, description: e.target.value })}
@@ -1028,7 +1028,7 @@ export default function VideoAdmin() {
 
               {/* Video Source Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Video Source *</label>
+                <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">Video Source *</label>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
@@ -1058,7 +1058,7 @@ export default function VideoAdmin() {
               {/* Video File Input - shown when upload_type is 'file' */}
               {uploadForm.upload_type === 'file' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Video File * (max 500MB)</label>
+                  <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">Video File * (max 500MB)</label>
                   <input
                     type="file"
                     accept="video/mp4,video/webm,video/quicktime,video/x-msvideo,video/x-matroska"
@@ -1076,7 +1076,7 @@ export default function VideoAdmin() {
               {/* Embed URL Input - shown when upload_type is 'embed' */}
               {uploadForm.upload_type === 'embed' && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">Embed URL *</label>
+                  <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">Embed URL *</label>
                   <input
                     type="url"
                     value={uploadForm.embed_url}
@@ -1091,7 +1091,7 @@ export default function VideoAdmin() {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">
                   Cover Image {uploadForm.upload_type === 'file' ? '(optional, max 5MB)' : '(optional, max 5MB)'}
                 </label>
                 <input
@@ -1103,7 +1103,7 @@ export default function VideoAdmin() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Tags (select up to 50)</label>
+                <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">Tags (select up to 50)</label>
                 <div className="flex flex-wrap gap-2 p-3 bg-gray-700 rounded-lg max-h-40 overflow-y-auto">
                   {tags.filter(t => t.is_active).map(tag => (
                     <button
@@ -1165,7 +1165,7 @@ export default function VideoAdmin() {
                 <button
                   type="submit"
                   disabled={uploading}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
+                  className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
                 >
                   {uploading ? (
                     <Loader className="w-5 h-5 animate-spin" />
@@ -1201,7 +1201,7 @@ export default function VideoAdmin() {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Tag Name *</label>
+                <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">Tag Name *</label>
                 <input
                   type="text"
                   value={tagForm.name}
@@ -1215,7 +1215,7 @@ export default function VideoAdmin() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">Description</label>
                 <textarea
                   value={tagForm.description}
                   onChange={(e) => setTagForm({ ...tagForm, description: e.target.value })}
@@ -1225,7 +1225,7 @@ export default function VideoAdmin() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Color</label>
+                <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">Color</label>
                 <div className="flex items-center gap-3">
                   <input
                     type="color"
@@ -1234,7 +1234,7 @@ export default function VideoAdmin() {
                     className="w-12 h-10 rounded cursor-pointer"
                   />
                   <span
-                    className="px-3 py-1 rounded text-sm font-medium"
+                    className="px-3 py-1 rounded text-xs md:text-sm font-medium"
                     style={{ backgroundColor: tagForm.color + '30', color: tagForm.color }}
                   >
                     #{tagForm.name || 'preview'}
@@ -1264,7 +1264,7 @@ export default function VideoAdmin() {
                 <button
                   type="submit"
                   disabled={savingTag}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
+                  className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
                 >
                   {savingTag && <Loader className="w-4 h-4 animate-spin" />}
                   {editingTag ? 'Save Changes' : 'Create Tag'}
@@ -1297,7 +1297,7 @@ export default function VideoAdmin() {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Profile Name *</label>
+                <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">Profile Name *</label>
                 <input
                   type="text"
                   value={profileForm.name}
@@ -1310,7 +1310,7 @@ export default function VideoAdmin() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Description</label>
+                <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">Description</label>
                 <textarea
                   value={profileForm.description}
                   onChange={(e) => setProfileForm({ ...profileForm, description: e.target.value })}
@@ -1321,7 +1321,7 @@ export default function VideoAdmin() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Kleur</label>
+                <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">Kleur</label>
                 <div className="flex items-center gap-3">
                   <input
                     type="color"
@@ -1330,7 +1330,7 @@ export default function VideoAdmin() {
                     className="w-12 h-10 rounded cursor-pointer"
                   />
                   <span
-                    className="flex items-center gap-1 px-3 py-1 rounded text-sm font-medium"
+                    className="flex items-center gap-1 px-3 py-1 rounded text-xs md:text-sm font-medium"
                     style={{ backgroundColor: profileForm.color + '30', color: profileForm.color }}
                   >
                     <Layers className="w-4 h-4" />
@@ -1340,7 +1340,7 @@ export default function VideoAdmin() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">
                   Tags in this profile ({profileForm.tag_ids.length} selected)
                 </label>
                 <div className="flex flex-wrap gap-2 p-3 bg-gray-700 rounded-lg max-h-48 overflow-y-auto">
@@ -1431,7 +1431,7 @@ export default function VideoAdmin() {
               </p>
               
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-300 mb-2">Mode</label>
+                <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">Mode</label>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2 text-gray-300">
                     <input
@@ -1542,7 +1542,7 @@ export default function VideoAdmin() {
               
               {/* Title */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Title</label>
+                <label className="block text-xs md:text-sm font-medium text-gray-300 mb-1">Title</label>
                 <input
                   type="text"
                   value={editForm.title}
@@ -1553,7 +1553,7 @@ export default function VideoAdmin() {
               
               {/* Description */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">Description</label>
+                <label className="block text-xs md:text-sm font-medium text-gray-300 mb-1">Description</label>
                 <textarea
                   value={editForm.description}
                   onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
@@ -1564,7 +1564,7 @@ export default function VideoAdmin() {
               
               {/* Tags */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Tags</label>
+                <label className="block text-xs md:text-sm font-medium text-gray-300 mb-2">Tags</label>
                 <div className="flex flex-wrap gap-2 p-3 bg-gray-700 rounded-lg max-h-40 overflow-y-auto">
                   {tags.filter(t => t.is_active).map(tag => (
                     <button
@@ -1626,7 +1626,7 @@ export default function VideoAdmin() {
               <button
                 onClick={handleSaveVideo}
                 disabled={savingVideo || !editForm.title.trim()}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
+                className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition"
               >
                 {savingVideo ? (
                   <>
@@ -1714,7 +1714,7 @@ export default function VideoAdmin() {
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h3 className="text-2xl font-bold text-white">{viewingVideo.title}</h3>
+                    <h3 className="text-lg md:text-2xl font-bold text-white">{viewingVideo.title}</h3>
                     <p className="text-gray-400 mt-1">By {viewingVideo.uploader.nickname} • {formatDate(viewingVideo.created_at)}</p>
                   </div>
                   <div className="flex items-center gap-4 text-sm">
@@ -1757,7 +1757,7 @@ export default function VideoAdmin() {
                 {/* Description */}
                 {viewingVideo.description && (
                   <div className="mb-6">
-                    <h4 className="text-sm font-medium text-gray-400 mb-2">Description</h4>
+                    <h4 className="text-xs md:text-sm font-medium text-gray-400 mb-2">Description</h4>
                     <p className="text-gray-300 whitespace-pre-wrap">{viewingVideo.description}</p>
                   </div>
                 )}
@@ -1765,7 +1765,7 @@ export default function VideoAdmin() {
                 {/* Tags */}
                 {viewingVideo.tags.length > 0 && (
                   <div className="mb-6">
-                    <h4 className="text-sm font-medium text-gray-400 mb-2">Tags</h4>
+                    <h4 className="text-xs md:text-sm font-medium text-gray-400 mb-2">Tags</h4>
                     <div className="flex flex-wrap gap-2">
                       {viewingVideo.tags.map(tag => (
                         <span

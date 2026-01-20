@@ -294,7 +294,7 @@ export default function UserManagement() {
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 pt-20 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-8 text-center">
-            <h2 className="text-2xl font-bold text-red-400 mb-2">Access Denied</h2>
+            <h2 className="text-lg md:text-2xl font-bold text-red-400 mb-2">Access Denied</h2>
             <p className="text-slate-300">Only staff members can access user management.</p>
           </div>
         </div>
@@ -320,13 +320,13 @@ export default function UserManagement() {
           <div>
             <div className="flex items-center gap-3 mb-2">
               <Users className="w-8 h-8 text-blue-400" />
-              <h1 className="text-3xl font-bold text-white">User Management</h1>
+              <h1 className="text-xl md:text-3xl font-bold text-white">User Management</h1>
             </div>
             <p className="text-slate-400">Manage user roles, permissions, and bans</p>
           </div>
           <button
             onClick={() => setShowNewUserModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition"
+            className="flex items-center gap-2 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition"
           >
             <UserPlus className="w-5 h-5" />
             New User
@@ -346,22 +346,22 @@ export default function UserManagement() {
             <table className="w-full">
               <thead className="bg-slate-900/50">
                 <tr>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-slate-300">User</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-slate-300">Role</th>
-                  <th className="px-6 py-4 text-left text-sm font-medium text-slate-300">Status</th>
-                  <th className="px-6 py-4 text-right text-sm font-medium text-slate-300">Actions</th>
+                  <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-medium text-slate-300">User</th>
+                  <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-medium text-slate-300">Role</th>
+                  <th className="px-2 py-2 md:px-6 md:py-4 text-left text-xs md:text-sm font-medium text-slate-300">Status</th>
+                  <th className="px-2 py-2 md:px-6 md:py-4 text-right text-xs md:text-sm font-medium text-slate-300">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-700">
                 {users.map((user) => (
                   <tr key={user.id} className="hover:bg-slate-700/30 transition">
-                    <td className="px-6 py-4">
+                    <td className="px-2 py-2 md:px-6 md:py-4">
                       <div>
                         <div className="font-medium text-white">{user.nickname}</div>
                         <div className="text-sm text-slate-400">{user.email}</div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-2 py-2 md:px-6 md:py-4">
                       <div className="flex gap-2">
                         {user.is_superuser && (
                           <span className="inline-flex items-center gap-1 px-2 py-1 bg-red-500/20 border border-red-500/30 rounded text-xs text-red-300">
@@ -382,7 +382,7 @@ export default function UserManagement() {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-2 py-2 md:px-6 md:py-4">
                       <div className="flex flex-col gap-1">
                         {!user.is_active && (
                           <span className="inline-flex items-center gap-1 text-xs text-red-400">
@@ -404,7 +404,7 @@ export default function UserManagement() {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-2 py-2 md:px-6 md:py-4">
                       {user.id !== currentUser?.id && canManageUser(user) && (
                         <div className="flex gap-2 justify-end">
                           {/* Promote/Demote Superuser (only for superusers) */}
@@ -520,7 +520,7 @@ export default function UserManagement() {
               </p>
 
               <div className="mb-6">
-                <label className="block text-sm font-medium text-slate-300 mb-2">
+                <label className="block text-xs md:text-sm font-medium text-slate-300 mb-2">
                   Number of days
                 </label>
                 <input
@@ -544,7 +544,7 @@ export default function UserManagement() {
                     setBanModal(null);
                     setBanDays('7');
                   }}
-                  className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition"
+                  className="flex-1 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition"
                 >
                   Cancel
                 </button>
@@ -588,7 +588,7 @@ export default function UserManagement() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                  <label className="block text-xs md:text-sm font-medium text-slate-300 mb-2">
                     Email *
                   </label>
                   <input
@@ -601,7 +601,7 @@ export default function UserManagement() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                  <label className="block text-xs md:text-sm font-medium text-slate-300 mb-2">
                     Nickname *
                   </label>
                   <input
@@ -614,7 +614,7 @@ export default function UserManagement() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-300 mb-2">
+                  <label className="block text-xs md:text-sm font-medium text-slate-300 mb-2">
                     Password *
                   </label>
                   <div className="relative">
@@ -663,7 +663,7 @@ export default function UserManagement() {
               <div className="flex gap-3 mt-6">
                 <button
                   onClick={handleCreateUser}
-                  className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition"
+                  className="flex-1 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition"
                 >
                   Create User
                 </button>
@@ -679,7 +679,7 @@ export default function UserManagement() {
                       is_verified: true,
                     });
                   }}
-                  className="flex-1 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition"
+                  className="flex-1 px-2 py-1.5 md:px-4 md:py-2 text-xs md:text-sm bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-lg transition"
                 >
                   Cancel
                 </button>
