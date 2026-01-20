@@ -552,7 +552,7 @@ function ColorSection({ title, description, fields, onChange }: {
   title: string;
   description?: string;
   fields: Array<{ label: string; key: string; value: string; help?: string }>;
-  onChange: (key: string, value: string) => void;
+  onChange: (field: keyof ThemeSettings, value: string | boolean) => void;
 }) {
   return (
     <div>
@@ -564,7 +564,7 @@ function ColorSection({ title, description, fields, onChange }: {
             key={field.key}
             label={field.label}
             value={field.value}
-            onChange={(v) => onChange(field.key, v)}
+            onChange={(v) => onChange(field.key as keyof ThemeSettings, v)}
             help={field.help}
           />
         ))}
