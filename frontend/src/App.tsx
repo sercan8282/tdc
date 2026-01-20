@@ -503,9 +503,9 @@ function AdminLayout() {
   };
 
   return (
-    <div className="flex h-screen bg-slate-900">
+    <div className="min-h-screen bg-slate-900 lg:flex">
       <Sidebar onLogout={logout} onAdminTabChange={handleAdminTabChange} activeAdminTab={adminTab} />
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 overflow-auto pt-14 lg:pt-0">
         <Admin initialTab={adminTab} />
       </main>
     </div>
