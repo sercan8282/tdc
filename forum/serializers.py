@@ -112,6 +112,9 @@ class ForumCategoryDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = ForumCategory
         fields = '__all__'
+        extra_kwargs = {
+            'slug': {'required': False},
+        }
 
 
 class ReplySerializer(serializers.ModelSerializer):
