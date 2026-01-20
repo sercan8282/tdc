@@ -330,7 +330,7 @@ verify_environment() {
 start_service() {
     print_header "Starting Application Service"
     
-    # Start service
+    # Check if running as systemd service first
     if systemctl list-units --full -all | grep -Fq "$SERVICE_NAME.service"; then
         print_step "Starting $SERVICE_NAME service"
         
@@ -353,8 +353,47 @@ start_service() {
             exit 1
         fi
     else
-        print_warning "Service not found - application may need manual start"
-        print_info "Start with: systemctl start $SERVICE_NAME.service"
+        # No systemd service - try to restart Gunicorn directly
+        print_warning "Systemd service not found - restarting Gunicorn manually"
+        
+        # Find Gunicorn master process
+        GUNICORN_PID=$(pgrep -f "gunicorn.*warzone_loadout.wsgi" | head -1)
+        
+        if [ -n "$GUNICORN_PID" ]; then
+            print_step "Sending reload signal to Gunicorn (PID: $GUNICORN_PID)"
+            sudo kill -HUP "$GUNICORN_PID"
+            sleep 2
+            
+            # Verify it's still running
+            if pgrep -f "gunicorn.*warzone_loadout.wsgi" > /dev/null; then
+                print_success "Gunicorn reloaded successfully"
+            else
+                print_error "Gunicorn stopped - restarting..."
+                cd "$APP_DIR" || exit 1
+                source venv/bin/activate
+                gunicorn warzone_loadout.wsgi:application \
+                    --bind 127.0.0.1:8000 \
+                    --workers 3 \
+                    --timeout 120 \
+                    --access-logfile /var/log/turkdostclan/access.log \
+                    --error-logfile /var/log/turkdostclan/error.log \
+                    --daemon
+                print_success "Gunicorn started"
+            fi
+        else
+            print_error "Gunicorn is not running"
+            print_info "Starting Gunicorn..."
+            cd "$APP_DIR" || exit 1
+            source venv/bin/activate
+            gunicorn warzone_loadout.wsgi:application \
+                --bind 127.0.0.1:8000 \
+                --workers 3 \
+                --timeout 120 \
+                --access-logfile /var/log/turkdostclan/access.log \
+                --error-logfile /var/log/turkdostclan/error.log \
+                --daemon
+            print_success "Gunicorn started"
+        fi
     fi
 }
 
