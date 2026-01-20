@@ -283,60 +283,66 @@ export default function ThemeEditor() {
           <div className="space-y-6">
             <ColorSection
               title="Primary Colors"
+              description="Main brand colors used for buttons, links, and primary actions"
               fields={[
-                { label: 'Primary', key: 'primary_color', value: theme.primary_color },
-                { label: 'Primary Hover', key: 'primary_hover', value: theme.primary_hover },
-                { label: 'Primary Text', key: 'primary_text', value: theme.primary_text },
+                { label: 'Primary', key: 'primary_color', value: theme.primary_color, help: 'Main buttons, primary links, active states' },
+                { label: 'Primary Hover', key: 'primary_hover', value: theme.primary_hover, help: 'Button hover effects' },
+                { label: 'Primary Text', key: 'primary_text', value: theme.primary_text, help: 'Text on primary buttons' },
               ]}
               onChange={handleChange}
             />
             
             <ColorSection
               title="Secondary Colors"
+              description="Accent colors for secondary buttons and alternative actions"
               fields={[
-                { label: 'Secondary', key: 'secondary_color', value: theme.secondary_color },
-                { label: 'Secondary Hover', key: 'secondary_hover', value: theme.secondary_hover },
-                { label: 'Secondary Text', key: 'secondary_text', value: theme.secondary_text },
+                { label: 'Secondary', key: 'secondary_color', value: theme.secondary_color, help: 'Secondary buttons, badges' },
+                { label: 'Secondary Hover', key: 'secondary_hover', value: theme.secondary_hover, help: 'Secondary button hover' },
+                { label: 'Secondary Text', key: 'secondary_text', value: theme.secondary_text, help: 'Text on secondary buttons' },
               ]}
               onChange={handleChange}
             />
             
             <ColorSection
               title="Background Colors"
+              description="Page and component backgrounds"
               fields={[
-                { label: 'Primary Background', key: 'bg_primary', value: theme.bg_primary },
-                { label: 'Secondary Background', key: 'bg_secondary', value: theme.bg_secondary },
-                { label: 'Tertiary Background', key: 'bg_tertiary', value: theme.bg_tertiary },
+                { label: 'Primary Background', key: 'bg_primary', value: theme.bg_primary, help: 'Main page background' },
+                { label: 'Secondary Background', key: 'bg_secondary', value: theme.bg_secondary, help: 'Cards, panels, modals' },
+                { label: 'Tertiary Background', key: 'bg_tertiary', value: theme.bg_tertiary, help: 'Hover states, elevated elements' },
               ]}
               onChange={handleChange}
             />
             
             <ColorSection
               title="Text Colors"
+              description="Text content throughout the site"
               fields={[
-                { label: 'Primary Text', key: 'text_primary', value: theme.text_primary },
-                { label: 'Secondary Text', key: 'text_secondary', value: theme.text_secondary },
-                { label: 'Tertiary Text', key: 'text_tertiary', value: theme.text_tertiary },
+                { label: 'Primary Text', key: 'text_primary', value: theme.text_primary, help: 'Main headings, body text' },
+                { label: 'Secondary Text', key: 'text_secondary', value: theme.text_secondary, help: 'Subtitles, descriptions' },
+                { label: 'Tertiary Text', key: 'text_tertiary', value: theme.text_tertiary, help: 'Timestamps, metadata, hints' },
               ]}
               onChange={handleChange}
             />
             
             <ColorSection
               title="Border Colors"
+              description="Borders for inputs, cards, and dividers"
               fields={[
-                { label: 'Border', key: 'border_color', value: theme.border_color },
-                { label: 'Border Hover', key: 'border_hover', value: theme.border_hover },
+                { label: 'Border', key: 'border_color', value: theme.border_color, help: 'Default borders, dividers' },
+                { label: 'Border Hover', key: 'border_hover', value: theme.border_hover, help: 'Input focus, hover states' },
               ]}
               onChange={handleChange}
             />
             
             <ColorSection
               title="Status Colors"
+              description="Feedback colors for alerts, notifications, and status messages"
               fields={[
-                { label: 'Success', key: 'success_color', value: theme.success_color },
-                { label: 'Warning', key: 'warning_color', value: theme.warning_color },
-                { label: 'Error', key: 'error_color', value: theme.error_color },
-                { label: 'Info', key: 'info_color', value: theme.info_color },
+                { label: 'Success', key: 'success_color', value: theme.success_color, help: 'Success messages, confirmations' },
+                { label: 'Warning', key: 'warning_color', value: theme.warning_color, help: 'Warnings, caution alerts' },
+                { label: 'Error', key: 'error_color', value: theme.error_color, help: 'Errors, validation failures' },
+                { label: 'Info', key: 'info_color', value: theme.info_color, help: 'Info messages, tips' },
               ]}
               onChange={handleChange}
             />
@@ -345,42 +351,57 @@ export default function ThemeEditor() {
 
         {activeTab === 'typography' && (
           <div className="space-y-4">
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-white mb-2">Font Families</h3>
+              <p className="text-sm text-gray-400 mb-4">Define font families for different text types</p>
+            </div>
             <InputField
               label="Base Font Family"
               value={theme.font_family_base}
               onChange={(v) => handleChange('font_family_base', v)}
+              help="Used for body text, paragraphs, and general content"
             />
             <InputField
               label="Heading Font Family"
               value={theme.font_family_heading}
               onChange={(v) => handleChange('font_family_heading', v)}
+              help="Used for headings (h1, h2, h3, etc.)"
             />
             <InputField
               label="Monospace Font Family"
               value={theme.font_family_mono}
               onChange={(v) => handleChange('font_family_mono', v)}
+              help="Used for code blocks, timestamps, and technical content"
             />
             
-            <div className="grid grid-cols-2 gap-4 mt-6">
+            <div className="mt-8 mb-6">
+              <h3 className="text-lg font-semibold text-white mb-2">Font Sizes</h3>
+              <p className="text-sm text-gray-400 mb-4">Control text sizes across the site</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <InputField
                 label="Base Font Size"
                 value={theme.font_size_base}
                 onChange={(v) => handleChange('font_size_base', v)}
+                help="Default body text size"
               />
               <InputField
                 label="Small Font Size"
                 value={theme.font_size_sm}
                 onChange={(v) => handleChange('font_size_sm', v)}
+                help="Small text, captions, hints"
               />
               <InputField
                 label="Large Font Size"
                 value={theme.font_size_lg}
                 onChange={(v) => handleChange('font_size_lg', v)}
+                help="Larger paragraphs, subtitles"
               />
               <InputField
                 label="XL Font Size"
                 value={theme.font_size_xl}
                 onChange={(v) => handleChange('font_size_xl', v)}
+                help="Large headings, hero text"
               />
             </div>
           </div>
@@ -388,33 +409,45 @@ export default function ThemeEditor() {
 
         {activeTab === 'spacing' && (
           <div className="space-y-4">
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold text-white mb-2">Spacing</h3>
+              <p className="text-sm text-gray-400 mb-4">Control padding, margins, and gaps</p>
+            </div>
             <InputField
               label="Spacing Unit"
               value={theme.spacing_unit}
               onChange={(v) => handleChange('spacing_unit', v)}
-              help="Base spacing unit (e.g., 4px)"
+              help="Base unit for spacing (padding, margins, gaps)"
             />
             
-            <div className="grid grid-cols-2 gap-4 mt-6">
+            <div className="mt-8 mb-6">
+              <h3 className="text-lg font-semibold text-white mb-2">Border Radius</h3>
+              <p className="text-sm text-gray-400 mb-4">Roundedness of corners for various components</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
               <InputField
                 label="Small Radius"
                 value={theme.border_radius_sm}
                 onChange={(v) => handleChange('border_radius_sm', v)}
+                help="Small elements, badges"
               />
               <InputField
                 label="Medium Radius"
                 value={theme.border_radius_md}
                 onChange={(v) => handleChange('border_radius_md', v)}
+                help="Buttons, inputs, tags"
               />
               <InputField
                 label="Large Radius"
                 value={theme.border_radius_lg}
                 onChange={(v) => handleChange('border_radius_lg', v)}
+                help="Cards, panels, modals"
               />
               <InputField
                 label="XL Radius"
                 value={theme.border_radius_xl}
                 onChange={(v) => handleChange('border_radius_xl', v)}
+                help="Large containers, hero sections"
               />
             </div>
           </div>
@@ -422,39 +455,75 @@ export default function ThemeEditor() {
 
         {activeTab === 'components' && (
           <div className="space-y-6">
+            <div className="mb-6">
+              <p className="text-sm text-gray-400">Customize specific UI components</p>
+            </div>
+            
             <ColorSection
               title="Navbar"
+              description="Top navigation bar colors"
               fields={[
-                { label: 'Background', key: 'navbar_bg', value: theme.navbar_bg },
-                { label: 'Text', key: 'navbar_text', value: theme.navbar_text },
+                { label: 'Background', key: 'navbar_bg', value: theme.navbar_bg, help: 'Navbar background color' },
+                { label: 'Text', key: 'navbar_text', value: theme.navbar_text, help: 'Navbar text and icons' },
               ]}
               onChange={handleChange}
             />
             
             <ColorSection
               title="Sidebar"
+              description="Side navigation panel colors"
               fields={[
-                { label: 'Background', key: 'sidebar_bg', value: theme.sidebar_bg },
-                { label: 'Text', key: 'sidebar_text', value: theme.sidebar_text },
+                { label: 'Background', key: 'sidebar_bg', value: theme.sidebar_bg, help: 'Sidebar background color' },
+                { label: 'Text', key: 'sidebar_text', value: theme.sidebar_text, help: 'Sidebar text and icons' },
               ]}
               onChange={handleChange}
             />
             
+            <div className="mt-8 mb-6">
+              <h3 className="text-lg font-semibold text-white mb-2">Shadows</h3>
+              <p className="text-sm text-gray-400 mb-4">Elevation and depth effects</p>
+            </div>
+            <InputField
+              label="Shadow Small"
+              value={theme.shadow_sm}
+              onChange={(v) => handleChange('shadow_sm', v)}
+              help="Subtle shadows for buttons, inputs"
+            />
+            <InputField
+              label="Shadow Medium"
+              value={theme.shadow_md}
+              onChange={(v) => handleChange('shadow_md', v)}
+              help="Medium shadows for cards, dropdowns"
+            />
+            <InputField
+              label="Shadow Large"
+              value={theme.shadow_lg}
+              onChange={(v) => handleChange('shadow_lg', v)}
+              help="Large shadows for modals, popovers"
+            />
+            
+            <div className="mt-8 mb-6">
+              <h3 className="text-lg font-semibold text-white mb-2">Component Radius</h3>
+              <p className="text-sm text-gray-400 mb-4">Border radius for specific component types</p>
+            </div>
             <div className="grid grid-cols-3 gap-4">
               <InputField
                 label="Button Radius"
                 value={theme.button_radius}
                 onChange={(v) => handleChange('button_radius', v)}
+                help="All buttons"
               />
               <InputField
                 label="Input Radius"
                 value={theme.input_radius}
                 onChange={(v) => handleChange('input_radius', v)}
+                help="Text inputs, textareas"
               />
               <InputField
                 label="Card Radius"
                 value={theme.card_radius}
                 onChange={(v) => handleChange('card_radius', v)}
+                help="Card components"
               />
             </div>
           </div>
@@ -479,14 +548,16 @@ export default function ThemeEditor() {
 }
 
 // Helper Components
-function ColorSection({ title, fields, onChange }: {
+function ColorSection({ title, description, fields, onChange }: {
   title: string;
-  fields: Array<{ label: string; key: string; value: string }>;
+  description?: string;
+  fields: Array<{ label: string; key: string; value: string; help?: string }>;
   onChange: (key: string, value: string) => void;
 }) {
   return (
     <div>
-      <h3 className="text-lg font-semibold text-white mb-4">{title}</h3>
+      <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
+      {description && <p className="text-sm text-gray-400 mb-4">{description}</p>}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {fields.map((field) => (
           <ColorPicker
@@ -494,6 +565,7 @@ function ColorSection({ title, fields, onChange }: {
             label={field.label}
             value={field.value}
             onChange={(v) => onChange(field.key, v)}
+            help={field.help}
           />
         ))}
       </div>
@@ -501,10 +573,11 @@ function ColorSection({ title, fields, onChange }: {
   );
 }
 
-function ColorPicker({ label, value, onChange }: {
+function ColorPicker({ label, value, onChange, help }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  help?: string;
 }) {
   return (
     <div>
@@ -524,6 +597,7 @@ function ColorPicker({ label, value, onChange }: {
           placeholder="#000000"
         />
       </div>
+      {help && <p className="text-xs text-gray-500 mt-1">{help}</p>}
     </div>
   );
 }
