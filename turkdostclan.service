@@ -1,0 +1,16 @@
+[Unit]
+Description=TurkDostClan Gunicorn daemon
+After=network.target
+
+[Service]
+User=root
+Group=www-data
+WorkingDirectory=/var/www/turkdostclan
+Environment="PATH=/var/www/turkdostclan/venv/bin"
+ExecStart=/var/www/turkdostclan/venv/bin/gunicorn warzone_loadout.wsgi:application --bind 127.0.0.1:8000 --workers 3 --timeout 120
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
