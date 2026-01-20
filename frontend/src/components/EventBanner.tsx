@@ -58,7 +58,12 @@ export default function EventBanner() {
         const response = await fetch('/api/event-banners/active/');
         console.log('Response status:', response.status);
         if (response.ok) {
-          const data = await response.json();
+          const text = await response.text();
+          if (!text || text === 'null') {
+            console.log('No active banner');
+            return;
+          }
+          const data = JSON.parse(text);
           console.log('Banner data:', data);
           if (data && !dismissedBanners.includes(data.id)) {
             console.log('Setting banner:', data);
